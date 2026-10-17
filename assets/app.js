@@ -10,6 +10,8 @@ const state = {
   topRated: false,
   picks: new Set(read(STORAGE.picks, [])),
   votes: { tools: {} },
+  shots: { tools: {} },
+  detail: null,
 };
 
 const nodes = {
@@ -27,6 +29,20 @@ const nodes = {
   pickCount: $("#pick-count"),
   download: $("#download"),
   toast: $("#toast"),
+  detail: $("#detail"),
+  detailCat: $("#detail-cat"),
+  detailTitle: $("#detail-title"),
+  detailDesc: $("#detail-desc"),
+  detailShot: $("#detail-shot"),
+  detailInstall: $("#detail-install"),
+  detailTags: $("#detail-tags"),
+  detailMeta: $("#detail-meta"),
+  detailHow: $("#detail-how"),
+  detailActions: $("#detail-actions"),
+  detailPrev: $("#detail-prev"),
+  detailNext: $("#detail-next"),
+  detailClose: $("#detail-close"),
+  detailScroll: $(".detail-scroll"),
 };
 
 function read(key, fallback) {
@@ -53,7 +69,14 @@ function esc(value) {
 }
 
 const CATEGORY_BY_ID = () => new Map(state.categories.map((category) => [category.id, category]));
-const labelFor = (id) => CATEGORY_BY_ID().get(id)?.label ?? id;
+const categoryOf = (id) => CATEGORY_BY_ID().get(id);
+const labelFor = (id) => categoryOf(id)?.label ?? id;
+const badgeFor = (id) => {
+  const category = categoryOf(id);
+  return category ? `${category.emoji} ${category.label}` : id;
+};
+const shotFor = (item) => state.shots.tools[item.slug];
+const bookmarkIcon = '<svg class="icon" aria-hidden="true"><use href="#i-bookmark"></use></svg>';
 
 const score = (item) => {
   const vote = state.votes.tools[item.slug];
@@ -79,6 +102,7 @@ function renderFeatured() {
   if (!state.items.length) return;
   const item = state.items.find((entry) => entry.featured) ?? state.items[0];
   const index = state.categories.findIndex((category) => category.id === item.category);
+  const shot = shotFor(item);
   const date = new Date(`${item.added}T00:00:00`).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -92,21 +116,28 @@ function renderFeatured() {
         <h2 id="featured-title">${esc(item.name)}</h2>
         <p class="featured-desc">${esc(item.description)}</p>
         <div class="featured-actions">
-          <a class="drag-btn" href="${esc(item.href)}" draggable="true" title="Drag “${esc(item.name)}” onto your bookmarks bar">
-            <svg class="icon" aria-hidden="true"><use href="#i-bookmark"></use></svg>
-            ${esc(item.name)}
+          <a class="install install-lg" href="${esc(item.href)}" draggable="true" title="Drag “${esc(item.name)}” onto your bookmarks bar">
+            ${bookmarkIcon}
+            <span>${esc(item.name)}</span>
           </a>
           <button class="ghost-btn" type="button" data-copy="${esc(item.slug)}">
             <svg class="icon" aria-hidden="true"><use href="#i-copy"></use></svg>
             Copy code
           </button>
         </div>
-        <p class="featured-hint">Drag the name onto your bookmarks bar. It installs already named.</p>
+        <p class="featured-hint">Drag this button onto your bookmarks bar. It installs already named. <button class="link-btn" type="button" data-open="${esc(item.slug)}">See it in action</button></p>
       </div>
-      <div class="featured-side" aria-hidden="true">
-        <span class="featured-index">${String(index + 1).padStart(2, "0")}</span>
-        <span class="featured-kind">${esc(labelFor(item.category))}<br>${Math.round(item.bytes / 1024)} KB</span>
-      </div>
+      ${
+        shot
+          ? `<button class="featured-shot" type="button" data-open="${esc(item.slug)}" aria-label="See ${esc(item.name)} at work">
+              <img src="${esc(shot.file)}" alt="Screenshot of ${esc(item.name)} running on a demo page" loading="lazy">
+              <span class="featured-shot-label">See it in action</span>
+            </button>`
+          : `<div class="featured-side" aria-hidden="true">
+              <span class="featured-index">${String(index + 1).padStart(2, "0")}</span>
+              <span class="featured-kind">${esc(badgeFor(item.category))}<br>${Math.round(item.bytes / 1024)} KB</span>
+            </div>`
+      }
     </div>`;
   nodes.featured.hidden = false;
 }
@@ -118,7 +149,7 @@ function renderChips() {
     ...state.categories.map(
       (category) => `
       <button class="chip" type="button" data-cat="${esc(category.id)}" aria-pressed="${state.category === category.id}">
-        ${esc(category.label)} <span class="chip-count">${category.count}</span>
+        <span class="chip-emoji" aria-hidden="true">${esc(category.emoji)}</span> ${esc(category.label)} <span class="chip-count">${category.count}</span>
       </button>`,
     ),
     `<span class="chip-sep" aria-hidden="true"></span>`,
@@ -142,19 +173,33 @@ function voteButtons(item) {
 
 function card(item) {
   const picked = state.picks.has(item.slug);
+  const shot = shotFor(item);
   return `
     <article class="card" data-card="${esc(item.slug)}">
       <div class="card-top">
-        <span class="card-cat">${esc(labelFor(item.category))}</span>
+        <span class="card-cat">${esc(badgeFor(item.category))}</span>
         ${voteButtons(item)}
       </div>
-      <h3 class="card-title">
-        <a href="${esc(item.href)}" draggable="true" title="Drag onto your bookmarks bar to install “${esc(item.name)}”">
-          ${esc(item.name)}<svg class="icon drag-mark" aria-hidden="true"><use href="#i-bookmark"></use></svg>
-        </a>
-      </h3>
+      <h3 class="card-title">${esc(item.name)}</h3>
       <p class="card-desc">${esc(item.description)}</p>
+      ${
+        shot?.changed
+          ? `<button class="card-shot" type="button" data-open="${esc(item.slug)}" aria-label="See ${esc(item.name)} at work">
+              <img src="${esc(shot.file)}" alt="Screenshot of ${esc(item.name)} running on a demo page" loading="lazy" decoding="async">
+            </button>`
+          : `<button class="card-shot card-shot-blank" type="button" data-open="${esc(item.slug)}" aria-label="Details for ${esc(item.name)}">
+              <span class="card-shot-emoji" aria-hidden="true">${esc(item.name.split(" ")[0])}</span>
+              <span class="card-shot-note">Works outside the page</span>
+            </button>`
+      }
+      <a class="install" href="${esc(item.href)}" draggable="true" title="Drag “${esc(item.name)}” onto your bookmarks bar">
+        ${bookmarkIcon}
+        <span>${esc(item.name)}</span>
+      </a>
+      <p class="install-hint">Drag onto your bookmarks bar</p>
       <div class="card-actions">
+        <button class="text-btn" type="button" data-open="${esc(item.slug)}">Details</button>
+        <span class="card-actions-gap"></span>
         <button class="copy-btn" type="button" data-copy="${esc(item.slug)}" aria-label="Copy code for ${esc(item.name)}" title="Copy the bookmarklet code">
           <svg class="icon" aria-hidden="true"><use href="#i-copy"></use></svg>
         </button>
@@ -205,6 +250,107 @@ function renderComposer() {
   nodes.pickCount.textContent = String(count);
   nodes.composer.hidden = count === 0;
   document.body.classList.toggle("has-composer", count > 0);
+}
+
+/* Detail view ----------------------------------------------------------- */
+
+const HOW = {
+  capture:
+    "Run it on the page you want to keep. It may ask the browser for screen, camera or microphone access the first time, and the result is saved straight to your downloads.",
+  annotate:
+    "It puts a drawing surface over the page. Mark it up, then save or copy the result. Press Escape to cancel without keeping anything.",
+  text:
+    "It reads the page you run it on, or asks for a value first, then writes the result back to the page, the clipboard or a download.",
+  files:
+    "It turns what is on your clipboard, or in a panel it opens, into a file and saves it to your downloads folder.",
+  devtools:
+    "It inspects the page you are on — URL, storage, DOM, scripts or console — and shows what it finds in a panel, a new tab or a downloaded file.",
+  view:
+    "It changes how the page in front of you is shown, or hands its media to a floating player. Run it again or reload to undo.",
+  privacy:
+    "It rewrites the page in place so the details you do not want to share stay out of a screenshot or screen share. Reload to restore the page.",
+};
+
+let detailReturnFocus = null;
+
+function hashSlug() {
+  return location.hash.match(/^#t\/(.+)$/)?.[1] ?? null;
+}
+
+function fillDetail(item) {
+  const shot = shotFor(item);
+  const date = new Date(`${item.added}T00:00:00`).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  nodes.detailCat.textContent = badgeFor(item.category);
+  nodes.detailTitle.textContent = item.name;
+  nodes.detailDesc.textContent = item.description;
+  nodes.detailInstall.setAttribute("href", item.href);
+  nodes.detailInstall.setAttribute("title", `Drag “${item.name}” onto your bookmarks bar`);
+  nodes.detailInstall.innerHTML = `${bookmarkIcon}<span>${esc(item.name)}</span>`;
+  nodes.detailTags.innerHTML = item.tags.map((tag) => `<span class="tag">#${esc(tag)}</span>`).join("");
+  nodes.detailMeta.innerHTML = `
+    <div><dt>Category</dt><dd>${esc(badgeFor(item.category))}</dd></div>
+    <div><dt>Added</dt><dd>${esc(date)}</dd></div>
+    <div><dt>Size</dt><dd>${Math.max(1, Math.round(item.bytes / 1024))} KB</dd></div>`;
+  nodes.detailHow.textContent = HOW[item.category] ?? HOW.text;
+  nodes.detailActions.innerHTML = `
+    <button class="ghost-btn" type="button" data-copy="${esc(item.slug)}">
+      <svg class="icon" aria-hidden="true"><use href="#i-copy"></use></svg> Copy code
+    </button>
+    <a class="ghost-btn" href="${esc(item.source)}" target="_blank" rel="noopener">
+      <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg> Source file
+    </a>
+    ${voteButtons(item)}`;
+
+  nodes.detailShot.innerHTML = shot
+    ? `<img src="${esc(shot.file)}" alt="Screenshot of ${esc(item.name)} running on a demo page">
+       <figcaption>${esc(
+         shot.popup
+           ? "The tab the tool opened, captured after it ran on the demo page."
+           : shot.changed
+             ? "The demo page after running the tool."
+             : "Run on a demo page. This tool works outside the page, so the page itself looks unchanged.",
+       )}</figcaption>`
+    : `<div class="detail-shot-empty">No screenshot captured yet. Run <code>node scripts/shots.mjs</code> to make one.</div>`;
+}
+
+function openDetail(slug, mode = "push") {
+  const item = state.items.find((entry) => entry.slug === slug);
+  if (!item) return;
+  if (!state.detail) detailReturnFocus = document.activeElement;
+  state.detail = slug;
+  fillDetail(item);
+  nodes.detail.hidden = false;
+  document.body.classList.add("has-detail");
+  $("main").inert = true;
+  $("footer").inert = true;
+  nodes.detailScroll.scrollTop = 0;
+  const target = `#t/${slug}`;
+  if (mode === "push" && location.hash !== target) history.pushState(null, "", target);
+  else if (mode === "replace") history.replaceState(null, "", target);
+  nodes.detailClose.focus({ preventScroll: true });
+}
+
+function closeDetail() {
+  if (!state.detail) return;
+  state.detail = null;
+  nodes.detail.hidden = true;
+  document.body.classList.remove("has-detail");
+  $("main").inert = false;
+  $("footer").inert = false;
+  if (hashSlug()) history.replaceState(null, "", location.pathname + location.search);
+  detailReturnFocus?.focus?.({ preventScroll: true });
+}
+
+function stepDetail(delta) {
+  if (!state.detail) return;
+  const index = state.items.findIndex((entry) => entry.slug === state.detail);
+  const next = state.items[(index + delta + state.items.length) % state.items.length];
+  openDetail(next.slug, "replace");
 }
 
 /* Feedback -------------------------------------------------------------- */
@@ -367,8 +513,28 @@ function bindStaticEvents() {
   document.addEventListener("click", (event) => {
     const copy = event.target.closest("[data-copy]");
     const vote = event.target.closest(".vote");
-    if (copy) onCopy(copy.dataset.copy);
-    else if (vote) toast("Opened GitHub — add 👍 or 👎 to the comment to count your vote.");
+    const open = event.target.closest("[data-open]");
+    const install = event.target.closest("a.install");
+
+    if (copy) return onCopy(copy.dataset.copy);
+    if (vote) return toast("Opened GitHub — add 👍 or 👎 to the comment to count your vote.");
+    if (open) return openDetail(open.dataset.open);
+    if (install) {
+      event.preventDefault();
+      return toast("Drag that button onto your bookmarks bar. A click would run it here, on the catalog.");
+    }
+    const card = event.target.closest("[data-card]");
+    if (card && !event.target.closest("a, button, input, label")) openDetail(card.dataset.card);
+  });
+
+  nodes.detailClose.addEventListener("click", closeDetail);
+  nodes.detailPrev.addEventListener("click", () => stepDetail(-1));
+  nodes.detailNext.addEventListener("click", () => stepDetail(1));
+
+  window.addEventListener("hashchange", () => {
+    const slug = hashSlug();
+    if (slug) openDetail(slug, "replace");
+    else closeDetail();
   });
 
   nodes.download.addEventListener("click", downloadSelection);
@@ -383,6 +549,11 @@ function bindStaticEvents() {
 
   document.addEventListener("keydown", (event) => {
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName ?? "");
+    if (state.detail) {
+      if (event.key === "Escape") return closeDetail();
+      if (event.key === "ArrowLeft" && !typing) return stepDetail(-1);
+      if (event.key === "ArrowRight" && !typing) return stepDetail(1);
+    }
     if (event.key === "/" && !typing) {
       event.preventDefault();
       nodes.search.focus();
@@ -407,16 +578,22 @@ async function init() {
   bindStaticEvents();
 
   try {
-    const [catalog, votes] = await Promise.all([
+    const [catalog, votes, shots] = await Promise.all([
       fetch("data/catalog.json", { cache: "no-cache" }).then((response) => response.json()),
       fetch("data/votes.json", { cache: "no-cache" })
+        .then((response) => (response.ok ? response.json() : null))
+        .catch(() => null),
+      fetch("data/screenshots.json", { cache: "no-cache" })
         .then((response) => (response.ok ? response.json() : null))
         .catch(() => null),
     ]);
     state.items = catalog.items;
     state.categories = catalog.categories;
     if (votes?.tools) state.votes = votes;
+    if (shots?.tools) state.shots = shots;
     renderAll();
+    const slug = hashSlug();
+    if (slug) openDetail(slug, false);
   } catch (error) {
     console.error(error);
     nodes.footerCount.textContent = "Catalog unavailable";

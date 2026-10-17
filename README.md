@@ -7,8 +7,10 @@ A searchable catalog of small browser tools. Find one that does the job, drag it
 ## Use it
 
 1. Show your bookmarks bar: `⌘ + Shift + B` on a Mac, `Ctrl + Shift + B` elsewhere.
-2. Drag a tool's **name** up onto the bar. The bookmark is named after the tool, so there is nothing to rename.
+2. Drag a tool's **button** up onto the bar. Every tool has a button named after it, emoji and all, so the bookmark arrives named and ready. There is nothing to rename.
 3. Click the bookmark while you are on the page you want it to act on.
+
+Click any card to open it full page: a screenshot of the tool at work on a demo page, what it does, and the same install button.
 
 Prefer keyboard or want to install a whole set at once? Search or filter, tick the tools you want with **Pick**, then **Download bookmarks.html**. The file holds a folder per category nested under "Bookmarklet Library" — import it from your browser's bookmark manager and the whole set lands in the bar in one go.
 
@@ -32,7 +34,7 @@ Create `bookmarklets/<category>/<slug>.js` with a metadata comment, then rebuild
 
 ```
 /**
- * @name Page to Markdown
+ * @name 📝 Page to Markdown
  * @category text
  * @description Convert the page content to Markdown and download it.
  * @tags markdown, convert, export
@@ -43,10 +45,24 @@ Create `bookmarklets/<category>/<slug>.js` with a metadata comment, then rebuild
 
 ```sh
 node scripts/build.mjs     # writes data/catalog.json
-node scripts/verify.mjs    # parses every tool, checks hrefs and metadata
+node scripts/verify.mjs    # parses every tool, checks hrefs, votes and screenshots
 ```
 
+The name must start with an emoji: it becomes the card title, the install button and the bookmark in someone's bar.
+
 See [AGENTS.md](AGENTS.md) for the full conventions (no runtime dependencies, monochrome theme, no vendor-specific tooling).
+
+## Screenshots
+
+Every tool has a capture in `screenshots/`, taken by running the tool on `scripts/fixtures/demo-page.html` in headless Chrome.
+
+```sh
+npm run shots            # capture anything missing
+npm run shots -- --force # recapture everything
+npm run shots -- markup hide-emails --force   # recapture named tools
+```
+
+The script needs Chrome on `PATH` (or `CHROME=/path/to/chrome`). It writes `screenshots/<slug>.png` and `data/screenshots.json`, which records whether the demo page visibly changed. Tools that only download a file, open a tab or write to the clipboard are marked `changed: false`; the page says so instead of showing a page that looks untouched. Run it only when a tool's on-page effect changes — the images are committed, so recapturing all 60 rewrites about 3 MB.
 
 ## Run it locally
 
@@ -71,14 +87,18 @@ node scripts/votes.mjs --offline                                # add rows for n
 ## Repository layout
 
 ```
-index.html                     the catalog page
+index.html                     the catalog page and the full-page detail view
 assets/style.css               theme (light and dark, same monochrome palette)
-assets/app.js                  search, filters, picks, bookmark export
+assets/app.js                  search, filters, picks, detail view, bookmark export
 bookmarklets/<category>/*.js   one file per tool, code plus metadata
 data/catalog.json              generated catalog the page reads
 data/votes.json                generated vote tally the page reads
+data/screenshots.json          generated screenshot manifest the page reads
+screenshots/<slug>.png         one capture per tool
+scripts/fixtures/…             the demo page and media clips tools are captured against
 scripts/build.mjs              builds the catalog
 scripts/votes.mjs              seeds vote comments, counts reactions
+scripts/shots.mjs              runs tools in headless Chrome, captures screenshots
 scripts/verify.mjs             integrity checks
 .github/workflows/votes.yml    nightly vote tally
 ```

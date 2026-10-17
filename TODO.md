@@ -7,6 +7,13 @@
 - [x] Confirm every ARIVE/Wizni tool was left out (`npm run verify` enforces this).
 - [ ] Scan `README.md` and the page copy after publishing, in case a screenshot or URL is more revealing than intended.
 
+## Screenshots
+
+- [x] One capture per tool in `screenshots/`, taken by `scripts/shots.mjs` in headless Chrome against `scripts/fixtures/demo-page.html`. 35 of 60 visibly change the demo page; the rest download, open a tab or write to the clipboard, and the page says so rather than showing an untouched page.
+- [ ] Re-run `node scripts/shots.mjs <slug> --force` whenever a tool's effect on a page changes. Captures are committed, so they only rot if a tool is edited and the shot is forgotten.
+- [ ] Recapture the picture-in-picture tools (video, audio, Zoom) if headless Chrome ever composites PiP windows; today they show the untouched demo page, which is correct but dull.
+- [ ] Consider a `--check` mode on `scripts/shots.mjs` for CI, comparing a fresh capture against the committed PNG.
+
 ## Feedback (thumbs)
 
 - [x] GitHub Action route, built: one comment per tool on the **Tool votes** issue, 👍/👎 reactions counted by `scripts/votes.mjs` into `data/votes.json` on a nightly schedule. No server, no browser storage.
@@ -18,7 +25,8 @@
 
 ## Nice to have, only if it earns its place
 
-- [ ] Shareable filter state in the URL (`?q=markdown&cat=text`) so a search can be linked.
+- [ ] Shareable filter state in the URL (`?q=markdown&cat=text`) so a search can be linked. Tool views already deep-link as `#t/<slug>`.
+- [ ] A search that also matches emoji, so typing `📸` finds the capture tools.
 - [ ] Keyboard flow for picking tools (`J`/`K` to move, `Space` to pick) once the catalog grows.
 - [ ] A CI workflow that runs `npm run verify` and `npm run check` on pull requests.
 - [ ] Include `AGENTS.md` guidance in the rendered page as a "how to add a tool" link for contributors.

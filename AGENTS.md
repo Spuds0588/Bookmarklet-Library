@@ -12,11 +12,15 @@ A static, zero-dependency catalog of bookmarklets. GitHub Pages will serve `inde
 bookmarklets/<category>/<slug>.js   one bookmarklet per file: metadata comment + raw code
 data/catalog.json                   generated — never edit by hand
 data/votes.json                     generated — 👍/👎 tally, never edit by hand
+data/screenshots.json               generated — screenshot manifest, never edit by hand
+screenshots/<slug>.png              generated — one capture per tool, committed
 assets/style.css                    the whole theme, monochrome, CSS variables only
-assets/app.js                       catalog rendering, search, picks, export (vanilla ES module)
+assets/app.js                       catalog rendering, search, picks, detail view, export
 scripts/build.mjs                   source files -> data/catalog.json
 scripts/votes.mjs                   seeds one comment per tool, counts reactions -> data/votes.json
-scripts/verify.mjs                  integrity checks
+scripts/shots.mjs                   runs every tool on the demo page, captures screenshots/
+scripts/fixtures/demo-page.html     the page tools are photographed against
+scripts/verify.mjs                  integrity checks (catalog, votes, screenshots)
 .github/workflows/votes.yml         nightly reaction tally, commits data/votes.json
 ```
 
@@ -24,13 +28,14 @@ scripts/verify.mjs                  integrity checks
 
 1. Create `bookmarklets/<category>/<slug>.js`. The file starts with the metadata block, then the bookmarklet code exactly as it should run in the page (no `javascript:` prefix, no wrapping).
 2. Run `node scripts/build.mjs`, then `node scripts/votes.mjs --offline`, then `node scripts/verify.mjs`. The vote step adds the new row; the nightly workflow creates its comment.
-3. Check it in a browser before committing.
+3. Run `node scripts/shots.mjs <slug> --force` if the tool's effect on the demo page changed.
+4. Check it in a browser before committing.
 
 Metadata fields, all required:
 
 ```
 /**
- * @name Tab screenshot
+ * @name 📸 Tab screenshot
  * @category capture
  * @description Capture the visible tab and download it as a PNG named after the page.
  * @tags screenshot, png, tab
@@ -39,7 +44,8 @@ Metadata fields, all required:
  */
 ```
 
-- The category must match the folder. Known categories: `capture`, `annotate`, `text`, `files`, `devtools`, `view`, `privacy`.
+- `@name` starts with an emoji or symbol. It becomes the card title, the install button and the bookmark, so the emoji is what makes a bookmarks bar readable. `build.mjs` refuses a name without one.
+- The category must match the folder. Known categories: `capture`, `annotate`, `text`, `files`, `devtools`, `view`, `privacy`. Each category also carries an emoji in `build.mjs`, used on the chips and card labels.
 - Exactly one file may set `@featured true`; that tool gets the highlighted panel at the top of the page.
 - The description is the card copy. One sentence, concrete, no marketing.
 - Tags are searchable, so include the words people would type.
@@ -51,7 +57,9 @@ Metadata fields, all required:
 - **Vanilla only.** No frameworks, no CSS library, no runtime dependencies. Prefer a one-line solution over an abstraction.
 - **Monochrome.** Black and white, hairline borders, square corners, uppercase mono micro-labels. Dark theme is the same palette inverted through CSS variables in `assets/style.css`.
 - **The page has no header bar.** It opens on the intro; the theme toggle sits in the intro's top row. Content and the catalog instructions carry the page.
-- **Install links are named.** A bookmark dragged out of the page inherits the anchor's text, so every draggable anchor is the tool's name and the copy says "drag the name". Never label a drag target "Drag" — the bookmark would arrive with that name.
+- **Install links are named.** A bookmark dragged out of the page inherits the anchor's text, so the install button is exactly the tool's name — emoji included — with "Drag onto your bookmarks bar" underneath. Never label a drag target "Drag" or "Drag to bookmarks bar"; the bookmark would arrive with that name.
+- **Screenshots are captured, not drawn.** `scripts/shots.mjs` runs each tool on `scripts/fixtures/demo-page.html` in headless Chrome, saves `screenshots/<slug>.png`, and records in `data/screenshots.json` whether the page visibly changed. A tool that only downloads, opens a tab or writes to the clipboard is marked `changed: false` and the page says so instead of pretending. Never hand-edit a capture or fake one.
+- **Cards open.** Clicking a card, its screenshot or its **Details** button opens the full-page view, which is also a link: `#t/<slug>`.
 - **Votes live on GitHub, never in the page.** One comment per tool on the issue titled "Tool votes"; 👍 and 👎 reactions are the ballots. `scripts/votes.mjs` seeds comments and tallies them into `data/votes.json`, and the workflow commits it. No `localStorage` votes, no counter API.
 - **YAGNI.** Add the smallest thing that works; delete what nothing uses.
 
@@ -59,6 +67,7 @@ Metadata fields, all required:
 
 ```sh
 node scripts/build.mjs && node scripts/verify.mjs && node scripts/build.mjs --check
+node scripts/shots.mjs        # only when a tool's on-page effect changed
 python3 -m http.server 4173   # then open http://127.0.0.1:4173
 ```
 

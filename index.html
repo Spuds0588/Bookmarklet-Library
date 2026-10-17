@@ -28,6 +28,9 @@
   <symbol id="i-thumb-down" viewBox="0 0 24 24"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.7a2 2 0 0 0-2 1.7l-1.4 9a2 2 0 0 0 2 2.3zM17 2h2.7A2.3 2.3 0 0 1 22 4.3v6.4A2.3 2.3 0 0 1 19.7 13H17"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></symbol>
   <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 4h12v17l-6-4.5L6 21z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
 </svg>
 
 <a class="skip" href="#catalog">Skip to catalog</a>
@@ -41,7 +44,7 @@
       </button>
     </div>
     <h1 id="intro-title">Small tools,<br>one click away.</h1>
-    <p class="lede">Drag a tool's name onto your bookmarks bar and it installs already named. Click it on any page. No extensions, no account.</p>
+    <p class="lede">Every tool has a button with its own name. Drag that button onto your bookmarks bar and it installs already named and ready. No extensions, no account.</p>
   </section>
 
   <section id="featured" class="featured" aria-labelledby="featured-title" hidden></section>
@@ -50,7 +53,7 @@
     <div class="catalog-head">
       <div>
         <h2 id="catalog-title" class="section-label">Catalog</h2>
-        <p class="hint">Drag any tool's name onto your bookmarks bar, or tick <strong>Pick</strong> to export a whole folder.</p>
+        <p class="hint">Drag a tool's button onto your bookmarks bar, or tick <strong>Pick</strong> to export a folder of tools. Click a card to see it in action.</p>
       </div>
       <p class="hint"><kbd>/</kbd> to search</p>
     </div>
@@ -87,8 +90,8 @@
       </li>
       <li>
         <span class="step-num">02</span>
-        <h3>Drag the tool's name onto it</h3>
-        <p>Every title is a draggable bookmark, so the bookmark arrives named after the tool. No renaming afterwards.</p>
+        <h3>Drag the tool's button onto it</h3>
+        <p>Each tool has a button named after it. Drag the button, not the card, and the bookmark arrives named — emoji included. No renaming afterwards.</p>
       </li>
       <li>
         <span class="step-num">03</span>
@@ -107,6 +110,39 @@
     <a href="https://github.com/Spuds0588/Bookmarklet-Library">Source <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
   </p>
 </footer>
+
+<div id="detail" class="detail" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
+  <div class="detail-bar">
+    <p id="detail-cat" class="detail-cat"></p>
+    <div class="detail-bar-actions">
+      <button id="detail-prev" class="icon-btn" type="button" aria-label="Previous tool"><svg class="icon" aria-hidden="true"><use href="#i-prev"></use></svg></button>
+      <button id="detail-next" class="icon-btn" type="button" aria-label="Next tool"><svg class="icon" aria-hidden="true"><use href="#i-next"></use></svg></button>
+      <button id="detail-close" class="icon-btn" type="button" aria-label="Close details"><svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg></button>
+    </div>
+  </div>
+  <div class="detail-scroll">
+    <div class="detail-head">
+      <h2 id="detail-title"></h2>
+      <p id="detail-desc" class="detail-desc"></p>
+      <div class="detail-install">
+        <a id="detail-install" class="install install-lg" draggable="true"></a>
+        <p class="install-hint">Drag this button onto your bookmarks bar</p>
+      </div>
+      <div id="detail-tags" class="detail-tags"></div>
+    </div>
+    <figure id="detail-shot" class="detail-shot"></figure>
+    <div class="detail-body">
+      <section class="detail-how">
+        <h3 class="section-label">How it works</h3>
+        <p id="detail-how"></p>
+      </section>
+      <aside class="detail-side">
+        <dl id="detail-meta" class="detail-meta"></dl>
+        <div id="detail-actions" class="detail-actions"></div>
+      </aside>
+    </div>
+  </div>
+</div>
 
 <div id="composer" class="composer" role="region" aria-label="Export selection" hidden>
   <div class="composer-inner">
