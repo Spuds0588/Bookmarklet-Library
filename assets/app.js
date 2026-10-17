@@ -1,19 +1,18 @@
 const $ = (selector, root = document) => root.querySelector(selector);
 
-const STORAGE = { picks: "bl:picks", votes: "bl:votes", theme: "bl:theme" };
+const STORAGE = { picks: "bl:picks", theme: "bl:theme" };
 
 const state = {
   items: [],
   categories: [],
   query: "",
   category: "all",
-  likedOnly: false,
+  topRated: false,
   picks: new Set(read(STORAGE.picks, [])),
-  votes: read(STORAGE.votes, {}),
+  votes: { tools: {} },
 };
 
 const nodes = {
-  count: $("#count"),
   footerCount: $("#footer-count"),
   theme: $("#theme"),
   featured: $("#featured"),
@@ -56,17 +55,22 @@ function esc(value) {
 const CATEGORY_BY_ID = () => new Map(state.categories.map((category) => [category.id, category]));
 const labelFor = (id) => CATEGORY_BY_ID().get(id)?.label ?? id;
 
+const score = (item) => {
+  const vote = state.votes.tools[item.slug];
+  return vote ? vote.up - vote.down : 0;
+};
+
 function visibleItems() {
   const tokens = state.query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  return state.items.filter((item) => {
+  const items = state.items.filter((item) => {
     if (state.category !== "all" && item.category !== state.category) return false;
-    if (state.likedOnly && state.votes[item.slug] !== 1) return false;
     if (!tokens.length) return true;
     const haystack = [item.name, item.description, item.tags.join(" "), labelFor(item.category)]
       .join(" ")
       .toLowerCase();
     return tokens.every((token) => haystack.includes(token));
   });
+  return state.topRated ? items.sort((a, b) => score(b) - score(a)) : items;
 }
 
 /* Rendering ------------------------------------------------------------- */
@@ -88,15 +92,16 @@ function renderFeatured() {
         <h2 id="featured-title">${esc(item.name)}</h2>
         <p class="featured-desc">${esc(item.description)}</p>
         <div class="featured-actions">
-          <a class="drag-btn" href="${esc(item.href)}" draggable="true" title="Drag onto your bookmarks bar">
+          <a class="drag-btn" href="${esc(item.href)}" draggable="true" title="Drag “${esc(item.name)}” onto your bookmarks bar">
             <svg class="icon" aria-hidden="true"><use href="#i-bookmark"></use></svg>
-            Drag to bookmarks bar
+            ${esc(item.name)}
           </a>
           <button class="ghost-btn" type="button" data-copy="${esc(item.slug)}">
             <svg class="icon" aria-hidden="true"><use href="#i-copy"></use></svg>
             Copy code
           </button>
         </div>
+        <p class="featured-hint">Drag the name onto your bookmarks bar. It installs already named.</p>
       </div>
       <div class="featured-side" aria-hidden="true">
         <span class="featured-index">${String(index + 1).padStart(2, "0")}</span>
@@ -107,7 +112,7 @@ function renderFeatured() {
 }
 
 function renderChips() {
-  const liked = Object.values(state.votes).filter((vote) => vote === 1).length;
+  const rated = Object.keys(state.votes.tools).length;
   const chips = [
     `<button class="chip" type="button" data-cat="all" aria-pressed="${state.category === "all"}">All <span class="chip-count">${state.items.length}</span></button>`,
     ...state.categories.map(
@@ -117,25 +122,22 @@ function renderChips() {
       </button>`,
     ),
     `<span class="chip-sep" aria-hidden="true"></span>`,
-    `<button class="chip" type="button" data-liked="true" aria-pressed="${state.likedOnly}" title="Filter by the tools you rated">
+    `<button class="chip" type="button" data-rated="true" aria-pressed="${state.topRated}" title="Sort by GitHub votes">
       <svg class="icon" aria-hidden="true" style="width:12px;height:12px"><use href="#i-thumb-up"></use></svg>
-      Liked <span class="chip-count">${liked}</span>
+      Top rated <span class="chip-count">${rated}</span>
     </button>`,
   ];
   nodes.chips.innerHTML = chips.join("");
 }
 
 function voteButtons(item) {
-  const current = state.votes[item.slug];
-  return `
-    <div class="votes">
-      <button class="vote" type="button" data-vote="1" data-slug="${esc(item.slug)}" aria-pressed="${current === 1}" aria-label="More tools like ${esc(item.name)}" title="More like this">
-        <svg class="icon" aria-hidden="true"><use href="#i-thumb-up"></use></svg>
-      </button>
-      <button class="vote" type="button" data-vote="-1" data-slug="${esc(item.slug)}" aria-pressed="${current === -1}" aria-label="Not useful: ${esc(item.name)}" title="Not for me">
-        <svg class="icon" aria-hidden="true"><use href="#i-thumb-down"></use></svg>
-      </button>
-    </div>`;
+  const vote = state.votes.tools[item.slug];
+  if (!vote?.url) return "";
+  const link = (kind, count, label) => `
+    <a class="vote" href="${esc(vote.url)}" target="_blank" rel="noopener" aria-label="${esc(label)} ${esc(item.name)} on GitHub" title="Vote on GitHub — react ${kind} to this tool's comment">
+      <svg class="icon" aria-hidden="true"><use href="#i-thumb-${kind === "👍" ? "up" : "down"}"></use></svg>${count ? `<span class="vote-count">${count}</span>` : ""}
+    </a>`;
+  return `<div class="votes">${link("👍", vote.up, "Thumbs up for")}${link("👎", vote.down, "Thumbs down for")}</div>`;
 }
 
 function card(item) {
@@ -146,13 +148,13 @@ function card(item) {
         <span class="card-cat">${esc(labelFor(item.category))}</span>
         ${voteButtons(item)}
       </div>
-      <h3 class="card-title">${esc(item.name)}</h3>
+      <h3 class="card-title">
+        <a href="${esc(item.href)}" draggable="true" title="Drag onto your bookmarks bar to install “${esc(item.name)}”">
+          ${esc(item.name)}<svg class="icon drag-mark" aria-hidden="true"><use href="#i-bookmark"></use></svg>
+        </a>
+      </h3>
       <p class="card-desc">${esc(item.description)}</p>
       <div class="card-actions">
-        <a class="drag" href="${esc(item.href)}" draggable="true" title="Drag onto your bookmarks bar">
-          <svg class="icon" aria-hidden="true"><use href="#i-bookmark"></use></svg>
-          Drag
-        </a>
         <button class="copy-btn" type="button" data-copy="${esc(item.slug)}" aria-label="Copy code for ${esc(item.name)}" title="Copy the bookmarklet code">
           <svg class="icon" aria-hidden="true"><use href="#i-copy"></use></svg>
         </button>
@@ -182,7 +184,7 @@ function renderGrid() {
 
   const status = [`${items.length} of ${state.items.length} tools`];
   if (state.category !== "all") status.push(labelFor(state.category));
-  if (state.likedOnly) status.push("liked");
+  if (state.topRated) status.push("top rated");
   if (state.query.trim()) status.push(`“${state.query.trim()}”`);
   nodes.status.textContent = status.join(" · ");
 
@@ -195,7 +197,6 @@ function renderAll() {
   renderChips();
   renderGrid();
   renderComposer();
-  nodes.count.textContent = `${state.items.length} tools · ${state.categories.length} categories`;
   nodes.footerCount.textContent = `${state.items.length} tools, ${state.categories.length} categories`;
 }
 
@@ -230,12 +231,6 @@ async function copyText(text) {
     area.remove();
     return copied;
   }
-}
-
-function syncVotes(slug) {
-  document.querySelectorAll(`[data-vote][data-slug="${CSS.escape(slug)}"]`).forEach((button) => {
-    button.setAttribute("aria-pressed", String(Number(button.dataset.vote) === state.votes[slug]));
-  });
 }
 
 /* Composer -------------------------------------------------------------- */
@@ -324,8 +319,8 @@ function bindStaticEvents() {
   nodes.chips.addEventListener("click", (event) => {
     const chip = event.target.closest("button");
     if (!chip) return;
-    if (chip.dataset.liked) {
-      state.likedOnly = !state.likedOnly;
+    if (chip.dataset.rated) {
+      state.topRated = !state.topRated;
     } else if (chip.dataset.cat) {
       state.category = chip.dataset.cat;
     }
@@ -345,7 +340,7 @@ function bindStaticEvents() {
   $("#reset").addEventListener("click", () => {
     state.query = "";
     state.category = "all";
-    state.likedOnly = false;
+    state.topRated = false;
     nodes.search.value = "";
     nodes.clearSearch.hidden = true;
     renderChips();
@@ -369,25 +364,11 @@ function bindStaticEvents() {
     toast(copied ? "Copied. Paste it into a bookmark's URL field." : "Copy failed. Select the code from the source file instead.");
   };
 
-  const onVote = (slug, value) => {
-    const current = state.votes[slug];
-    if (current === value) delete state.votes[slug];
-    else state.votes[slug] = value;
-    write(STORAGE.votes, state.votes);
-    syncVotes(slug);
-    renderChips();
-    if (state.likedOnly) renderGrid();
-    toast("Rating saved. Thumbs stay in this browser.");
-  };
-
   document.addEventListener("click", (event) => {
     const copy = event.target.closest("[data-copy]");
-    if (copy) {
-      onCopy(copy.dataset.copy);
-      return;
-    }
-    const vote = event.target.closest("[data-vote]");
-    if (vote) onVote(vote.dataset.slug, Number(vote.dataset.vote));
+    const vote = event.target.closest(".vote");
+    if (copy) onCopy(copy.dataset.copy);
+    else if (vote) toast("Opened GitHub — add 👍 or 👎 to the comment to count your vote.");
   });
 
   nodes.download.addEventListener("click", downloadSelection);
@@ -426,15 +407,19 @@ async function init() {
   bindStaticEvents();
 
   try {
-    const response = await fetch("data/catalog.json", { cache: "no-cache" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const catalog = await response.json();
+    const [catalog, votes] = await Promise.all([
+      fetch("data/catalog.json", { cache: "no-cache" }).then((response) => response.json()),
+      fetch("data/votes.json", { cache: "no-cache" })
+        .then((response) => (response.ok ? response.json() : null))
+        .catch(() => null),
+    ]);
     state.items = catalog.items;
     state.categories = catalog.categories;
+    if (votes?.tools) state.votes = votes;
     renderAll();
   } catch (error) {
     console.error(error);
-    nodes.count.textContent = "Catalog unavailable";
+    nodes.footerCount.textContent = "Catalog unavailable";
     nodes.status.textContent = "Could not load data/catalog.json — serve this folder over HTTP and rebuild with node scripts/build.mjs.";
   }
 }

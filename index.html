@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="assets/style.css">
 <script>
   try {
-    const saved = localStorage.getItem("bl:theme");
+    const saved = JSON.parse(localStorage.getItem("bl:theme") ?? "null");
     const theme = saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     document.documentElement.dataset.theme = theme;
   } catch {}
@@ -32,29 +32,27 @@
 
 <a class="skip" href="#catalog">Skip to catalog</a>
 
-<header class="masthead">
-  <a class="wordmark" href="./"><span class="wordmark-mark" aria-hidden="true"></span>Bookmarklet Library</a>
-  <div class="masthead-meta">
-    <p id="count" class="count">Loading catalog…</p>
-    <button id="theme" class="icon-btn" type="button" aria-label="Switch to dark theme">
-      <svg class="icon" aria-hidden="true"><use href="#i-moon"></use></svg>
-    </button>
-  </div>
-</header>
-
 <main>
   <section class="intro" aria-labelledby="intro-title">
-    <p class="eyebrow">A searchable catalog of browser bookmarklets</p>
+    <div class="intro-top">
+      <p class="eyebrow">A searchable catalog of browser bookmarklets</p>
+      <button id="theme" class="icon-btn" type="button" aria-label="Switch to dark theme">
+        <svg class="icon" aria-hidden="true"><use href="#i-moon"></use></svg>
+      </button>
+    </div>
     <h1 id="intro-title">Small tools,<br>one click away.</h1>
-    <p class="lede">Drag a tool to your bookmarks bar. Click it on any page. No extensions, no accounts, nothing to install.</p>
+    <p class="lede">Drag a tool's name onto your bookmarks bar and it installs already named. Click it on any page. No extensions, no account.</p>
   </section>
 
   <section id="featured" class="featured" aria-labelledby="featured-title" hidden></section>
 
   <section id="catalog" class="catalog" aria-labelledby="catalog-title">
     <div class="catalog-head">
-      <h2 id="catalog-title" class="section-label">Catalog</h2>
-      <p class="hint">Press <kbd>/</kbd> to search</p>
+      <div>
+        <h2 id="catalog-title" class="section-label">Catalog</h2>
+        <p class="hint">Drag any tool's name onto your bookmarks bar, or tick <strong>Pick</strong> to export a whole folder.</p>
+      </div>
+      <p class="hint"><kbd>/</kbd> to search</p>
     </div>
 
     <div class="search-row">
@@ -89,8 +87,8 @@
       </li>
       <li>
         <span class="step-num">02</span>
-        <h3>Drag a tool onto it</h3>
-        <p>Each card has a drag handle. Drop it on the bar to install the bookmarklet.</p>
+        <h3>Drag the tool's name onto it</h3>
+        <p>Every title is a draggable bookmark, so the bookmark arrives named after the tool. No renaming afterwards.</p>
       </li>
       <li>
         <span class="step-num">03</span>
@@ -105,7 +103,7 @@
 <footer class="footer">
   <p><span id="footer-count">Bookmarklet Library</span> · vanilla HTML, CSS and JS</p>
   <p class="footer-right">
-    <span>Thumbs stay in this browser</span>
+    <span>Votes are GitHub reactions</span>
     <a href="https://github.com/Spuds0588/Bookmarklet-Library">Source <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
   </p>
 </footer>

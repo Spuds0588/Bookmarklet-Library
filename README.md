@@ -7,7 +7,7 @@ A searchable catalog of small browser tools. Find one that does the job, drag it
 ## Use it
 
 1. Show your bookmarks bar: `⌘ + Shift + B` on a Mac, `Ctrl + Shift + B` elsewhere.
-2. Drag a tool's **Drag** handle up onto the bar.
+2. Drag a tool's **name** up onto the bar. The bookmark is named after the tool, so there is nothing to rename.
 3. Click the bookmark while you are on the page you want it to act on.
 
 Prefer keyboard or want to install a whole set at once? Search or filter, tick the tools you want with **Pick**, then **Download bookmarks.html**. The file holds a folder per category nested under "Bookmarklet Library" — import it from your browser's bookmark manager and the whole set lands in the bar in one go.
@@ -55,7 +55,18 @@ python3 -m http.server 4173
 # open http://127.0.0.1:4173
 ```
 
-The page fetches `data/catalog.json`, so serve the folder over HTTP rather than opening `index.html` from disk.
+The page fetches `data/catalog.json` and `data/votes.json`, so serve the folder over HTTP rather than opening `index.html` from disk.
+
+## Votes
+
+Thumbs up and down are real, shared counts with no server behind them. One comment per tool lives on the issue titled **Tool votes**; a 👍 or 👎 reaction on that comment is a vote. Clicking a thumb opens the comment on GitHub, where you add the reaction.
+
+`.github/workflows/votes.yml` runs nightly (and on demand): it creates any missing comments, counts the reactions, and commits `data/votes.json`. The page reads that file. Reactions do not fire workflow events, so counts can be up to a day behind.
+
+```sh
+GITHUB_TOKEN=<token with issues:write> node scripts/votes.mjs   # seed and tally now
+node scripts/votes.mjs --offline                                # add rows for new tools, no network
+```
 
 ## Repository layout
 
@@ -65,12 +76,15 @@ assets/style.css               theme (light and dark, same monochrome palette)
 assets/app.js                  search, filters, picks, bookmark export
 bookmarklets/<category>/*.js   one file per tool, code plus metadata
 data/catalog.json              generated catalog the page reads
+data/votes.json                generated vote tally the page reads
 scripts/build.mjs              builds the catalog
+scripts/votes.mjs              seeds vote comments, counts reactions
 scripts/verify.mjs             integrity checks
+.github/workflows/votes.yml    nightly vote tally
 ```
 
 ## Notes
 
-- Thumbs are stored in your browser only; there is no backend. See [TODO.md](TODO.md).
+- Votes are GitHub reactions tallied by a workflow; there is no backend and no tracking.
 - Bookmarklets run with the permissions of the page you click them on. Clipboard, camera and screen tools ask the browser first.
 - Raw browser bookmark exports are gitignored and are never part of this repository.

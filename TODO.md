@@ -9,19 +9,19 @@
 
 ## Feedback (thumbs)
 
-Thumbs currently save in `localStorage`, so they show only in the browser that cast them. Aggregate counts need one of:
-
-- [ ] GitHub Action route: a workflow that reads 👍/👎 from a single issue per tool, writes `data/votes.json`, and commits it. Voting itself still needs a GitHub account and a prefilled issue link, so the UX is clumsy but needs no server.
-- [ ] Tiny counter API route (for example a no-auth hit-counter service) called directly from the page. Simplest to build, but it is a third-party dependency on every vote and easy to game.
-- [ ] Do nothing and keep the local-only behaviour, which is honest and offline-safe.
+- [x] GitHub Action route, built: one comment per tool on the **Tool votes** issue, 👍/👎 reactions counted by `scripts/votes.mjs` into `data/votes.json` on a nightly schedule. No server, no browser storage.
+- [ ] Run `.github/workflows/votes.yml` once (Actions → Tally votes → Run workflow) so the issue and its 60 comments exist; until then the page hides the thumbs because there is nothing to link to.
+- [ ] Pin the **Tool votes** issue so people can find it from the repo page.
+- [ ] GitHub disables scheduled workflows after 60 days without commits; if the counts freeze, run the workflow by hand.
+- [ ] Voting needs a GitHub account by design. If that proves too high a fence, the alternative is a small counter API, which adds a third-party dependency and is easy to game.
 
 ## Nice to have, only if it earns its place
 
 - [ ] Shareable filter state in the URL (`?q=markdown&cat=text`) so a search can be linked.
-- [ ] Sort toggle: catalog order vs. most liked.
 - [ ] Keyboard flow for picking tools (`J`/`K` to move, `Space` to pick) once the catalog grows.
 - [ ] A CI workflow that runs `npm run verify` and `npm run check` on pull requests.
 - [ ] Include `AGENTS.md` guidance in the rendered page as a "how to add a tool" link for contributors.
+- [ ] Show the featured tool's vote count in the highlighted panel once the tally has run.
 
 ## Housekeeping
 

@@ -36,6 +36,22 @@ for (const item of catalog.items) {
   if (item.bytes !== Buffer.byteLength(body)) problems.push(`${item.slug}: byte count mismatch`);
 }
 
+let votes = null;
+try {
+  votes = JSON.parse(await readFile(path.join(root, "data", "votes.json"), "utf8"));
+} catch {
+  problems.push("data/votes.json is missing or is not JSON (run node scripts/votes.mjs --offline)");
+}
+
+if (votes) {
+  const slugs = new Set(catalog.items.map((item) => item.slug));
+  for (const [slug, vote] of Object.entries(votes.tools ?? {})) {
+    if (!slugs.has(slug)) problems.push(`votes: "${slug}" is not in the catalog`);
+    if (!Number.isInteger(vote.up) || vote.up < 0) problems.push(`votes: ${slug} up count is not a non-negative integer`);
+    if (!Number.isInteger(vote.down) || vote.down < 0) problems.push(`votes: ${slug} down count is not a non-negative integer`);
+  }
+}
+
 if (catalog.total !== catalog.items.length) problems.push("catalog.total does not match items");
 for (const category of catalog.categories) {
   const actual = catalog.items.filter((item) => item.category === category.id).length;
@@ -47,4 +63,6 @@ if (problems.length) {
   console.error(`${problems.length} problem(s):\n- ${problems.join("\n- ")}`);
   process.exit(1);
 }
-console.log(`verified ${catalog.items.length} bookmarklets across ${catalog.categories.length} categories`);
+console.log(
+  `verified ${catalog.items.length} bookmarklets across ${catalog.categories.length} categories, ${Object.keys(votes?.tools ?? {}).length} vote rows`,
+);

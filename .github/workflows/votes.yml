@@ -1,0 +1,37 @@
+name: Tally votes
+
+# Reactions do not fire workflow events, so the counts refresh on a schedule.
+# Run it by hand after seeding a new tool if you want the numbers sooner.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: votes
+  cancel-in-progress: true
+
+jobs:
+  tally:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Seed comments and count reactions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/votes.mjs
+      - name: Commit data/votes.json when the counts moved
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/votes.json
+          git diff --cached --quiet && echo "no vote changes" && exit 0
+          git commit -m "Tally bookmarklet votes from GitHub reactions"
+          git push
