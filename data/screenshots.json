@@ -19,16 +19,16 @@
       "popup": true
     },
     "record-tab": {
-      "file": "screenshots/record-tab.png",
-      "changed": false
+      "changed": false,
+      "reason": "display"
     },
     "grab-text": {
-      "file": "screenshots/grab-text.png",
-      "changed": true
+      "changed": false,
+      "reason": "display"
     },
     "tab-screenshot": {
-      "file": "screenshots/tab-screenshot.png",
-      "changed": false
+      "changed": false,
+      "reason": "download"
     },
     "tab-screenshot-annotate": {
       "file": "screenshots/tab-screenshot-annotate.png",
@@ -36,47 +36,50 @@
     },
     "draw-on-page": {
       "file": "screenshots/draw-on-page.png",
-      "changed": false
+      "changed": true,
+      "steps": 2
     },
     "markup": {
       "file": "screenshots/markup.png",
-      "changed": true
+      "changed": true,
+      "steps": 2
     },
     "mailto-gmail": {
-      "file": "screenshots/mailto-gmail.png",
-      "changed": false
+      "changed": false,
+      "reason": "external"
     },
     "markdown-reader": {
       "file": "screenshots/markdown-reader.png",
       "changed": true
     },
     "website-to-markdown": {
-      "file": "screenshots/website-to-markdown.png",
-      "changed": false
+      "changed": false,
+      "reason": "download"
     },
     "mailto-outlook": {
-      "file": "screenshots/mailto-outlook.png",
-      "changed": false
+      "changed": false,
+      "reason": "external"
     },
     "text-replacer": {
       "file": "screenshots/text-replacer.png",
       "changed": true
     },
     "read-aloud": {
-      "file": "screenshots/read-aloud.png",
-      "changed": false
+      "changed": false,
+      "reason": "speech"
     },
     "advanced-find": {
       "file": "screenshots/advanced-find.png",
-      "changed": true
+      "changed": true,
+      "steps": 2
     },
     "generate-password": {
-      "file": "screenshots/generate-password.png",
-      "changed": true
+      "changed": false,
+      "reason": "clipboard"
     },
     "generate-passphrase": {
-      "file": "screenshots/generate-passphrase.png",
-      "changed": false
+      "changed": false,
+      "reason": "clipboard"
     },
     "scratchpad": {
       "file": "screenshots/scratchpad.png",
@@ -84,16 +87,16 @@
       "popup": true
     },
     "selection-to-markdown": {
-      "file": "screenshots/selection-to-markdown.png",
-      "changed": false
+      "changed": false,
+      "reason": "download"
     },
     "save-clipboard-as-html": {
-      "file": "screenshots/save-clipboard-as-html.png",
-      "changed": false
+      "changed": false,
+      "reason": "download"
     },
     "loom-links-csv": {
-      "file": "screenshots/loom-links-csv.png",
-      "changed": false
+      "changed": false,
+      "reason": "download"
     },
     "excalidraw-room": {
       "file": "screenshots/excalidraw-room.png",
@@ -101,28 +104,28 @@
       "popup": true
     },
     "save-clipboard-as-png": {
-      "file": "screenshots/save-clipboard-as-png.png",
-      "changed": false
+      "changed": false,
+      "reason": "download"
     },
     "save-clipboard-as-css": {
-      "file": "screenshots/save-clipboard-as-css.png",
-      "changed": false
+      "changed": false,
+      "reason": "download"
     },
     "save-clipboard-as-txt": {
-      "file": "screenshots/save-clipboard-as-txt.png",
-      "changed": false
+      "changed": false,
+      "reason": "download"
     },
     "save-clipboard-as-md": {
-      "file": "screenshots/save-clipboard-as-md.png",
-      "changed": false
+      "changed": false,
+      "reason": "download"
     },
     "save-clipboard-as-csv": {
-      "file": "screenshots/save-clipboard-as-csv.png",
-      "changed": false
+      "changed": false,
+      "reason": "download"
     },
     "clipboard-to-code-block": {
-      "file": "screenshots/clipboard-to-code-block.png",
-      "changed": false
+      "changed": false,
+      "reason": "clipboard"
     },
     "save-html-snippet": {
       "file": "screenshots/save-html-snippet.png",
@@ -135,15 +138,16 @@
     },
     "record-actions": {
       "file": "screenshots/record-actions.png",
-      "changed": true
+      "changed": true,
+      "steps": 2
     },
     "js-runner": {
       "file": "screenshots/js-runner.png",
       "changed": true
     },
     "field-label-audit": {
-      "file": "screenshots/field-label-audit.png",
-      "changed": false
+      "changed": false,
+      "reason": "download"
     },
     "url-parameter-report": {
       "file": "screenshots/url-parameter-report.png",
@@ -165,8 +169,8 @@
       "popup": true
     },
     "site-map-csv": {
-      "file": "screenshots/site-map-csv.png",
-      "changed": false
+      "changed": false,
+      "reason": "download"
     },
     "peek-html": {
       "file": "screenshots/peek-html.png",
@@ -178,32 +182,32 @@
       "popup": true
     },
     "enable-api-export": {
-      "file": "screenshots/enable-api-export.png",
-      "changed": false
+      "changed": false,
+      "reason": "other-page"
     },
     "clear-site-data": {
-      "file": "screenshots/clear-site-data.png",
-      "changed": false
+      "changed": false,
+      "reason": "reload"
     },
     "iframe-tester": {
       "file": "screenshots/iframe-tester.png",
       "changed": true
     },
     "force-scroll": {
-      "file": "screenshots/force-scroll.png",
-      "changed": false
+      "changed": false,
+      "reason": "no-effect"
     },
     "toggle-theme": {
       "file": "screenshots/toggle-theme.png",
       "changed": true
     },
     "zoom-web-join": {
-      "file": "screenshots/zoom-web-join.png",
-      "changed": false
+      "changed": false,
+      "reason": "external"
     },
     "audio-pip": {
-      "file": "screenshots/audio-pip.png",
-      "changed": false
+      "changed": false,
+      "reason": "display"
     },
     "yt-music-pip": {
       "file": "screenshots/yt-music-pip.png",
@@ -215,17 +219,16 @@
       "changed": true
     },
     "video-pip": {
-      "file": "screenshots/video-pip.png",
-      "changed": false
+      "changed": false,
+      "reason": "display"
     },
     "social-link-preview": {
       "file": "screenshots/social-link-preview.png",
       "changed": true
     },
     "web-zoom-pip": {
-      "file": "screenshots/web-zoom-pip.png",
-      "changed": true,
-      "popup": true
+      "changed": false,
+      "reason": "display"
     },
     "zoom-lens": {
       "file": "screenshots/zoom-lens.png",
@@ -241,15 +244,16 @@
     },
     "blur-picker": {
       "file": "screenshots/blur-picker.png",
-      "changed": true
+      "changed": true,
+      "steps": 2
     },
     "hide-notifications": {
       "file": "screenshots/hide-notifications.png",
       "changed": true
     },
     "pixelate-section": {
-      "file": "screenshots/pixelate-section.png",
-      "changed": true
+      "changed": false,
+      "reason": "clipboard"
     },
     "hide-emails": {
       "file": "screenshots/hide-emails.png",

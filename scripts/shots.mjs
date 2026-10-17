@@ -2,20 +2,27 @@
 /**
  * Runs every bookmarklet on scripts/fixtures/demo-page.html in headless Chrome and
  * saves one screenshot per tool to screenshots/<slug>.png, plus a manifest at
- * data/screenshots.json that says whether the page actually changed.
+ * data/screenshots.json describing what the capture shows.
  *
  * No dependencies: Chrome is driven over the DevTools pipe (fd 3 / fd 4).
  *
  *   node scripts/shots.mjs                 capture anything missing
  *   node scripts/shots.mjs --force         recapture everything
  *   node scripts/shots.mjs markup --force  recapture named tools only
+ *   node scripts/shots.mjs --display=:99   run on a real display (see DISPLAY_TOOLS)
+ *
+ * Tools whose output never reaches the page — a download, the clipboard, a
+ * floating player — get no image at all and a reason in the manifest, so the
+ * catalog can say what happened instead of showing a page that looks untouched.
  */
-import { spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
+import { readdir, readFile, unlink, writeFile, mkdir, stat } from "node:fs/promises";
 import { createServer } from "node:http";
-import { mkdir, readFile, writeFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 
+const execFileAsync = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const WIDTH = 1200;
 const HEIGHT = 750;
@@ -25,8 +32,63 @@ const MANIFEST = path.join(root, "data", "screenshots.json");
 const FIXTURE = path.join(root, "scripts", "fixtures", "demo-page.html");
 const DEMO_URL = "http://127.0.0.1:4321/?utm_source=demo&utm_campaign=field-guide&plan=team&debug=1";
 
+/* Interactions ----------------------------------------------------------
+ * Some tools only make sense once you have used them: a drawing surface is
+ * blank until you draw, a picker is idle until you pick, an editor wants the
+ * image pasted into it. These steps drive the real UI with real input events
+ * before the capture, so the screenshot shows the result, not the invite.
+ */
+const STEPS = {
+  "draw-on-page": [{ drag: [230, 300, 780, 545] }, { wait: 400 }],
+  "blur-picker": [{ click: ".ad-slot" }, { wait: 400 }],
+
+  "advanced-find": [{ type: "demo", into: "#searchInput" }, { wait: 400 }],
+  markup: [{ paste: true }, { wait: 600 }],
+  "record-actions": [{ click: 'a[href="#faq"]' }, { wait: 400 }],
+};
+
+/* Tools that leave the page alone. The key becomes copy on the page, so it has
+ * to be true: a download really lands in the downloads folder, a clipboard tool
+ * really writes the clipboard, and so on. */
+const REASONS = {
+  "tab-screenshot": "download",
+  "website-to-markdown": "download",
+  "selection-to-markdown": "download",
+  "field-label-audit": "download",
+  "save-clipboard-as-css": "download",
+  "save-clipboard-as-csv": "download",
+  "save-clipboard-as-html": "download",
+  "save-clipboard-as-md": "download",
+  "save-clipboard-as-png": "download",
+  "save-clipboard-as-txt": "download",
+  "loom-links-csv": "download",
+  "site-map-csv": "download",
+  "generate-password": "clipboard",
+  "generate-passphrase": "clipboard",
+  "clipboard-to-code-block": "clipboard",
+  "read-aloud": "speech",
+  "mailto-gmail": "external",
+  "mailto-outlook": "external",
+  "zoom-web-join": "external",
+  "enable-api-export": "other-page",
+  "clear-site-data": "reload",
+  "force-scroll": "no-effect",
+  "pixelate-section": "clipboard",
+  "video-pip": "display",
+  "audio-pip": "display",
+  "web-zoom-pip": "display",
+  "record-tab": "display",
+  "grab-text": "display",
+};
+
+// These need a real display server: a picture-in-picture window, a screen
+// recorder or a screen grab is not part of the page surface, so headless
+// Chrome cannot photograph it. Pass --display=:99 (Xvfb) to capture them.
+const DISPLAY_TOOLS = new Set(["video-pip", "audio-pip", "web-zoom-pip", "record-tab", "grab-text"]);
+
 const args = process.argv.slice(2);
 const force = args.includes("--force");
+const displayArg = args.find((arg) => arg.startsWith("--display="))?.slice("--display=".length) ?? null;
 const only = args.filter((arg) => !arg.startsWith("--"));
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -75,6 +137,10 @@ class Pipe {
     this.listeners.get(method).push(listener);
   }
 
+  off(method, listener) {
+    this.listeners.set(method, (this.listeners.get(method) ?? []).filter((fn) => fn !== listener));
+  }
+
   send(method, params = {}, sessionId) {
     const id = this.nextId++;
     const message = { id, method, params };
@@ -86,28 +152,32 @@ class Pipe {
 
 /* Chrome ---------------------------------------------------------------- */
 
-async function launchChrome() {
-  const profile = `/tmp/bl-shots-${process.pid}`;
-  const child = spawn(
-    CHROME,
-    [
-      "--headless=new",
-      "--remote-debugging-pipe",
-      `--user-data-dir=${profile}`,
-      "--no-first-run",
-      "--no-default-browser-check",
-      "--disable-extensions",
-      "--disable-popup-blocking",
-      "--hide-scrollbars",
-      "--mute-audio",
-      "--use-fake-ui-for-media-stream",
-      "--use-fake-device-for-media-stream",
-      "--force-device-scale-factor=1",
-      `--window-size=${WIDTH},${HEIGHT}`,
-      "about:blank",
-    ],
-    { stdio: ["ignore", "ignore", "pipe", "pipe", "pipe"] },
-  );
+async function launchChrome(display) {
+  const flags = [
+    "--remote-debugging-pipe",
+    `--user-data-dir=/tmp/bl-shots-${process.pid}`,
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--disable-extensions",
+    "--disable-popup-blocking",
+    "--hide-scrollbars",
+    "--mute-audio",
+    "--use-fake-ui-for-media-stream",
+    "--use-fake-device-for-media-stream",
+    "--autoplay-policy=no-user-gesture-required",
+    "--force-device-scale-factor=1",
+    `--window-size=${WIDTH},${HEIGHT}`,
+  ];
+  if (display) {
+    flags.push("--window-position=0,0", "--app=" + DEMO_URL);
+  } else {
+    flags.push("--headless=new", "about:blank");
+  }
+
+  const child = spawn(CHROME, flags, {
+    stdio: ["ignore", "ignore", "pipe", "pipe", "pipe"],
+    env: display ? { ...process.env, DISPLAY: display } : process.env,
+  });
   child.on("error", (error) => {
     console.error(`Could not start ${CHROME}: ${error.message}`);
     console.error("Set CHROME=/path/to/chrome if it lives somewhere else.");
@@ -168,6 +238,107 @@ async function openTool(cdp, url) {
   return { targetId, sessionId };
 }
 
+/* Input events ---------------------------------------------------------- */
+
+const KEYS = {
+  Enter: { windowsVirtualKeyCode: 13, key: "Enter", code: "Enter", text: "\r" },
+  Escape: { windowsVirtualKeyCode: 27, key: "Escape", code: "Escape" },
+  ArrowDown: { windowsVirtualKeyCode: 40, key: "ArrowDown", code: "ArrowDown" },
+  ArrowUp: { windowsVirtualKeyCode: 38, key: "ArrowUp", code: "ArrowUp" },
+};
+
+async function pointFor(cdp, sessionId, selector) {
+  const point = await evaluate(
+    cdp,
+    sessionId,
+    `(() => {
+      const el = document.querySelector(${JSON.stringify(selector)});
+      if (!el) return null;
+      const box = el.getBoundingClientRect();
+      return [Math.round(box.left + box.width / 2), Math.round(box.top + box.height / 2)];
+    })()`,
+  );
+  if (!point) throw new Error(`step selector not found: ${selector}`);
+  return point;
+}
+
+async function mouse(cdp, sessionId, type, x, y, extra = {}) {
+  await cdp.send("Input.dispatchMouseEvent", { type, x, y, ...extra }, sessionId);
+}
+
+async function runStep(cdp, sessionId, step, pasteImage) {
+  if (step.wait) return sleep(step.wait);
+
+  if (step.script) return evaluate(cdp, sessionId, step.script);
+
+  if (step.click) {
+    const [x, y] = await pointFor(cdp, sessionId, step.click);
+    await mouse(cdp, sessionId, "mouseMoved", x, y);
+    await mouse(cdp, sessionId, "mousePressed", x, y, { button: "left", buttons: 1, clickCount: 1 });
+    await sleep(30);
+    await mouse(cdp, sessionId, "mouseReleased", x, y, { button: "left", clickCount: 1 });
+    return;
+  }
+
+  if (step.drag) {
+    const [x1, y1, x2, y2] = step.drag;
+    await mouse(cdp, sessionId, "mouseMoved", x1, y1);
+    await mouse(cdp, sessionId, "mousePressed", x1, y1, { button: "left", buttons: 1, clickCount: 1 });
+    for (let i = 1; i <= 14; i++) {
+      await mouse(cdp, sessionId, "mouseMoved", x1 + ((x2 - x1) * i) / 14, y1 + ((y2 - y1) * i) / 14, {
+        button: "left",
+        buttons: 1,
+      });
+      await sleep(16);
+    }
+    await mouse(cdp, sessionId, "mouseReleased", x2, y2, { button: "left", clickCount: 1 });
+    return;
+  }
+
+  if (step.type) {
+    if (step.into) await evaluate(cdp, sessionId, `document.querySelector(${JSON.stringify(step.into)})?.focus()`);
+    await cdp.send("Input.insertText", { text: step.type }, sessionId);
+    if (step.enter) {
+      await cdp.send("Input.dispatchKeyEvent", { type: "keyDown", ...KEYS.Enter }, sessionId);
+      await cdp.send("Input.dispatchKeyEvent", { type: "keyUp", ...KEYS.Enter }, sessionId);
+    }
+    return;
+  }
+
+  if (step.key) {
+    const key = KEYS[step.key];
+    if (!key) throw new Error(`unknown key ${step.key}`);
+    await cdp.send("Input.dispatchKeyEvent", { type: "keyDown", ...key }, sessionId);
+    await cdp.send("Input.dispatchKeyEvent", { type: "keyUp", ...key }, sessionId);
+    return;
+  }
+
+  if (step.paste) {
+    // Paste the page's own screenshot, the way a person would annotate a capture.
+    await evaluate(
+      cdp,
+      sessionId,
+      `(() => {
+        const binary = atob(${JSON.stringify(pasteImage.toString("base64"))});
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const file = new File([bytes], "paste.png", { type: "image/png" });
+        const transfer = new DataTransfer();
+        transfer.items.add(file);
+        const event = new ClipboardEvent("paste", { clipboardData: transfer, bubbles: true, cancelable: true });
+        (document.activeElement ?? document.body).dispatchEvent(event);
+        document.dispatchEvent(new ClipboardEvent("paste", { clipboardData: transfer, bubbles: true, cancelable: true }));
+        return true;
+      })()`,
+    );
+    return;
+  }
+
+  throw new Error(`unknown step ${JSON.stringify(step)}`);
+}
+
+/* Capture --------------------------------------------------------------- */
+
 const STUBS = `(() => {
   const sample = "# Field notes\\n\\n- Retry the demo route\\n- Email dana@northwind.example\\n";
   let index = 0;
@@ -189,18 +360,14 @@ const STUBS = `(() => {
   return true;
 })()`;
 
-/* Capture --------------------------------------------------------------- */
-
-async function shoot(cdp, item) {
+async function shoot(cdp, item, baselinePng) {
   const { targetId, sessionId } = await openTool(cdp, DEMO_URL);
   const created = [];
   const onCreated = (params) => {
     if (params.targetInfo.type === "page" && params.targetInfo.openerId === targetId) created.push(params.targetInfo);
   };
   const onDialog = (params, dialogSession) => {
-    cdp
-      .send("Page.handleJavaScriptDialog", { accept: true, promptText: "demo" }, dialogSession)
-      .catch(() => {});
+    cdp.send("Page.handleJavaScriptDialog", { accept: true, promptText: "demo" }, dialogSession).catch(() => {});
   };
   cdp.on("Target.targetCreated", onCreated);
   cdp.on("Page.javascriptDialogOpening", onDialog);
@@ -214,7 +381,8 @@ async function shoot(cdp, item) {
         // Tools that rewrite the document can lose their execution context mid-call.
         if (!/context|destroyed|Inspected target/i.test(error.message)) throw error;
       }
-      await sleep(900);
+      await sleep(850);
+      for (const step of STEPS[item.slug] ?? []) await runStep(cdp, sessionId, step, baselinePng);
     }
 
     let shotSession = sessionId;
@@ -231,24 +399,59 @@ async function shoot(cdp, item) {
         deviceScaleFactor: 1,
         mobile: false,
       }, shotSession);
-      await sleep(500);
+      // A tab a tool opened is often an app that has to load before it looks like anything.
+      await waitForLoad(cdp, shotSession).catch(() => {});
+      await sleep(1500);
     }
 
     const { data } = await cdp.send("Page.captureScreenshot", { format: "png" }, shotSession);
     return { png: Buffer.from(data, "base64"), popup: Boolean(popup) };
   } finally {
-    cdp.listeners.set(
-      "Target.targetCreated",
-      (cdp.listeners.get("Target.targetCreated") ?? []).filter((fn) => fn !== onCreated),
-    );
-    cdp.listeners.set(
-      "Page.javascriptDialogOpening",
-      (cdp.listeners.get("Page.javascriptDialogOpening") ?? []).filter((fn) => fn !== onDialog),
-    );
+    cdp.off("Target.targetCreated", onCreated);
+    cdp.off("Page.javascriptDialogOpening", onDialog);
     await cdp.send("Target.closeTarget", { targetId }).catch(() => {});
     const popupTarget = created.at(-1);
     if (popupTarget) await cdp.send("Target.closeTarget", { targetId: popupTarget.targetId }).catch(() => {});
   }
+}
+
+// Screenshot of a whole X display, used for the tools that draw outside the page.
+async function grabDisplay(display) {
+  const file = `/tmp/bl-display-${process.pid}.png`;
+  await execFileAsync("ffmpeg", [
+    "-loglevel", "error", "-f", "x11grab", "-video_size", `${WIDTH}x${HEIGHT}`,
+    "-i", display, "-frames:v", "1", "-y", file,
+  ]);
+  const png = await readFile(file);
+  await unlink(file).catch(() => {});
+  return png;
+}
+
+// On a real display the browser window is the page, so the tool runs in that
+// window instead of a fresh hidden target, and the capture is the screen.
+async function displayWindow(cdp) {
+  const { targetInfos } = await cdp.send("Target.getTargets");
+  const page = targetInfos.find((target) => target.type === "page" && target.url.startsWith("http://127.0.0.1:4321"));
+  if (!page) throw new Error("no browser window on demo page");
+  const { sessionId } = await cdp.send("Target.attachToTarget", { targetId: page.targetId, flatten: true });
+  await cdp.send("Page.enable", {}, sessionId);
+  await cdp.send("Runtime.enable", {}, sessionId);
+  return { targetId: page.targetId, sessionId };
+}
+
+async function shootOnDisplay(cdp, item) {
+  const { sessionId } = await displayWindow(cdp);
+  await cdp.send("Page.navigate", { url: DEMO_URL }, sessionId);
+  await waitForLoad(cdp, sessionId);
+  await sleep(600);
+  await evaluate(cdp, sessionId, STUBS);
+  try {
+    await evaluate(cdp, sessionId, item.code);
+  } catch (error) {
+    if (!/context|destroyed|Inspected target/i.test(error.message)) throw error;
+  }
+  await sleep(1200);
+  for (const step of STEPS[item.slug] ?? []) await runStep(cdp, sessionId, step, null);
 }
 
 /* Main ------------------------------------------------------------------ */
@@ -259,6 +462,12 @@ if (!items.length) throw new Error(`no tools matched: ${only.join(", ")}`);
 
 const previous = await readFile(MANIFEST, "utf8").then(JSON.parse).catch(() => ({ tools: {} }));
 const manifest = { width: WIDTH, height: HEIGHT, generated: new Date().toISOString().slice(0, 10), tools: {} };
+// A run for named tools must not orphan everybody else's capture.
+if (only.length) {
+  for (const [slug, entry] of Object.entries(previous.tools ?? {})) {
+    if (!items.some((item) => item.slug === slug)) manifest.tools[slug] = entry;
+  }
+}
 await mkdir(OUT_DIR, { recursive: true });
 
 const EMBED = `<!doctype html><html><head><meta charset="utf-8"><title>Weekly field report</title>
@@ -271,62 +480,121 @@ const MEDIA = new Map([
   ["/demo.mp3", ["demo.mp3", "audio/mpeg"]],
 ]);
 
-const server = createServer(async (request, response) => {
-  try {
-    const { pathname } = new URL(request.url, "http://127.0.0.1");
-    const media = MEDIA.get(pathname);
-    if (media) {
-      const body = await readFile(path.join(root, "scripts", "fixtures", media[0]));
-      response.writeHead(200, { "content-type": media[1], "content-length": body.length, "cache-control": "no-store" });
-      response.end(body);
-      return;
+async function serveFixture() {
+  const server = createServer(async (request, response) => {
+    try {
+      const { pathname } = new URL(request.url, "http://127.0.0.1");
+      const media = MEDIA.get(pathname);
+      if (media) {
+        const body = await readFile(path.join(root, "scripts", "fixtures", media[0]));
+        response.writeHead(200, { "content-type": media[1], "content-length": body.length, "cache-control": "no-store" });
+        response.end(body);
+        return;
+      }
+      const html = pathname === "/embed" ? EMBED : await readFile(FIXTURE);
+      response.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
+      response.end(html);
+    } catch (error) {
+      response.writeHead(500);
+      response.end(String(error));
     }
-    const html = pathname === "/embed" ? EMBED : await readFile(FIXTURE);
-    response.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
-    response.end(html);
-  } catch (error) {
-    response.writeHead(500);
-    response.end(String(error));
-  }
-});
-await new Promise((resolve) => server.listen(4321, "127.0.0.1", resolve));
+  });
+  await new Promise((resolve) => server.listen(4321, "127.0.0.1", resolve));
+  return server;
+}
 
-const { child, pipe: cdp, log } = await launchChrome();
+const display = displayArg && (await stat(`/tmp/.X11-unix/X${displayArg.replace(":", "")}`).then(() => true).catch(() => false)) ? displayArg : null;
+if (displayArg && !display) {
+  console.error(`No X server on ${displayArg}; the display-only tools will keep their note instead.`);
+}
+
+/* What actually needs a browser ----------------------------------------- */
+
+const plan = [];
+for (const item of items) {
+  const needsDisplay = DISPLAY_TOOLS.has(item.slug);
+  // Tools whose work leaves the page — and the display-only tools when there is
+  // no display — are declared, not photographed. Everything else has to show
+  // its result in an image.
+  const expectedReason = !needsDisplay || !display ? REASONS[item.slug] ?? null : null;
+  const stepCount = (STEPS[item.slug] ?? []).length;
+  const previousEntry = previous.tools?.[item.slug];
+  const exists = await stat(path.join(OUT_DIR, `${item.slug}.png`)).then(() => true).catch(() => false);
+  const upToDate =
+    !force &&
+    previousEntry &&
+    (previousEntry.steps ?? 0) === stepCount &&
+    (expectedReason
+      ? !previousEntry.file && previousEntry.reason === expectedReason
+      : Boolean(previousEntry.file) && exists);
+  plan.push({ item, needsDisplay, expectedReason, stepCount, upToDate, previousEntry });
+}
+
+const work = plan.filter((entry) => !entry.upToDate && !entry.expectedReason);
+const failures = [];
+const notes = [];
+
+if (work.length) {
+const server = await serveFixture();
+const { child, pipe: cdp, log } = await launchChrome(display);
 await cdp.send("Target.setDiscoverTargets", { discover: true });
 
 let baseline = null;
-const failures = [];
+let displayBaseline = null;
 
 try {
   console.log("capturing the demo page without a tool…");
-  baseline = (await shoot(cdp, null)).png;
+  baseline = (await shoot(cdp, null, null)).png;
 
   let done = 0;
-  for (const item of items) {
+  for (const { item, needsDisplay, stepCount } of work) {
     const file = path.join(OUT_DIR, `${item.slug}.png`);
-    const exists = await stat(file).then(() => true).catch(() => false);
-    if (exists && !force && previous.tools?.[item.slug]) {
-      manifest.tools[item.slug] = previous.tools[item.slug];
-      done++;
-      continue;
-    }
+    const label = `${String(done + 1).padStart(2, "0")}/${work.length} ${item.name}`;
 
-    const label = `${String(done + 1).padStart(2, "0")}/${items.length} ${item.name}`;
     try {
       const source = await readFile(path.join(root, item.source), "utf8");
       const code = source.slice(source.indexOf("*/") + 2).trim();
-      const { png, popup } = await shoot(cdp, { code });
+
+      if (needsDisplay) {
+        if (!displayBaseline) {
+          await shootOnDisplay(cdp, { code: "void 0", slug: "baseline" });
+          displayBaseline = await grabDisplay(display);
+        }
+        await shootOnDisplay(cdp, { code, slug: item.slug });
+        const png = await grabDisplay(display);
+        const changed = !png.equals(displayBaseline);
+        if (changed) {
+          await writeFile(file, png);
+          manifest.tools[item.slug] = { file: `screenshots/${item.slug}.png`, changed: true, display: true };
+          console.log(`${label.padEnd(46)} ${String(Math.round(png.length / 1024)).padStart(4)} KB  changed (display)`);
+        } else {
+          manifest.tools[item.slug] = { changed: false, reason: REASONS[item.slug] ?? "display", display: true };
+          console.log(`${label.padEnd(46)} no capture (nothing visible on the display)`);
+        }
+        done++;
+        continue;
+      }
+
+      const { png, popup } = await shoot(cdp, { code, slug: item.slug }, baseline);
       const changed = !png.equals(baseline);
-      await writeFile(file, png);
-      manifest.tools[item.slug] = {
-        file: `screenshots/${item.slug}.png`,
-        changed,
-        ...(popup ? { popup } : {}),
-      };
-      console.log(`${label.padEnd(48)} ${String(Math.round(png.length / 1024)).padStart(4)} KB  ${changed ? "changed" : "unchanged"}${popup ? " (new tab)" : ""}`);
+      if (changed || popup) {
+        await writeFile(file, png);
+        manifest.tools[item.slug] = {
+          file: `screenshots/${item.slug}.png`,
+          changed: true,
+          ...(popup ? { popup: true } : {}),
+          ...(stepCount ? { steps: stepCount } : {}),
+        };
+        console.log(`${label.padEnd(46)} ${String(Math.round(png.length / 1024)).padStart(4)} KB  changed${popup ? " (new tab)" : ""}`);
+      } else {
+        const reason = REASONS[item.slug] ?? "no-effect";
+        manifest.tools[item.slug] = { changed: false, reason, ...(stepCount ? { steps: stepCount } : {}) };
+        if (!REASONS[item.slug]) notes.push(`${item.slug}: no visible change and no reason recorded`);
+        console.log(`${label.padEnd(46)} no capture (${reason})`);
+      }
     } catch (error) {
       failures.push(`${item.slug}: ${error.message}`);
-      console.log(`${label.padEnd(48)} FAILED  ${error.message}`);
+      console.log(`${label.padEnd(46)} FAILED  ${error.message}`);
     }
     done++;
   }
@@ -336,12 +604,34 @@ try {
   child.kill();
   server.close();
 }
+}
 
-const ordered = Object.fromEntries(catalog.items.map((item) => [item.slug, manifest.tools[item.slug]]).filter(([, entry]) => entry));
+// Everything that needed no browser: reuse the last entry, or state the reason.
+for (const { item, expectedReason, upToDate, previousEntry } of plan) {
+  if (manifest.tools[item.slug]) continue;
+  manifest.tools[item.slug] = upToDate ? previousEntry : { changed: false, reason: expectedReason };
+}
+if (!work.length) console.log(`nothing to capture — ${plan.length} tools already up to date`);
+
+// Keep only the images the manifest points at, so a tool that stops producing a
+// screenshot does not leave a stale one behind.
+const referenced = new Set(
+  Object.values(manifest.tools).map((entry) => entry.file).filter(Boolean).map((file) => path.basename(file)),
+);
+for (const entry of await readdir(OUT_DIR)) {
+  if (!entry.endsWith(".png") || referenced.has(entry)) continue;
+  await unlink(path.join(OUT_DIR, entry));
+  console.log(`removed stale capture screenshots/${entry}`);
+}
+
+const ordered = Object.fromEntries(
+  catalog.items.map((item) => [item.slug, manifest.tools[item.slug]]).filter(([, entry]) => entry),
+);
 await writeFile(MANIFEST, JSON.stringify({ ...manifest, tools: ordered }, null, 2) + "\n");
 
-const changedCount = Object.values(ordered).filter((entry) => entry.changed).length;
-console.log(`\n${Object.keys(ordered).length} screenshots in ${path.relative(root, OUT_DIR)}/, ${changedCount} changed the page.`);
+const withImage = Object.values(ordered).filter((entry) => entry.file).length;
+console.log(`\n${withImage} screenshots in screenshots/, ${Object.keys(ordered).length - withImage} tools explained without one.`);
+if (notes.length) console.log(`notes:\n- ${notes.join("\n- ")}`);
 if (failures.length) {
   console.error(`${failures.length} failed:\n- ${failures.join("\n- ")}`);
   console.error(log.join("").split("\n").filter((line) => /ERROR|error/i.test(line)).slice(-8).join("\n"));
