@@ -821,16 +821,28 @@ body.has-detail { overflow: hidden; }
   color: var(--muted);
 }
 .detail-shot-empty {
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-height: 30vh;
-  padding: 24px;
+  padding: 40px 24px;
   border: 1px dashed var(--line);
-  font: 12px/1.6 var(--mono);
   color: var(--muted);
   text-align: center;
 }
-.detail-shot-empty code { color: var(--fg); }
+.detail-shot-emoji { font-size: 40px; line-height: 1; }
+.detail-shot-empty p {
+  margin: 16px 0 0;
+  max-width: 54ch;
+  font: 13.5px/1.6 var(--sans);
+}
+.detail-shot-empty .detail-shot-note {
+  margin-top: 12px;
+  font: 9.5px/1.4 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
 
 .detail-body {
   display: grid;

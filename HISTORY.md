@@ -2,6 +2,27 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-17 — Captures now show results, and tools that leave the page get none
+
+**Changed**
+
+- Screenshots were taken 850 ms after a tool ran, which is honest but shallow: a drawing surface was photographed blank, a picker before the pick, an annotation editor showing "Paste Image Here". `scripts/shots.mjs` now drives real input first, per tool: **Draw on page** gets a stroke dragged across the page, **Blur an element** picks the ad block and blurs it, **Advanced find** types a query into its own field, **Screenshot markup** has the page's screenshot pasted into it, **Record actions** records a click.
+- Tools whose work never touches the page no longer ship a picture of an untouched page. They get a reason in `data/screenshots.json` and the card and detail view say what happened: download, clipboard, floating window, another site, reads aloud, reloads, needs a certain page, works outside the page. 32 tools have captures; 28 are explained without one.
+- A tab a tool opens is now captured after it finishes loading, plus 1.5 s, so Excalidraw, Scratchpad, the URL parameter reports and system info show their real interface instead of a spinner.
+- A capture run with nothing to do no longer starts Chrome at all, and a run for named tools no longer orphans the other captures — that bug deleted 40+ committed PNGs once, which `git checkout` undid.
+- `verify.mjs` now fails an entry that has both a file and a reason, neither, or an unknown reason key, and fails any PNG in `screenshots/` that the manifest does not name.
+
+**Verified**
+
+- Pixel-level checks against a fresh rendering of the demo page: the draw-on-page stroke reads as a diagonal band of changed pixels between the drag points (the same path on the untouched page is blank), the blur-picker capture leaves the ad block unreadable to OCR, the markup capture changes nearly the whole viewport as the editor takes over with the pasted image, and the advanced-find capture shows the query typed with matches. The record-actions capture contains the recorder panel, with its red stop button present in the pixels.
+- **Pixelate a section** was going to get a drag step too; its redacted image goes to the clipboard and it leaves no visible result, so it is now in the reason list instead.
+- OCR of all 32 captures finds no loading or spinner state left anywhere.
+- `npm run verify` passes: 60 bookmarklets, 60 vote rows, 32 screenshots, 28 tools explained without one. Re-running the capture reports "nothing to capture — 60 tools already up to date" and changes nothing.
+
+**Not verified**
+
+- The display path for the floating-window tools (`--display=:99`, Xvfb, ffmpeg x11grab) is written and the fallback is exercised — with no display the five tools keep the `display` reason and the run says so — but the capture path itself has never run, because installing Xvfb needs admin approval and both prompts timed out. It is untested code, not a working feature, until someone installs Xvfb and checks the five captures.
+
 ## 2026-10-17 — Emoji names, install buttons, captured screenshots, full-page tool view
 
 **Changed**

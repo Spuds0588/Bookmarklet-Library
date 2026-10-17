@@ -58,7 +58,10 @@ Metadata fields, all required:
 - **Monochrome.** Black and white, hairline borders, square corners, uppercase mono micro-labels. Dark theme is the same palette inverted through CSS variables in `assets/style.css`.
 - **The page has no header bar.** It opens on the intro; the theme toggle sits in the intro's top row. Content and the catalog instructions carry the page.
 - **Install links are named.** A bookmark dragged out of the page inherits the anchor's text, so the install button is exactly the tool's name — emoji included — with "Drag onto your bookmarks bar" underneath. Never label a drag target "Drag" or "Drag to bookmarks bar"; the bookmark would arrive with that name.
-- **Screenshots are captured, not drawn.** `scripts/shots.mjs` runs each tool on `scripts/fixtures/demo-page.html` in headless Chrome, saves `screenshots/<slug>.png`, and records in `data/screenshots.json` whether the page visibly changed. A tool that only downloads, opens a tab or writes to the clipboard is marked `changed: false` and the page says so instead of pretending. Never hand-edit a capture or fake one.
+- **Screenshots are captured, not drawn.** `scripts/shots.mjs` runs each tool on `scripts/fixtures/demo-page.html` in headless Chrome and saves `screenshots/<slug>.png` at 1200x750. Never hand-edit a capture or fake one.
+- **A tool that shows its result only after you use it gets driven.** `STEPS` in `shots.mjs` holds real input events per slug — draw a stroke, click an element, type a query, paste an image — so the capture shows the result rather than the blank canvas or the invite to start.
+- **No image beats a misleading image.** A tool whose work never reaches the page — a download, the clipboard, speech, another site — is recorded in `data/screenshots.json` as a `reason` with no file, and the card and detail view explain what happened. `REASONS` in `shots.mjs` is that list, and `verify.mjs` fails any entry that has both a file and a reason, neither, or an unknown reason. Every PNG must be named by the manifest.
+- **Floating windows need a real display.** Picture-in-picture, screen recorders and screen grabs are not part of the page surface, so headless Chrome cannot photograph them. `DISPLAY_TOOLS` lists them; `node scripts/shots.mjs --display=:99` (Xvfb) captures the whole display instead, and without a display they keep their `display` reason. That path is written but has never been run on this machine.
 - **Cards open.** Clicking a card, its screenshot or its **Details** button opens the full-page view, which is also a link: `#t/<slug>`.
 - **Votes live on GitHub, never in the page.** One comment per tool on the issue titled "Tool votes"; 👍 and 👎 reactions are the ballots. `scripts/votes.mjs` seeds comments and tallies them into `data/votes.json`, and the workflow commits it. No `localStorage` votes, no counter API.
 - **YAGNI.** Add the smallest thing that works; delete what nothing uses.
@@ -68,6 +71,7 @@ Metadata fields, all required:
 ```sh
 node scripts/build.mjs && node scripts/verify.mjs && node scripts/build.mjs --check
 node scripts/shots.mjs        # only when a tool's on-page effect changed
+node scripts/shots.mjs <slug> --force   # one tool, when it or the fixture changed
 python3 -m http.server 4173   # then open http://127.0.0.1:4173
 ```
 

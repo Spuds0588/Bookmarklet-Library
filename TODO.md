@@ -9,9 +9,13 @@
 
 ## Screenshots
 
-- [x] One capture per tool in `screenshots/`, taken by `scripts/shots.mjs` in headless Chrome against `scripts/fixtures/demo-page.html`. 35 of 60 visibly change the demo page; the rest download, open a tab or write to the clipboard, and the page says so rather than showing an untouched page.
+- [x] One capture per tool that shows its result (32 today) in `screenshots/`, taken by `scripts/shots.mjs` in headless Chrome against `scripts/fixtures/demo-page.html`.
+- [x] Tools that need using before they show anything are driven with real input first: a stroke on the draw surface, an element picked to blur, a query typed into the find bar, an image pasted into the annotation editor, a click recorded by the action recorder.
+- [x] Tools whose work never reaches the page get no image and a reason instead (28 today): download, clipboard, floating window, another site, reads aloud, reloads, needs a certain page, works outside the page. A screenshot of an untouched page was worse than no screenshot.
+- [ ] **Blocked on approval: install Xvfb so the floating windows can be photographed.** `apt-get install -y xvfb` needs admin rights and the two approval prompts timed out. The display path in `scripts/shots.mjs` (`--display=:99`) is written but has never run. After installing:
+      `Xvfb :99 -screen 0 1200x750x24 &` then `node scripts/shots.mjs --display=:99 --force video-pip audio-pip web-zoom-pip record-tab grab-text`,
+      and check the five captures by eye before committing them.
 - [ ] Re-run `node scripts/shots.mjs <slug> --force` whenever a tool's effect on a page changes. Captures are committed, so they only rot if a tool is edited and the shot is forgotten.
-- [ ] Recapture the picture-in-picture tools (video, audio, Zoom) if headless Chrome ever composites PiP windows; today they show the untouched demo page, which is correct but dull.
 - [ ] Consider a `--check` mode on `scripts/shots.mjs` for CI, comparing a fresh capture against the committed PNG.
 
 ## Feedback (thumbs)

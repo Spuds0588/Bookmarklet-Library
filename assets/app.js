@@ -76,6 +76,44 @@ const badgeFor = (id) => {
   return category ? `${category.emoji} ${category.label}` : id;
 };
 const shotFor = (item) => state.shots.tools[item.slug];
+
+// Tools whose work never reaches the page get no screenshot. The reason says
+// what happened instead, so a blank tile is an answer rather than a gap.
+const REASON_COPY = {
+  download: {
+    short: "Saves a file",
+    long: "This one saves a file straight to your downloads folder. The page you run it on looks the same afterwards, so there is nothing to photograph here.",
+  },
+  clipboard: {
+    short: "Copies to clipboard",
+    long: "The result goes to your clipboard, ready to paste. Nothing on the page changes, so there is no screenshot to show.",
+  },
+  speech: {
+    short: "Reads aloud",
+    long: "It speaks the page through the browser's voice engine. The page itself stays put, so there is nothing to capture.",
+  },
+  external: {
+    short: "Opens another site",
+    long: "It hands the job to another site — a mail composer, your webmail, the Zoom web client. The page you started on is unchanged.",
+  },
+  "other-page": {
+    short: "Needs a certain page",
+    long: "This only does something on a page of a particular kind, such as an API reference. On the demo page it politely does nothing.",
+  },
+  reload: {
+    short: "Reloads the page",
+    long: "It clears what the site stored and reloads, so it leaves you with the page you started on.",
+  },
+  "no-effect": {
+    short: "Works outside the page",
+    long: "Nothing on the demo page needed the change this tool makes, so there is nothing to show.",
+  },
+  display: {
+    short: "Floating window",
+    long: "It runs in a floating player or records your screen. Those live outside the page surface, so this catalog cannot photograph them.",
+  },
+};
+const reasonFor = (shot) => REASON_COPY[shot?.reason] ?? REASON_COPY["no-effect"];
 const bookmarkIcon = '<svg class="icon" aria-hidden="true"><use href="#i-bookmark"></use></svg>';
 
 const score = (item) => {
@@ -128,7 +166,7 @@ function renderFeatured() {
         <p class="featured-hint">Drag this button onto your bookmarks bar. It installs already named. <button class="link-btn" type="button" data-open="${esc(item.slug)}">See it in action</button></p>
       </div>
       ${
-        shot
+        shot?.file
           ? `<button class="featured-shot" type="button" data-open="${esc(item.slug)}" aria-label="See ${esc(item.name)} at work">
               <img src="${esc(shot.file)}" alt="Screenshot of ${esc(item.name)} running on a demo page" loading="lazy">
               <span class="featured-shot-label">See it in action</span>
@@ -183,13 +221,13 @@ function card(item) {
       <h3 class="card-title">${esc(item.name)}</h3>
       <p class="card-desc">${esc(item.description)}</p>
       ${
-        shot?.changed
+        shot?.file
           ? `<button class="card-shot" type="button" data-open="${esc(item.slug)}" aria-label="See ${esc(item.name)} at work">
               <img src="${esc(shot.file)}" alt="Screenshot of ${esc(item.name)} running on a demo page" loading="lazy" decoding="async">
             </button>`
           : `<button class="card-shot card-shot-blank" type="button" data-open="${esc(item.slug)}" aria-label="Details for ${esc(item.name)}">
               <span class="card-shot-emoji" aria-hidden="true">${esc(item.name.split(" ")[0])}</span>
-              <span class="card-shot-note">Works outside the page</span>
+              <span class="card-shot-note">${esc(reasonFor(shot).short)}</span>
             </button>`
       }
       <a class="install" href="${esc(item.href)}" draggable="true" title="Drag “${esc(item.name)}” onto your bookmarks bar">
@@ -306,7 +344,7 @@ function fillDetail(item) {
     </a>
     ${voteButtons(item)}`;
 
-  nodes.detailShot.innerHTML = shot
+  nodes.detailShot.innerHTML = shot?.file
     ? `<img src="${esc(shot.file)}" alt="Screenshot of ${esc(item.name)} running on a demo page">
        <figcaption>${esc(
          shot.popup
@@ -314,8 +352,12 @@ function fillDetail(item) {
            : shot.changed
              ? "The demo page after running the tool."
              : "Run on a demo page. This tool works outside the page, so the page itself looks unchanged.",
-       )}</figcaption>`
-    : `<div class="detail-shot-empty">No screenshot captured yet. Run <code>node scripts/shots.mjs</code> to make one.</div>`;
+       )}       </figcaption>`
+    : `<div class="detail-shot-empty">
+         <span class="detail-shot-emoji" aria-hidden="true">${esc(item.name.split(" ")[0])}</span>
+         <p>${esc(reasonFor(shot).long)}</p>
+         <p class="detail-shot-note">${esc(reasonFor(shot).short)} — no screenshot</p>
+       </div>`;
 }
 
 function openDetail(slug, mode = "push") {

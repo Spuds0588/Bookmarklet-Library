@@ -54,7 +54,7 @@ See [AGENTS.md](AGENTS.md) for the full conventions (no runtime dependencies, mo
 
 ## Screenshots
 
-Every tool has a capture in `screenshots/`, taken by running the tool on `scripts/fixtures/demo-page.html` in headless Chrome.
+Captures are taken by running each tool on `scripts/fixtures/demo-page.html` in headless Chrome, and only the tools that show their result get one.
 
 ```sh
 npm run shots            # capture anything missing
@@ -62,7 +62,20 @@ npm run shots -- --force # recapture everything
 npm run shots -- markup hide-emails --force   # recapture named tools
 ```
 
-The script needs Chrome on `PATH` (or `CHROME=/path/to/chrome`). It writes `screenshots/<slug>.png` and `data/screenshots.json`, which records whether the demo page visibly changed. Tools that only download a file, open a tab or write to the clipboard are marked `changed: false`; the page says so instead of showing a page that looks untouched. Run it only when a tool's on-page effect changes — the images are committed, so recapturing all 60 rewrites about 3 MB.
+The script needs Chrome on `PATH` (or `CHROME=/path/to/chrome`). It writes `screenshots/<slug>.png` and `data/screenshots.json`.
+
+Tools that only make sense once you have used them are driven with real input first — a stroke drawn on the page, an element picked to blur, a search typed into the find bar, a screenshot pasted into the annotation editor — so the capture shows the result rather than the blank canvas.
+
+Tools whose work never reaches the page get no image at all. Instead the manifest records why, and the card and detail view say it plainly: **Saves a file** (12 tools), **Copies to clipboard** (4), **Floating window** for picture-in-picture and screen recorders (5), **Opens another site** (3), plus reads aloud, reloads the page, needs a certain page and works outside the page. A screenshot of an untouched demo page would be worse than no screenshot.
+
+Those floating-window and screen-capture tools can be captured on a real display, which headless Chrome does not have:
+
+```sh
+Xvfb :99 -screen 0 1200x750x24 &          # or any display you own
+CHROME=google-chrome npm run shots -- --display=:99 --force video-pip audio-pip web-zoom-pip record-tab grab-text
+```
+
+Run captures only when a tool's on-page effect changes — the images are committed, so recapturing everything rewrites a few megabytes.
 
 ## Run it locally
 
