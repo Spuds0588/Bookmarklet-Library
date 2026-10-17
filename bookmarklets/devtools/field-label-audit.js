@@ -1,0 +1,9 @@
+/**
+ * @name Field label audit
+ * @category devtools
+ * @description Export every form field's label, binding and element ID as a Markdown table.
+ * @tags forms, audit, markdown
+ * @added 2026-10-17
+ * @featured false
+ */
+void function(){(function(){const a=window.location.href;let b=`# Application Field Audit\n`;b+=`**URL:** ${a}\n`,b+=`**Date:** ${new Date().toISOString()}\n\n`,b+=`| Label | Binding (FormControl/Name) | Element ID | Type | Component Path |\n`,b+=`|---|---|---|---|---|\n`;const c=document.querySelectorAll("input, select, textarea"),d=new Set;c.forEach(a=>{const c=a.getAttribute("formcontrolname")||a.getAttribute("controlname"),d=a.id,e=a.name;if(!c&&!d&&!e)return;let f="";if(d){const a=document.querySelector(`label[data-label-for="${d}"], label[for="${d}"]`);a&&(f=a.innerText)}if(!f){const b=a.closest("label");if(b){const a=b.cloneNode(!0),c=a.querySelector("input, select, textarea");c&&c.remove(),f=a.innerText}}let g=[],h=a.parentElement;for(;h&&h!==document.body;){const a=h.tagName.toLowerCase();a.startsWith("app-")?g.unshift(a):h.id&&h.id.toUpperCase().includes("SECTION")&&g.unshift(h.id),h=h.parentElement}const i=g.join(" > ")||"Root";f=f.replace(/(\r\n|\n|\r)/gm," ").replace(/\|/g,"-").trim();const j="input"===a.tagName.toLowerCase()?a.type:a.tagName.toLowerCase();b+=`| ${f||"*Inferred*"} | ${c||e||"*None*"} | ${d||"*None*"} | ${j} | ${i} |\n`});const e=new Blob([b],{type:"text/markdown;charset=utf-8;"}),f=document.createElement("a"),g=window.location.pathname.replace(/[^a-z0-9]/gi,"_").toLowerCase();f.download=`field_audit${g}_${Date.now()}.md`,f.href=URL.createObjectURL(e),f.style.display="none",document.body.appendChild(f),f.click(),document.body.removeChild(f),URL.revokeObjectURL(f.href),console.log("Audit complete. Markdown file generated.")})()}();
