@@ -13,6 +13,7 @@
 - [ ] Run `.github/workflows/votes.yml` once (Actions → Tally votes → Run workflow) so the issue and its 60 comments exist; until then the page hides the thumbs because there is nothing to link to.
 - [ ] Pin the **Tool votes** issue so people can find it from the repo page.
 - [ ] GitHub disables scheduled workflows after 60 days without commits; if the counts freeze, run the workflow by hand.
+- [ ] If `main` ever gets branch protection, the tally job needs a bypass or its `git push` will fail and the counts will stop updating.
 - [ ] Voting needs a GitHub account by design. If that proves too high a fence, the alternative is a small counter API, which adds a third-party dependency and is easy to game.
 
 ## Nice to have, only if it earns its place
