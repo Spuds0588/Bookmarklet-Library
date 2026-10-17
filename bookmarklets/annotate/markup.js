@@ -1,5 +1,5 @@
 /**
- * @name Screenshot markup
+ * @name 🖼️ Screenshot markup
  * @category annotate
  * @description Capture the tab, then crop and mark it up with arrows, boxes, numbers and labels before saving.
  * @tags screenshot, annotate, arrows, steps

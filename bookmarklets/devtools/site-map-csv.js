@@ -1,5 +1,5 @@
 /**
- * @name Site map to CSV
+ * @name 🗺️ Site map to CSV
  * @category devtools
  * @description Export every internal link on the page to a CSV.
  * @tags links, csv, crawl, seo

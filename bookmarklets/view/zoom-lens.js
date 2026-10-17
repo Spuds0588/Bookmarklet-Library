@@ -1,5 +1,5 @@
 /**
- * @name Zoom lens
+ * @name 🔭 Zoom lens
  * @category view
  * @description Magnify a region of the page in place while you move the pointer.
  * @tags zoom, magnify, accessibility

@@ -1,5 +1,5 @@
 /**
- * @name Record screen + camera
+ * @name 🎛️ Record screen + camera
  * @category capture
  * @description Record screen and camera together with a small PiP control panel.
  * @tags record, screen, camera, video

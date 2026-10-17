@@ -1,5 +1,5 @@
 /**
- * @name Blur an element
+ * @name 🌫️ Blur an element
  * @category privacy
  * @description Click elements to blur them; adjust the blur radius with the arrow keys.
  * @tags redact, blur, privacy

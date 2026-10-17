@@ -1,5 +1,5 @@
 /**
- * @name Export local storage
+ * @name 🗃️ Export local storage
  * @category devtools
  * @description Dump every local storage key for this domain into a readable page.
  * @tags localstorage, export, debug

@@ -1,5 +1,5 @@
 /**
- * @name Save clipboard as .html
+ * @name 🌐 Save clipboard as .html
  * @category files
  * @description Download the clipboard text as an HTML file.
  * @tags clipboard, html, file

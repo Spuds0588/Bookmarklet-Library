@@ -1,5 +1,5 @@
 /**
- * @name Replace text on page
+ * @name 🔁 Replace text on page
  * @category text
  * @description Find and replace text inside the page's inputs and textareas.
  * @tags find, replace, forms

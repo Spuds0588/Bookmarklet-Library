@@ -1,5 +1,5 @@
 /**
- * @name Generate password
+ * @name 🔐 Generate password
  * @category text
  * @description Generate a strong password and copy it to the clipboard.
  * @tags password, security, generate

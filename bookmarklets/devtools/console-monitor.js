@@ -1,5 +1,5 @@
 /**
- * @name Console monitor
+ * @name 🖥️ Console monitor
  * @category devtools
  * @description Show console logs in a floating panel without opening DevTools.
  * @tags console, logs, debug

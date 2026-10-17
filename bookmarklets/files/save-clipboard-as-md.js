@@ -1,5 +1,5 @@
 /**
- * @name Save clipboard as .md
+ * @name 📄 Save clipboard as .md
  * @category files
  * @description Download the clipboard text as a Markdown file.
  * @tags clipboard, markdown, file

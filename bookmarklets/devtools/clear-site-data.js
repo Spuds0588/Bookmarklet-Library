@@ -1,5 +1,5 @@
 /**
- * @name Clear cookies and cache
+ * @name 🧹 Clear cookies and cache
  * @category devtools
  * @description Clear local storage, cookies and cache for this site, then reload.
  * @tags cookies, cache, reset, storage

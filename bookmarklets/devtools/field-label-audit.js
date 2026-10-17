@@ -1,5 +1,5 @@
 /**
- * @name Field label audit
+ * @name 🏷️ Field label audit
  * @category devtools
  * @description Export every form field's label, binding and element ID as a Markdown table.
  * @tags forms, audit, markdown

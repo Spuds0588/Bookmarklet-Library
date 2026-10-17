@@ -1,5 +1,5 @@
 /**
- * @name Web Zoom in PiP
+ * @name 🔬 Web Zoom in PiP
  * @category view
  * @description Move the Zoom web client into a picture-in-picture window.
  * @tags zoom, pip, meetings

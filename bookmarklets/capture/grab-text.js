@@ -1,5 +1,5 @@
 /**
- * @name Grab text from screen
+ * @name 👁️ Grab text from screen
  * @category capture
  * @description Drag over part of the screen to OCR it and copy the text to the clipboard.
  * @tags ocr, text, copy, screenshot

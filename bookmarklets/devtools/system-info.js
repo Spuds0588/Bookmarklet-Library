@@ -1,5 +1,5 @@
 /**
- * @name System info for tickets
+ * @name 📋 System info for tickets
  * @category devtools
  * @description Collect browser, screen and device details into a copyable support report.
  * @tags support, diagnostics, system

@@ -1,5 +1,5 @@
 /**
- * @name Tab screenshot
+ * @name 📸 Tab screenshot
  * @category capture
  * @description Capture the visible tab and download it as a PNG named after the page.
  * @tags screenshot, png, tab

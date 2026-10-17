@@ -1,5 +1,5 @@
 /**
- * @name Replace ads with placeholders
+ * @name 🧽 Replace ads with placeholders
  * @category view
  * @description Swap ad slots for neutral gray blocks so screenshots look clean.
  * @tags ads, screenshot, clean

@@ -1,5 +1,5 @@
 /**
- * @name Page to Markdown
+ * @name 📝 Page to Markdown
  * @category text
  * @description Convert the page content to Markdown and download it.
  * @tags markdown, convert, export

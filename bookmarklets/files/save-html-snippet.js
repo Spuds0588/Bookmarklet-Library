@@ -1,5 +1,5 @@
 /**
- * @name Save HTML snippet
+ * @name 🧬 Save HTML snippet
  * @category files
  * @description Paste an HTML snippet into a modal and download it as a file.
  * @tags html, snippet, file

@@ -1,5 +1,5 @@
 /**
- * @name Social link preview
+ * @name 🔗 Social link preview
  * @category view
  * @description Preview how this page's Open Graph card looks when shared.
  * @tags open graph, social, preview

@@ -1,5 +1,5 @@
 /**
- * @name Audio player in PiP
+ * @name 🎧 Audio player in PiP
  * @category view
  * @description Move the page's audio player into a floating picture-in-picture window.
  * @tags audio, pip, player

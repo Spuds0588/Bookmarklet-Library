@@ -1,5 +1,5 @@
 /**
- * @name Advanced find
+ * @name 🔍 Advanced find
  * @category text
  * @description Open a floating find bar that highlights every match on the page.
  * @tags find, search, highlight

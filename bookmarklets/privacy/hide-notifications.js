@@ -1,5 +1,5 @@
 /**
- * @name Hide notifications
+ * @name 🔕 Hide notifications
  * @category privacy
  * @description Hide toast and notification overlays before taking a screenshot.
  * @tags notifications, toast, clean screenshot

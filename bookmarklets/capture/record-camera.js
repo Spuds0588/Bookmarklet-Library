@@ -1,5 +1,5 @@
 /**
- * @name Record camera
+ * @name 🎥 Record camera
  * @category capture
  * @description Record your camera from a floating picture-in-picture window.
  * @tags record, camera, video

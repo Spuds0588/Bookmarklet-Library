@@ -1,5 +1,5 @@
 /**
- * @name Peek HTML
+ * @name 🧐 Peek HTML
  * @category devtools
  * @description Render the HTML on your clipboard in a sandboxed overlay.
  * @tags html, preview, sandbox

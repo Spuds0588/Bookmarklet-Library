@@ -1,5 +1,5 @@
 /**
- * @name Enable API doc export
+ * @name 🧰 Enable API doc export
  * @category devtools
  * @description Unlock the export button in Stoplight API docs.
  * @tags api, docs, export

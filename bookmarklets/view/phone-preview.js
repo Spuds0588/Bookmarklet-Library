@@ -1,5 +1,5 @@
 /**
- * @name Preview as phone
+ * @name 📱 Preview as phone
  * @category view
  * @description Show the current page inside a phone-sized frame.
  * @tags responsive, mobile, preview

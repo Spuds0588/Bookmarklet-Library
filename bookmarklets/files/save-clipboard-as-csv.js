@@ -1,5 +1,5 @@
 /**
- * @name Save clipboard as .csv
+ * @name 📊 Save clipboard as .csv
  * @category files
  * @description Download the clipboard text as a CSV file.
  * @tags clipboard, csv, file

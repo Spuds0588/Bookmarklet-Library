@@ -1,5 +1,5 @@
 /**
- * @name iFrame tester
+ * @name 🪟 iFrame tester
  * @category devtools
  * @description Load any URL in an iframe overlay to test embedding.
  * @tags iframe, embed, test

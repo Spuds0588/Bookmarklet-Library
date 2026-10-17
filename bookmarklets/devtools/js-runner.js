@@ -1,5 +1,5 @@
 /**
- * @name JS runner
+ * @name ⚙️ JS runner
  * @category devtools
  * @description Run snippets against the current page from a floating console.
  * @tags javascript, console, snippets

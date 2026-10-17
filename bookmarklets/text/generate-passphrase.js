@@ -1,5 +1,5 @@
 /**
- * @name Generate passphrase
+ * @name 🔑 Generate passphrase
  * @category text
  * @description Generate a four-word passphrase and copy it to the clipboard.
  * @tags passphrase, security, generate

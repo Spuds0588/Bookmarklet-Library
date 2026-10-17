@@ -1,5 +1,5 @@
 /**
- * @name Read aloud
+ * @name 🔊 Read aloud
  * @category text
  * @description Read the page aloud with adjustable voice, pitch and speed.
  * @tags text to speech, read, audio

@@ -1,5 +1,5 @@
 /**
- * @name Hide email addresses
+ * @name 🙈 Hide email addresses
  * @category privacy
  * @description Redact every email address on the page for screenshots.
  * @tags redact, email, privacy

@@ -1,5 +1,5 @@
 /**
- * @name Tab screenshot + annotate
+ * @name 🖍️ Tab screenshot + annotate
  * @category capture
  * @description Capture the current tab, then crop and mark it up in the same window.
  * @tags screenshot, annotate, crop

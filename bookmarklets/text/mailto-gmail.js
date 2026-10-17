@@ -1,5 +1,5 @@
 /**
- * @name mailto → Gmail
+ * @name ✉️ mailto → Gmail
  * @category text
  * @description Make mailto links open a Gmail compose window instead.
  * @tags email, gmail, mailto

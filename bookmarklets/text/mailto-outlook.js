@@ -1,5 +1,5 @@
 /**
- * @name mailto → Outlook
+ * @name 📧 mailto → Outlook
  * @category text
  * @description Make mailto links open an Outlook compose window instead.
  * @tags email, outlook, mailto

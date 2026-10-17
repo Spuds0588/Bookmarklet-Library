@@ -1,5 +1,5 @@
 /**
- * @name Join Zoom in browser
+ * @name 🎦 Join Zoom in browser
  * @category view
  * @description Turn a Zoom meeting link into a browser join URL.
  * @tags zoom, meeting, join

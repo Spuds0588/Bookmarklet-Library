@@ -1,5 +1,5 @@
 /**
- * @name Record actions
+ * @name ⏺️ Record actions
  * @category devtools
  * @description Record clicks and inputs as selectors you can replay or paste into a test.
  * @tags automation, selectors, record

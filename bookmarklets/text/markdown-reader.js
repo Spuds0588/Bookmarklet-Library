@@ -1,5 +1,5 @@
 /**
- * @name Read Markdown
+ * @name 📖 Read Markdown
  * @category text
  * @description Render the page's Markdown source with GitHub styling.
  * @tags markdown, reader, render

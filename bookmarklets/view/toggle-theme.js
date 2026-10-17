@@ -1,5 +1,5 @@
 /**
- * @name Toggle light / dark
+ * @name 🌓 Toggle light / dark
  * @category view
  * @description Force the page into the opposite color scheme.
  * @tags dark mode, theme, color scheme

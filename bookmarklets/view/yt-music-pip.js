@@ -1,5 +1,5 @@
 /**
- * @name YouTube Music controller
+ * @name 🎵 YouTube Music controller
  * @category view
  * @description Control YouTube Music from a compact picture-in-picture player.
  * @tags youtube music, pip, player

@@ -1,5 +1,5 @@
 /**
- * @name Save clipboard as .png
+ * @name 🏞️ Save clipboard as .png
  * @category files
  * @description Download the image on your clipboard as a PNG file.
  * @tags clipboard, image, png, file

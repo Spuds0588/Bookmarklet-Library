@@ -1,5 +1,5 @@
 /**
- * @name iFrame to new tab
+ * @name ↗️ iFrame to new tab
  * @category devtools
  * @description Open the page's iframe source in a new tab.
  * @tags iframe, tab, open

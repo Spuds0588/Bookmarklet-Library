@@ -1,5 +1,5 @@
 /**
- * @name Video picture-in-picture
+ * @name 📺 Video picture-in-picture
  * @category view
  * @description Send the page's first video into a floating window.
  * @tags video, pip, picture in picture

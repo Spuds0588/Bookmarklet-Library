@@ -1,5 +1,5 @@
 /**
- * @name Save clipboard as .txt
+ * @name 📃 Save clipboard as .txt
  * @category files
  * @description Download the clipboard text as a plain text file.
  * @tags clipboard, text, file

@@ -1,5 +1,5 @@
 /**
- * @name Record current tab
+ * @name 🎬 Record current tab
  * @category capture
  * @description Record the tab with audio in up to 4K 60fps, saved to disk when finished.
  * @tags record, screen, video, mp4

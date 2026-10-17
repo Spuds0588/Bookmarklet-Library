@@ -1,5 +1,5 @@
 /**
- * @name Clipboard to code block
+ * @name 🧩 Clipboard to code block
  * @category files
  * @description Escape clipboard text and copy a styled, collapsible code block back to the clipboard.
  * @tags code, html, clipboard

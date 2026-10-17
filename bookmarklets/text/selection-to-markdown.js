@@ -1,5 +1,5 @@
 /**
- * @name Element to Markdown
+ * @name 🧾 Element to Markdown
  * @category text
  * @description Click one element to convert just that element to Markdown.
  * @tags markdown, convert, element

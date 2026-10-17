@@ -15,17 +15,21 @@ const sourceDir = path.join(root, "bookmarklets");
 const catalogPath = path.join(root, "data", "catalog.json");
 
 const CATEGORIES = [
-  ["capture", "Capture", "Screenshots, screen recording, OCR"],
-  ["annotate", "Annotate", "Mark up and draw over pages"],
-  ["text", "Text", "Find, replace, read and convert text"],
-  ["files", "Files", "Clipboard to files, snippets and exports"],
-  ["devtools", "Dev tools", "Inspect URLs, storage, DOM and console"],
-  ["view", "View", "Preview, magnify, declutter, picture-in-picture"],
-  ["privacy", "Privacy", "Redact what should not be seen"],
+  ["capture", "📸", "Capture", "Screenshots, screen recording, OCR"],
+  ["annotate", "🖍️", "Annotate", "Mark up and draw over pages"],
+  ["text", "🔤", "Text", "Find, replace, read and convert text"],
+  ["files", "🗂️", "Files", "Clipboard to files, snippets and exports"],
+  ["devtools", "🛠️", "Dev tools", "Inspect URLs, storage, DOM and console"],
+  ["view", "👀", "View", "Preview, magnify, declutter, picture-in-picture"],
+  ["privacy", "🕶️", "Privacy", "Redact what should not be seen"],
 ];
 const categoryIndex = new Map(CATEGORIES.map(([id], i) => [id, i]));
 
 const FIELDS = ["name", "category", "description", "tags", "added", "featured"];
+
+// Install links are named after the tool, so a tool without an emoji stands out
+// as a mistake in the catalog rather than a deliberate plain label.
+const EMOJI = /^\p{Extended_Pictographic}|^[\u2190-\u21FF\u2300-\u27BF]/u;
 
 function parseSource(slug, file, text) {
   const match = text.match(/^\/\*\*([\s\S]*?)\*\//);
@@ -45,6 +49,7 @@ function parseSource(slug, file, text) {
     throw new Error(`${file}: category does not match its folder`);
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(meta.added)) throw new Error(`${file}: @added must be YYYY-MM-DD`);
+  if (!EMOJI.test(meta.name)) throw new Error(`${file}: @name must start with an emoji or symbol`);
 
   return {
     slug,
@@ -84,8 +89,9 @@ const items = await readItems();
 if (items.length === 0) throw new Error("no bookmarklets found");
 if (items.filter((item) => item.featured).length > 1) throw new Error("only one featured item is supported");
 
-const categories = CATEGORIES.map(([id, label, blurb]) => ({
+const categories = CATEGORIES.map(([id, emoji, label, blurb]) => ({
   id,
+  emoji,
   label,
   blurb,
   count: items.filter((item) => item.category === id).length,

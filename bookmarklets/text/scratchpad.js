@@ -1,5 +1,5 @@
 /**
- * @name Scratchpad
+ * @name 🗒️ Scratchpad
  * @category text
  * @description Open a scratchpad with Markdown preview in a new tab.
  * @tags notes, markdown, scratchpad

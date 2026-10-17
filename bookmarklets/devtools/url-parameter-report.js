@@ -1,5 +1,5 @@
 /**
- * @name URL parameter report
+ * @name 📈 URL parameter report
  * @category devtools
  * @description Break the current URL's query string into a readable table.
  * @tags url, query string, params

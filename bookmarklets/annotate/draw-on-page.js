@@ -1,5 +1,5 @@
 /**
- * @name Draw on page
+ * @name ✍️ Draw on page
  * @category annotate
  * @description Draw freehand on a transparent layer over the page; press Escape to clear.
  * @tags draw, canvas, annotate

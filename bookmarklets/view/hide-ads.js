@@ -1,5 +1,5 @@
 /**
- * @name Hide ads
+ * @name 🚫 Hide ads
  * @category view
  * @description Replace ad slots with background-colored blocks that match the page.
  * @tags ads, declutter, screenshot

@@ -1,5 +1,5 @@
 /**
- * @name New Excalidraw room
+ * @name 🎨 New Excalidraw room
  * @category files
  * @description Open a fresh collaborative Excalidraw canvas in a new tab.
  * @tags excalidraw, whiteboard, diagram

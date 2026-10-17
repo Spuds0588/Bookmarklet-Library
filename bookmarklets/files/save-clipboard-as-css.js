@@ -1,5 +1,5 @@
 /**
- * @name Save clipboard as .css
+ * @name 💅 Save clipboard as .css
  * @category files
  * @description Download the clipboard text as a stylesheet.
  * @tags clipboard, css, file

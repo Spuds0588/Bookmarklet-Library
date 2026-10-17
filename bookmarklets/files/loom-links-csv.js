@@ -1,5 +1,5 @@
 /**
- * @name Loom library to CSV
+ * @name 🎞️ Loom library to CSV
  * @category files
  * @description Export the title and URL of every Loom video loaded on the page.
  * @tags loom, csv, export, video

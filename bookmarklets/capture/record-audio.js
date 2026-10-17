@@ -1,5 +1,5 @@
 /**
- * @name Record audio
+ * @name 🎙️ Record audio
  * @category capture
  * @description Record narration from a PiP window and save it as an M4A file.
  * @tags record, audio, narration, m4a

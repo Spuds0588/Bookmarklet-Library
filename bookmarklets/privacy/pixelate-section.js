@@ -1,5 +1,5 @@
 /**
- * @name Pixelate a section
+ * @name 🧱 Pixelate a section
  * @category privacy
  * @description Drag over a region to pixelate it and copy the redacted image.
  * @tags redact, pixelate, privacy, screenshot

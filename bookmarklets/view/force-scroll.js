@@ -1,5 +1,5 @@
 /**
- * @name Force scroll
+ * @name ⬇️ Force scroll
  * @category view
  * @description Remove overflow locks so pages with frozen scroll can move again.
  * @tags scroll, overflow, unlock
