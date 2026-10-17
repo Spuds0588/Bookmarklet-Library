@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Northwind Field Guide — Keeping a field team in the loop</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #fbfaf8;
+    color: #17181a;
+    font: 16px/1.6 Georgia, "Times New Roman", serif;
+    caret-color: transparent;
+  }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  a { color: #17181a; }
+  .top {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px; padding: 18px 40px; border-bottom: 1px solid #dcd9d3;
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  .top nav { display: flex; gap: 20px; }
+  .top nav a { text-decoration: none; }
+  main { max-width: 720px; margin: 0 auto; padding: 44px 40px 120px; }
+  .kicker {
+    margin: 0 0 18px; font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #6f6a61;
+  }
+  h1 { margin: 0; font-size: 46px; line-height: 1.05; letter-spacing: -0.025em; font-weight: 400; }
+  .byline { margin: 16px 0 0; font-size: 13px; color: #6f6a61; }
+  .byline a { color: #6f6a61; }
+  h2 { margin: 44px 0 12px; font-size: 24px; font-weight: 400; letter-spacing: -0.01em; }
+  p { margin: 0 0 16px; }
+  .ad {
+    margin: 30px 0; padding: 18px 20px; border: 1px solid #17181a;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px;
+  }
+  .ad span { font-size: 9px; letter-spacing: 0.16em; color: #6f6a61; display: block; margin-bottom: 4px; }
+  .ad p { margin: 0; }
+  .ad a { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .ad-inline { border: 1px dashed #b9b3a8; padding: 14px; margin: 24px 0; font-size: 12px; color: #6f6a61; text-align: center; }
+  table { width: 100%; border-collapse: collapse; margin: 18px 0 26px; font-size: 13.5px; }
+  th, td { text-align: left; padding: 9px 10px 9px 0; border-bottom: 1px solid #dcd9d3; }
+  th { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #6f6a61; }
+  td a { text-decoration: none; border-bottom: 1px solid #c9c4b9; }
+  form { display: grid; gap: 14px; margin: 22px 0 8px; }
+  label { display: grid; gap: 5px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #6f6a61; }
+  input, textarea {
+    font: 15px/1.5 Georgia, serif; padding: 9px 11px; color: #17181a;
+    background: #fff; border: 1px solid #c9c4b9;
+  }
+  textarea { min-height: 76px; resize: vertical; }
+  .embed { border: 1px solid #dcd9d3; background: #fff; margin: 26px 0; }
+  .embed iframe { display: block; width: 100%; height: 130px; border: 0; }
+  .media { display: flex; gap: 20px; align-items: flex-start; margin: 26px 0; }
+  video { width: 280px; height: 158px; background: #17181a; }
+  .media p { margin: 0; font-size: 13px; color: #6f6a61; }
+  .toast-wrapper {
+    position: fixed; right: 28px; bottom: 24px; width: 280px;
+    padding: 13px 16px; background: #17181a; color: #fbfaf8;
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11px;
+    letter-spacing: 0.04em; box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+  }
+  .toast-wrapper b { display: block; font-size: 9px; letter-spacing: 0.16em; color: #b8b2a6; margin-bottom: 4px; }
+  footer { border-top: 1px solid #dcd9d3; padding: 24px 40px 40px; font-size: 12px; color: #6f6a61; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #121212; color: #f2f2f2; }
+    a { color: #f2f2f2; }
+    .top, .embed, footer, .ad, .ad-inline, th, td { border-color: #3a3a3a; }
+    .kicker, .byline, .byline a, .ad span, .ad-inline, th, label, footer { color: #a8a8a8; }
+    input, textarea { background: #1c1c1c; color: #f2f2f2; border-color: #3a3a3a; }
+    .toast-wrapper { background: #f2f2f2; color: #121212; }
+    .toast-wrapper b { color: #555; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <span>Northwind / Field Guide</span>
+  <nav>
+    <a href="/docs">Docs</a>
+    <a href="/pricing?plan=team&amp;utm_source=demo">Pricing</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+</header>
+
+<main>
+  <p class="kicker">Chapter 03 · Retention</p>
+  <h1>Keeping a field team in the loop</h1>
+  <p class="byline">By Dana Whitfield · Updated March 4, 2026 · <a href="mailto:dana@northwind.example">dana@northwind.example</a></p>
+
+  <div class="ad ad-slot" id="ad-slot">
+    <div>
+      <span>Sponsored</span>
+      <p>Ship faster with CloudTeam — a 14-day demo trial.</p>
+    </div>
+    <a href="https://example.com/cloudteam?utm_source=demo">Start trial</a>
+  </div>
+
+  <p>Every crew runs on a demo of the same routine: check in, hand off, write it down. The teams that keep their notes are the ones that keep their people. This page is a demo of that routine, written the way a real handbook reads.</p>
+  <p>Ask the demo team for the demo script, or write to <a href="mailto:crew@northwind.example">crew@northwind.example</a>. Press questions go to <a href="mailto:press@northwind.example">press@northwind.example</a> and are answered on Fridays.</p>
+
+  <div class="ad-inline ad-container">Advertisement · Field kit sale ends Sunday</div>
+
+  <h2>The handoff checklist</h2>
+  <table>
+    <thead><tr><th>Step</th><th>Owner</th><th>Link</th></tr></thead>
+    <tbody>
+      <tr><td>Open the demo route</td><td>Dispatch</td><td><a href="/routes/demo">/routes/demo</a></td></tr>
+      <tr><td>Log the demo visit</td><td>Field lead</td><td><a href="/visits/new?site=demo">/visits/new</a></td></tr>
+      <tr><td>Hand off notes</td><td>Night crew</td><td><a href="/notes/handoff">/notes/handoff</a></td></tr>
+      <tr><td>Close the demo loop</td><td>Dana</td><td><a href="/retro/demo">/retro/demo</a></td></tr>
+    </tbody>
+  </table>
+
+  <p>A good handoff note names the demo site, the person who owns it, and the one thing that changed. Keep it to three lines and the next crew will read it.</p>
+
+  <h2>Log a visit</h2>
+  <form>
+    <label>Region <input value="demo region — north" /></label>
+    <label>Contact <input value="demo@northwind.example" /></label>
+    <label>Notes <textarea>Ask the demo team for the demo script. The demo ends on Friday.</textarea></label>
+  </form>
+
+  <figure class="embed">
+    <iframe title="Embedded report" src="/embed"></iframe>
+  </figure>
+
+  <div class="media">
+    <div>
+      <video controls muted loop preload="auto" poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='158'%3E%3Crect width='280' height='158' fill='%2317181a'/%3E%3Cpath d='M124 62l36 17-36 17z' fill='%23fbfaf8'/%3E%3C/svg%3E" src="/demo.mp4"></video>
+      <audio controls preload="auto" src="/demo.mp3"></audio>
+    </div>
+    <p>Field walkthrough, 2 min. Recorded on the demo route in March. The player and the audio clip work with the picture-in-picture tools in the library.</p>
+  </div>
+
+  <h2 id="faq">Questions the demo raised</h2>
+  <p><b>How long does a demo run?</b> One shift, sometimes two. The demo ends when the notes are written.</p>
+  <p><b>Who reads the notes?</b> The next crew, and Dana on Monday. Send corrections to <a href="mailto:corrections@northwind.example">corrections@northwind.example</a>.</p>
+  <p><b>Can the demo be repeated?</b> Yes, as long as the headline says demo somewhere in the copy.</p>
+</main>
+
+<footer>Northwind Field Guide · Demo page built for screenshots · <a href="/colophon">Colophon</a></footer>
+
+<div class="toast-wrapper" id="toast"><b>Notification</b>3 new demo requests are waiting for review.</div>
+
+<script>
+  try {
+    localStorage.setItem("northwind:demo", JSON.stringify({ route: "demo", visits: 42, owner: "dana@northwind.example" }));
+    localStorage.setItem("northwind:plan", "team");
+    sessionStorage.setItem("northwind:tab", "field-guide");
+  } catch {}
+</script>
+</body>
+</html>

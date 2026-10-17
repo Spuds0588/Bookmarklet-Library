@@ -11,8 +11,10 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const catalog = JSON.parse(await readFile(path.join(root, "data", "catalog.json"), "utf8"));
 
 const FORBIDDEN = /arive|wizni|lender portal|freshdesk/i;
+const EMOJI = /^(?:\p{Extended_Pictographic}|[\u2190-\u21FF\u2300-\u27BF])/u;
 const problems = [];
 const seenNames = new Set();
+const slugs = new Set(catalog.items.map((item) => item.slug));
 
 for (const item of catalog.items) {
   const source = await readFile(path.join(root, item.source), "utf8");
@@ -34,6 +36,7 @@ for (const item of catalog.items) {
   if (seenNames.has(item.name)) problems.push(`${item.slug}: duplicate name "${item.name}"`);
   seenNames.add(item.name);
   if (item.bytes !== Buffer.byteLength(body)) problems.push(`${item.slug}: byte count mismatch`);
+  if (!EMOJI.test(item.name)) problems.push(`${item.slug}: name has no leading emoji`);
 }
 
 let votes = null;
@@ -44,11 +47,41 @@ try {
 }
 
 if (votes) {
-  const slugs = new Set(catalog.items.map((item) => item.slug));
   for (const [slug, vote] of Object.entries(votes.tools ?? {})) {
     if (!slugs.has(slug)) problems.push(`votes: "${slug}" is not in the catalog`);
     if (!Number.isInteger(vote.up) || vote.up < 0) problems.push(`votes: ${slug} up count is not a non-negative integer`);
     if (!Number.isInteger(vote.down) || vote.down < 0) problems.push(`votes: ${slug} down count is not a non-negative integer`);
+  }
+}
+
+let shots = null;
+try {
+  shots = JSON.parse(await readFile(path.join(root, "data", "screenshots.json"), "utf8"));
+} catch {
+  problems.push("data/screenshots.json is missing or is not JSON (run node scripts/shots.mjs)");
+}
+
+if (shots) {
+  for (const item of catalog.items) {
+    const shot = shots.tools?.[item.slug];
+    if (!shot) {
+      problems.push(`screenshots: ${item.slug} has no capture (run node scripts/shots.mjs ${item.slug})`);
+      continue;
+    }
+    if (typeof shot.changed !== "boolean") problems.push(`screenshots: ${item.slug} is missing its changed flag`);
+    try {
+      const png = await readFile(path.join(root, shot.file ?? ""));
+      const header = png.subarray(0, 8).toString("hex");
+      if (header !== "89504e470d0a1a0a") problems.push(`screenshots: ${item.slug} is not a PNG`);
+      else if (png.readUInt32BE(16) !== shots.width || png.readUInt32BE(20) !== shots.height) {
+        problems.push(`screenshots: ${item.slug} is ${png.readUInt32BE(16)}x${png.readUInt32BE(20)}, expected ${shots.width}x${shots.height}`);
+      }
+    } catch {
+      problems.push(`screenshots: ${item.slug} points at a missing file (${shot.file})`);
+    }
+  }
+  for (const slug of Object.keys(shots.tools ?? {})) {
+    if (!slugs.has(slug)) problems.push(`screenshots: "${slug}" is not in the catalog`);
   }
 }
 
@@ -64,5 +97,6 @@ if (problems.length) {
   process.exit(1);
 }
 console.log(
-  `verified ${catalog.items.length} bookmarklets across ${catalog.categories.length} categories, ${Object.keys(votes?.tools ?? {}).length} vote rows`,
+  `verified ${catalog.items.length} bookmarklets across ${catalog.categories.length} categories, ` +
+    `${Object.keys(votes?.tools ?? {}).length} vote rows, ${Object.keys(shots?.tools ?? {}).length} screenshots`,
 );

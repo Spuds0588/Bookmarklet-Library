@@ -6,6 +6,7 @@
     "build": "node scripts/build.mjs",
     "check": "node scripts/build.mjs --check",
     "verify": "node scripts/verify.mjs",
+    "shots": "node scripts/shots.mjs",
     "serve": "python3 -m http.server 4173"
   }
 }
