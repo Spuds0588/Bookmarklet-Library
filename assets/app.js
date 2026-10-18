@@ -310,9 +310,70 @@ const HOW = {
 };
 
 let detailReturnFocus = null;
+let detailOrigin = null;
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)");
+const DETAIL_OPEN = { clipPath: "inset(0px 0px 0px 0px)", opacity: 1 };
 
 function hashSlug() {
   return location.hash.match(/^#t\/(.+)$/)?.[1] ?? null;
+}
+
+// Where the panel should grow out of: the card's screenshot when it has one,
+// otherwise the card itself, otherwise the featured panel.
+function originFor(slug) {
+  const key = CSS.escape(slug);
+  const card = document.querySelector(`[data-card="${key}"]`);
+  const shot = card?.querySelector(".card-shot");
+  if (shot?.getBoundingClientRect().width) return shot;
+  if (card) return card;
+  return document.querySelector(`.featured-shot[data-open="${key}"]`);
+}
+
+function clipTo(element) {
+  const rect = element?.getBoundingClientRect?.();
+  if (!rect || rect.width < 4 || rect.height < 4) return null;
+  const top = Math.max(0, Math.round(rect.top));
+  const left = Math.max(0, Math.round(rect.left));
+  const right = Math.max(0, Math.round(innerWidth - rect.right));
+  const bottom = Math.max(0, Math.round(innerHeight - rect.bottom));
+  return `inset(${top}px ${right}px ${bottom}px ${left}px)`;
+}
+
+// The card grows into the page instead of the page flashing into place. The
+// panel is already laid out full screen, so the clip is what moves: no text is
+// stretched on the way.
+function animateIn(slug, origin) {
+  if (REDUCED.matches) return;
+  const from = clipTo(origin ?? originFor(slug));
+  if (!from) {
+    nodes.detail.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 140, easing: "ease-out" });
+    return;
+  }
+  nodes.detail.animate([{ clipPath: from, opacity: 0.6 }, DETAIL_OPEN], {
+    duration: 340,
+    easing: "cubic-bezier(0.2, 0.8, 0.25, 1)",
+  });
+  nodes.detailScroll.animate(
+    [{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }],
+    { duration: 240, delay: 90, easing: "ease-out", fill: "backwards" },
+  );
+}
+
+function animateOut(slug, done) {
+  if (REDUCED.matches) return done();
+  const to = clipTo(detailOrigin ?? originFor(slug));
+  if (!to) return done();
+  const shrink = nodes.detail.animate([DETAIL_OPEN, { clipPath: to, opacity: 0.4 }], {
+    duration: 260,
+    easing: "cubic-bezier(0.4, 0, 0.7, 0.3)",
+    fill: "forwards",
+  });
+  nodes.detailScroll.animate([{ opacity: 1 }, { opacity: 0 }], {
+    duration: 160,
+    easing: "ease-in",
+    fill: "forwards",
+  });
+  shrink.finished.then(done, done);
 }
 
 function fillDetail(item) {
@@ -352,7 +413,7 @@ function fillDetail(item) {
            : shot.changed
              ? "The demo page after running the tool."
              : "Run on a demo page. This tool works outside the page, so the page itself looks unchanged.",
-       )}       </figcaption>`
+       )}</figcaption>`
     : `<div class="detail-shot-empty">
          <span class="detail-shot-emoji" aria-hidden="true">${esc(item.name.split(" ")[0])}</span>
          <p>${esc(reasonFor(shot).long)}</p>
@@ -360,13 +421,20 @@ function fillDetail(item) {
        </div>`;
 }
 
-function openDetail(slug, mode = "push") {
+function openDetail(slug, mode = "push", origin = null) {
   const item = state.items.find((entry) => entry.slug === slug);
   if (!item) return;
-  if (!state.detail) detailReturnFocus = document.activeElement;
+  if (!state.detail) {
+    detailReturnFocus = document.activeElement;
+    detailOrigin = origin;
+  }
   state.detail = slug;
   fillDetail(item);
   nodes.detail.hidden = false;
+  // A panel reopened mid-close still carries the outgoing shrink, which would
+  // otherwise finish and clip the fresh panel to the old card.
+  nodes.detail.getAnimations().forEach((animation) => animation.cancel());
+  nodes.detailScroll.getAnimations().forEach((animation) => animation.cancel());
   document.body.classList.add("has-detail");
   $("main").inert = true;
   $("footer").inert = true;
@@ -374,18 +442,25 @@ function openDetail(slug, mode = "push") {
   const target = `#t/${slug}`;
   if (mode === "push" && location.hash !== target) history.pushState(null, "", target);
   else if (mode === "replace") history.replaceState(null, "", target);
+  if (mode === "push") animateIn(slug, origin);
   nodes.detailClose.focus({ preventScroll: true });
 }
 
 function closeDetail() {
   if (!state.detail) return;
+  const slug = state.detail;
   state.detail = null;
-  nodes.detail.hidden = true;
   document.body.classList.remove("has-detail");
   $("main").inert = false;
   $("footer").inert = false;
   if (hashSlug()) history.replaceState(null, "", location.pathname + location.search);
   detailReturnFocus?.focus?.({ preventScroll: true });
+  animateOut(slug, () => {
+    // Reopened while the panel was shrinking: this close is stale.
+    if (state.detail) return;
+    nodes.detail.hidden = true;
+    nodes.detail.getAnimations().forEach((animation) => animation.cancel());
+  });
 }
 
 function stepDetail(delta) {
@@ -393,6 +468,11 @@ function stepDetail(delta) {
   const index = state.items.findIndex((entry) => entry.slug === state.detail);
   const next = state.items[(index + delta + state.items.length) % state.items.length];
   openDetail(next.slug, "replace");
+  // Stepping through tools keeps the panel where it is; only a card opening
+  // gets the grow-from-the-card animation.
+  if (!REDUCED.matches) {
+    nodes.detailScroll.animate([{ opacity: 0.35 }, { opacity: 1 }], { duration: 180, easing: "ease-out" });
+  }
 }
 
 /* Feedback -------------------------------------------------------------- */
@@ -560,7 +640,14 @@ function bindStaticEvents() {
 
     if (copy) return onCopy(copy.dataset.copy);
     if (vote) return toast("Opened GitHub — add 👍 or 👎 to the comment to count your vote.");
-    if (open) return openDetail(open.dataset.open);
+    if (open) {
+      // Grow from the picture, whichever control was clicked to get here.
+      const origin =
+        open.closest(".card-shot, .featured-shot") ??
+        open.closest(".card")?.querySelector(".card-shot") ??
+        open;
+      return openDetail(open.dataset.open, "push", origin);
+    }
     if (install) {
       event.preventDefault();
       return toast("Drag that button onto your bookmarks bar. A click would run it here, on the catalog.");
