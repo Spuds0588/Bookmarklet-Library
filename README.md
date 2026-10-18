@@ -1,8 +1,10 @@
 # Bookmarklet Library
 
+**[Open the library →](https://spuds0588.github.io/Bookmarklet-Library/)**
+
 A searchable catalog of small browser tools. Find one that does the job, drag it to your bookmarks bar, click it on any page. Nothing to install, no accounts, no extensions.
 
-60 bookmarklets across seven categories: capture, annotate, text, files, dev tools, view and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site.
+59 bookmarklets across seven categories: capture, annotate, text, files, dev tools, view and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site.
 
 ## Use it
 
@@ -20,7 +22,7 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 
 | Category | Examples |
 | --- | --- |
-| Capture | Tab screenshot, tab screenshot with annotation, OCR a screen region, record tab/camera/audio |
+| Capture | Tab screenshot, OCR a screen region, record tab/camera/audio, Loom links |
 | Annotate | Screenshot markup (arrows, boxes, numbered steps), freehand draw |
 | Text | Advanced find, find and replace on inputs, page to Markdown, read aloud, password generation |
 | Files | Clipboard to .md/.csv/.txt/.css/.html/.png, HTML snippet saver, Loom export |
@@ -68,7 +70,7 @@ Tools that only make sense once you have used them are driven with real input fi
 
 Tools that open a window are driven there too: the camera and audio recorders are photographed while recording, not sitting at "ready".
 
-Tools whose work never reaches the page get no image at all. Instead the manifest records why, and the card and detail view say it plainly: **Saves a file** (12 tools), **Copies to clipboard** (3), **Opens another site** (3), **Records your screen** (1), plus reads aloud, reloads the page, needs a certain page and works outside the page. A screenshot of an untouched demo page would be worse than no screenshot.
+Tools whose work never reaches the page get no image at all. Instead the manifest records why, and the tile shows the tool's own description with the reason underneath: **Saves a file** (12 tools), **Copies to clipboard** (3), **Opens another site** (3), **Records your screen** (1), plus reads aloud, reloads the page, needs a certain page and works outside the page. A screenshot of an untouched demo page would be worse than no screenshot, and a blank tile would say less than the sentence the tool already carries.
 
 Picture-in-picture windows live on the display rather than in the page, so the video and audio players are captured with a display running. Xvfb is enough and needs no admin rights, since it can start in a container:
 
@@ -102,6 +104,14 @@ GITHUB_TOKEN=<token with issues:write> node scripts/votes.mjs   # seed and tally
 node scripts/votes.mjs --offline                                # add rows for new tools, no network
 ```
 
+## The published site
+
+The catalog is served from `main` by GitHub Pages at <https://spuds0588.github.io/Bookmarklet-Library/>. There is no build action: `data/catalog.json`, `data/votes.json` and `data/screenshots.json` are committed and the page fetches them.
+
+Search engines get real markup rather than the rendered grid. `node scripts/build.mjs` writes two generated blocks into `index.html` between `<!-- tools:start -->` and `<!-- tools:end -->`: a `<noscript>` list of every tool with its description, and an `ItemList` of `SoftwareApplication` entries. `scripts/build.mjs --check` fails if those blocks, or the catalog, have drifted from the tool files. The rest of the head — canonical URL, Open Graph and Twitter cards, `WebSite` and `FAQPage` structured data — is hand-written, as are `robots.txt` and `sitemap.xml`.
+
+`?q=markdown` preselects the search box, which is the target advertised in the `SearchAction` structured data. Tool views deep-link as `#t/<slug>`.
+
 ## Repository layout
 
 ```
@@ -119,6 +129,7 @@ scripts/votes.mjs              seeds vote comments, counts reactions
 scripts/shots.mjs              runs tools in headless Chrome, captures screenshots
 scripts/verify.mjs             integrity checks
 .github/workflows/votes.yml    nightly vote tally
+robots.txt, sitemap.xml        what crawlers read
 ```
 
 ## Notes

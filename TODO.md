@@ -2,7 +2,8 @@
 
 ## Before flipping the repo public
 
-- [ ] Enable GitHub Pages on `main`, root folder. No build action is needed; `data/catalog.json` is committed.
+- [x] Repo is public and GitHub Pages serves `main`, root folder, at <https://spuds0588.github.io/Bookmarklet-Library/>. No build action is needed; `data/catalog.json` is committed.
+- [x] Page is crawlable without JavaScript: `build.mjs` writes a `<noscript>` tool list and `ItemList` structured data, with a canonical URL, Open Graph, Twitter cards, `WebSite` and `FAQPage` schema, `robots.txt` and `sitemap.xml`.
 - [ ] Open the published URL once and repeat the smoke test: search, chip filter, theme toggle, drag one tool, download a two-tool `bookmarks.html`.
 - [x] Confirm every ARIVE/Wizni tool was left out (`npm run verify` enforces this).
 - [ ] Scan `README.md` and the page copy after publishing, in case a screenshot or URL is more revealing than intended.
@@ -21,7 +22,7 @@
 ## Feedback (thumbs)
 
 - [x] GitHub Action route, built: one comment per tool on the **Tool votes** issue, 👍/👎 reactions counted by `scripts/votes.mjs` into `data/votes.json` on a nightly schedule. No server, no browser storage.
-- [ ] Run `.github/workflows/votes.yml` once (Actions → Tally votes → Run workflow) so the issue and its 60 comments exist; until then the page hides the thumbs because there is nothing to link to.
+- [ ] Run `.github/workflows/votes.yml` once (Actions → Tally votes → Run workflow) so the issue and its 59 comments exist; until then the page hides the thumbs because there is nothing to link to.
 - [ ] Pin the **Tool votes** issue so people can find it from the repo page.
 - [ ] GitHub disables scheduled workflows after 60 days without commits; if the counts freeze, run the workflow by hand.
 - [ ] If `main` ever gets branch protection, the tally job needs a bypass or its `git push` will fail and the counts will stop updating.
@@ -29,10 +30,12 @@
 
 ## Nice to have, only if it earns its place
 
-- [ ] Shareable filter state in the URL (`?q=markdown&cat=text`) so a search can be linked. Tool views already deep-link as `#t/<slug>`.
+- [x] Shareable search: `?q=markdown` preselects the box, the target advertised in the `SearchAction` schema. Tool views deep-link as `#t/<slug>`.
+- [ ] Carry the category in the URL too (`?q=markdown&cat=text`) so a filtered view can be linked as one thing.
 - [ ] A search that also matches emoji, so typing `📸` finds the capture tools.
 - [ ] Keyboard flow for picking tools (`J`/`K` to move, `Space` to pick) once the catalog grows.
 - [ ] A CI workflow that runs `npm run verify` and `npm run check` on pull requests.
+- [ ] Validate the structured data with Google's Rich Results test and the Open Graph card with each network's debugger once the site is live.
 - [ ] Include `AGENTS.md` guidance in the rendered page as a "how to add a tool" link for contributors.
 - [ ] Show the featured tool's vote count in the highlighted panel once the tally has run.
 

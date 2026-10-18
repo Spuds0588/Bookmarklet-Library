@@ -2,6 +2,28 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-18 — The catalog is published, and it reads like a document
+
+**Changed**
+
+- The library is live: the repo is public and GitHub Pages serves `main` at <https://spuds0588.github.io/Bookmarklet-Library/>. The README opens with that link instead of burying it in setup notes.
+- Every tool without a capture now puts its own description in the picture slot, with the reason underneath — **Saves a file · no capture**, **Copies to clipboard · no capture**. The 23 explained tiles were a dashed box with an emoji and two words; they now say what the tool does in the space a screenshot would take, and the card drops the sentence above the tile so nothing is said twice. The detail view keeps its description where it was and the panel keeps the longer explanation.
+- The page got a real head: canonical URL, Open Graph and Twitter cards with a 1200x750 capture, a theme colour for each palette, `WebSite` and `FAQPage` structured data, `robots.txt` and `sitemap.xml`.
+- Search engines and answer engines no longer get an empty grid. `build.mjs` writes a `<noscript>` list of all 59 tools grouped by category, each with its description, plus an `ItemList` of `SoftwareApplication` entries, into `index.html` between markers. `build.mjs --check` now fails if either the catalog or those blocks have drifted, so the crawlable copy cannot go stale.
+- Four questions answered on the page itself — what a bookmarklet is, how to install one, whether it needs an extension or account, and whether it is safe — with the same four answered in `FAQPage` schema.
+- `?q=markdown` preselects the search box. The structured data advertises that URL as the site search, so it had to exist.
+- The author card is in the footer: one `<burns-dev-card layout="full-width">` element and the shared component script loaded once, so credit is a single edit point.
+
+**Verified**
+
+- `build → verify → build --check` exits 0: 59 bookmarklets, 59 vote rows, 36 screenshots, 23 tools explained without one. Running `build.mjs` twice leaves `index.html` byte-identical.
+- In a browser: canonical, Open Graph and Twitter tags present with absolute URLs; all three JSON-LD blocks parse as JSON and the `ItemList` counts 59 items; the four FAQ answers render; `?q=markdown` loads with the box filled and the grid filtered; the 23 captureless cards show their description and reason; the author element mounts; no console errors.
+
+**Limits**
+
+- The hash detail routes (`#t/<slug>`) are one URL to a crawler, so per-tool pages are not indexed — the `ItemList` is what carries them.
+- No Rich Results or social-card debugger run yet; both need the deployed URL and are listed in `TODO.md`.
+
 ## 2026-10-18 — The catalog moves, and the tools that were only described get photographed
 
 **Changed**
