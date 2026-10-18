@@ -54,7 +54,7 @@ See [AGENTS.md](AGENTS.md) for the full conventions (no runtime dependencies, mo
 
 ## Screenshots
 
-Captures are taken by running each tool on `scripts/fixtures/demo-page.html` in headless Chrome, and only the tools that show their result get one.
+Captures are taken by running each tool on `scripts/fixtures/demo-page.html` in Chrome, and only the tools that show their result get one.
 
 ```sh
 npm run shots            # capture anything missing
@@ -66,14 +66,17 @@ The script needs Chrome on `PATH` (or `CHROME=/path/to/chrome`). It writes `scre
 
 Tools that only make sense once you have used them are driven with real input first — a stroke drawn on the page, an element picked to blur, a search typed into the find bar, a screenshot pasted into the annotation editor — so the capture shows the result rather than the blank canvas.
 
-Tools whose work never reaches the page get no image at all. Instead the manifest records why, and the card and detail view say it plainly: **Saves a file** (12 tools), **Copies to clipboard** (4), **Floating window** for picture-in-picture and screen recorders (5), **Opens another site** (3), plus reads aloud, reloads the page, needs a certain page and works outside the page. A screenshot of an untouched demo page would be worse than no screenshot.
+Tools whose work never reaches the page get no image at all. Instead the manifest records why, and the card and detail view say it plainly: **Saves a file** (12 tools), **Copies to clipboard** (5), **Records your screen** (1), **Opens another site** (3), plus reads aloud, reloads the page, needs a certain page and works outside the page. A screenshot of an untouched demo page would be worse than no screenshot.
 
-Those floating-window and screen-capture tools can be captured on a real display, which headless Chrome does not have:
+Picture-in-picture windows live on the display rather than in the page, so the video and audio players are captured with a display running. Xvfb is enough and needs no admin rights, since it can start in a container:
 
 ```sh
-Xvfb :99 -screen 0 1200x750x24 &          # or any display you own
-CHROME=google-chrome npm run shots -- --display=:99 --force video-pip audio-pip web-zoom-pip record-tab grab-text
+docker run -d --name bl-xvfb -v /tmp/.X11-unix:/tmp/.X11-unix alpine:3.20 \
+  sh -c 'apk add --no-cache xvfb && exec Xvfb :99 -screen 0 1200x750x24 -ac -nolisten tcp'
+npm run shots -- --display=:99 --force video-pip audio-pip web-zoom-pip
 ```
+
+Each of those runs asserts the floating player really opened before the image is kept, and a capture run without a display leaves the three images alone rather than deleting them.
 
 Run captures only when a tool's on-page effect changes — the images are committed, so recapturing everything rewrites a few megabytes.
 

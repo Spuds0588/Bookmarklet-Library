@@ -9,12 +9,12 @@
 
 ## Screenshots
 
-- [x] One capture per tool that shows its result (32 today) in `screenshots/`, taken by `scripts/shots.mjs` in headless Chrome against `scripts/fixtures/demo-page.html`.
+- [x] One capture per tool that shows its result (35 today) in `screenshots/`, taken by `scripts/shots.mjs` in Chrome against `scripts/fixtures/demo-page.html`.
 - [x] Tools that need using before they show anything are driven with real input first: a stroke on the draw surface, an element picked to blur, a query typed into the find bar, an image pasted into the annotation editor, a click recorded by the action recorder.
-- [x] Tools whose work never reaches the page get no image and a reason instead (28 today): download, clipboard, floating window, another site, reads aloud, reloads, needs a certain page, works outside the page. A screenshot of an untouched page was worse than no screenshot.
-- [ ] **Blocked on approval: install Xvfb so the floating windows can be photographed.** `apt-get install -y xvfb` needs admin rights and the two approval prompts timed out. The display path in `scripts/shots.mjs` (`--display=:99`) is written but has never run. After installing:
-      `Xvfb :99 -screen 0 1200x750x24 &` then `node scripts/shots.mjs --display=:99 --force video-pip audio-pip web-zoom-pip record-tab grab-text`,
-      and check the five captures by eye before committing them.
+- [x] Tools whose work never reaches the page get no image and a reason instead (25 today): download, clipboard, records your screen, another site, reads aloud, reloads, needs a certain page, works outside the page. A screenshot of an untouched page was worse than no screenshot.
+- [x] **The floating players are photographed on a real display.** Xvfb had no root approval, so it runs in a container instead: `docker run -d --name bl-xvfb -v /tmp/.X11-unix:/tmp/.X11-unix alpine:3.20 sh -c 'apk add --no-cache xvfb && exec Xvfb :99 -screen 0 1200x750x24 -ac -nolisten tcp'`, then `node scripts/shots.mjs --display=:99 --force video-pip audio-pip web-zoom-pip`. **Video PiP**, **Audio player in PiP** and **Web Zoom in PiP** all ship a capture now, each one asserting the player really opened first.
+- [x] **Record current tab** and **Grab text from screen** cannot be photographed even with a display: the recorder runs to a file with Chrome painting no indicator on a bare display, and the OCR tool's result is clipboard text. They keep their `display` and `clipboard` reasons. The `display` copy now reads "Records your screen".
+- [ ] **Two captures churn on every run**: `excalidraw-room.png` (a third-party app rendering live) and `system-info.png` (it prints the moment it ran), so a full recapture always shows a diff. Either freeze what can be frozen or stop treating those two as stable.
 - [ ] Re-run `node scripts/shots.mjs <slug> --force` whenever a tool's effect on a page changes. Captures are committed, so they only rot if a tool is edited and the shot is forgotten.
 - [ ] Consider a `--check` mode on `scripts/shots.mjs` for CI, comparing a fresh capture against the committed PNG.
 
