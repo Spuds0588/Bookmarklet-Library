@@ -3,8 +3,12 @@
  * Builds data/catalog.json from the per-bookmarklet files.
  * Each file starts with a metadata comment; the rest is the bookmarklet source.
  *
- *   node scripts/build.mjs           write the catalog
- *   node scripts/build.mjs --check   fail if the committed catalog is stale
+ * It also writes the crawlable parts of index.html: the no-JavaScript list of
+ * tools and the ItemList structured data, both between markers. Without them
+ * the page is an empty shell to anything that does not run scripts.
+ *
+ *   node scripts/build.mjs           write the catalog and index.html
+ *   node scripts/build.mjs --check   fail if either is stale
  */
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -13,6 +17,10 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceDir = path.join(root, "bookmarklets");
 const catalogPath = path.join(root, "data", "catalog.json");
+const indexPath = path.join(root, "index.html");
+const SITE = "https://spuds0588.github.io/Bookmarklet-Library/";
+const TOOLS_START = "<!-- tools:start -->";
+const TOOLS_END = "<!-- tools:end -->";
 
 const CATEGORIES = [
   ["capture", "📸", "Capture", "Screenshots, screen recording, OCR"],
@@ -104,6 +112,78 @@ const catalog = {
 };
 
 const json = JSON.stringify(catalog, null, 2) + "\n";
+
+/* Crawlable copies of the catalog --------------------------------------- */
+
+const escapeHtml = (value) =>
+  value.replace(/[&<>"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[character]);
+
+// The page fills its grid with fetch() and JavaScript. This list is what a
+// crawler, a reader mode or a browser with scripts blocked sees instead.
+function toolsBlock(items, categories) {
+  const groups = categories
+    .map((category) => {
+      const tools = items.filter((item) => item.category === category.id);
+      if (!tools.length) return "";
+      const rows = tools
+        .map((item) => `            <li><strong>${escapeHtml(item.name)}</strong> — ${escapeHtml(item.description)}</li>`)
+        .join("\n");
+      return `        <section class="static-group">
+          <h3 class="section-label">${category.emoji} ${escapeHtml(category.label)} · ${tools.length}</h3>
+          <ul>
+${rows}
+          </ul>
+        </section>`;
+    })
+    .filter(Boolean)
+    .join("\n");
+
+  const list = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Bookmarklet Library tools",
+    numberOfItems: items.length,
+    itemListOrder: "https://schema.org/ItemListOrderAscending",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": "SoftwareApplication",
+        name: item.name,
+        description: item.description,
+        applicationCategory: "BrowserApplication",
+        operatingSystem: "Chrome, Firefox, Safari, Edge",
+        url: `${SITE}#t/${item.slug}`,
+        sameAs: `https://github.com/Spuds0588/Bookmarklet-Library/blob/main/${item.source}`,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      },
+    })),
+  };
+  const structured = JSON.stringify(list).replace(/</g, "\\u003c");
+
+  return `    <noscript>
+      <div class="static-index">
+        <p class="hint">The grid needs JavaScript. Every tool is listed here in the meantime.</p>
+${groups}
+      </div>
+    </noscript>
+    <script type="application/ld+json">
+${structured}
+    </script>`;
+}
+
+function replaceBlock(html, start, end, body) {
+  const from = html.indexOf(start);
+  const to = html.lastIndexOf(end);
+  if (from === -1 || to === -1 || to < from) {
+    throw new Error(`index.html is missing the ${start} ${end} markers`);
+  }
+  return html.slice(0, from) + start + "\n" + body + "\n    " + end + html.slice(to + end.length);
+}
+
+const indexHtml = await readFile(indexPath, "utf8");
+const nextIndex = replaceBlock(indexHtml, TOOLS_START, TOOLS_END, toolsBlock(items, categories));
+
 const check = process.argv.includes("--check");
 
 if (check) {
@@ -111,12 +191,19 @@ if (check) {
   try {
     current = await readFile(catalogPath, "utf8");
   } catch {}
-  if (current !== json) {
-    console.error("data/catalog.json is stale. Run: node scripts/build.mjs");
+  const stale = [];
+  if (current !== json) stale.push("data/catalog.json");
+  if (nextIndex !== indexHtml) stale.push("index.html");
+  if (stale.length) {
+    console.error(`${stale.join(" and ")} ${stale.length > 1 ? "are" : "is"} stale. Run: node scripts/build.mjs`);
     process.exit(1);
   }
   console.log(`catalog is up to date (${items.length} bookmarklets)`);
 } else {
   await writeFile(catalogPath, json);
   console.log(`wrote data/catalog.json (${items.length} bookmarklets, ${(json.length / 1024).toFixed(0)} KB)`);
+  if (nextIndex !== indexHtml) {
+    await writeFile(indexPath, nextIndex);
+    console.log(`wrote index.html (${items.length} tools listed for crawlers)`);
+  }
 }
