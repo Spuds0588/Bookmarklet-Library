@@ -2,6 +2,34 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-18 — The catalog moves, and the tools that were only described get photographed
+
+**Changed**
+
+- The hero no longer explains the install gesture. The title, the catalog instructions and the install hint already do; the paragraph was three sentences of the same thing above the fold.
+- Cards stopped inverting on hover. A hovered or keyboard-focused card now lifts off the grid — `translateY(-4px)` with a soft shadow — and keeps every colour it had, including its screenshot, description and install button. The install and copy buttons pop the same way instead of swapping their fill. Chips, text buttons and icon buttons keep their existing border and label treatment.
+- Clicking a card now grows that card into the full-page view instead of flashing a panel over the page. The panel animates a `clip-path` from the clicked element's own rectangle to the viewport, so the layout is full-screen the whole time and no text is stretched on the way; the content fades in just behind it. Closing shrinks it back to the same card, then hides the panel and returns focus. The featured panel grows from its thumbnail. Under `prefers-reduced-motion` both directions are a 140 ms colour fade, and prev/next cross-fade instead of growing from a card that is off screen.
+- The detail's close button became a **Back** button at the top-left, with a back arrow and the tool's category beside it. Previous and next stay at the right.
+- **Tab screenshot + annotate** was deleted: **Screenshot markup** does the same job — capture, crop, arrows, boxes, numbers, labels — with a better editor, and two cards for one job is one card too many. The catalog is 59 tools.
+- **JS Runner** is captured running: a snippet is typed into its floating console, **Run Code** is pressed with a real click, and the demo page's heading shows the line it ran. `clickText` was added to the harness because the console's buttons carry no ids.
+- Two tools that were declared unphotographable now have honest images. **Pixelate a section** and **Generate password** were photographed before their own feedback existed: the pixelate overlay takes a second to build and its redaction toast lasts three, and the password tool's toast was gone by the time the old 850 ms wait ended. Both are driven now, so the redaction toast and the "Password generated & copied to clipboard" toast are what the capture shows.
+- **Record camera** and **Record audio** are photographed mid-recording. `AFTER` runs steps inside the window a tool opens — the camera gets **Start Recording** pressed, the audio recorder gets a microphone chosen and **2. Start Recording** pressed. The audio recorder asks for a save file before it will start, so `STUBS` hands `showSaveFilePicker` a writable that goes nowhere; a native picker cannot be answered by a headless run.
+
+**Verified**
+
+- `build → verify → build --check` exits 0: 59 bookmarklets, 59 vote rows, 36 screenshots, 23 tools explained without one.
+- The opening animation was recorded through a `Element.prototype.animate` wrapper in headless Chrome with reduced motion off: the first frame's clip is the card's rect (`inset(365px 939px 382px 97px)` for a card at 97,366 against a 1280x900 viewport), the animation is still running at 117 ms with intermediate insets, and the panel ends at `inset(0px)`. Closing starts one animation, clears `#t/<slug>`, hides the panel and puts focus back on the card's screenshot.
+- Hover was checked with a real pointer move: `transform: matrix(1,0,0,1,0,-4)`, the shadow applied, background still transparent and text still `rgb(11,11,11)` — motion, no repaint.
+- The detail bar was checked at 1280x900: **Back** renders at x=40, y=16 in mono micro-label type, previous/next at x=1048. The old close button's X icon is gone from the bar.
+- Captures were read back with OCR: **JS Runner** shows `JS Runner ran this line` on the page with the snippet in its console and the Run Code button; **Pixelate a section** shows its redaction toast; **Generate password** shows its confirmation toast; **Record camera** shows `Recording...`; **Record audio** shows `00:01` and `Stop Recording`.
+- A capture run with nothing to do reports *"nothing to capture — 59 tools already up to date"* and writes a manifest without the deleted tool's row.
+
+**Limits**
+
+- The recorder captures are the recorder window's own document at 1200x750, the size every page capture uses. On a desktop that window is much smaller, so the image shows the interface with more empty black than a person would see.
+- **Record current tab** and **Grab text from screen** still have no image: the recorder paints no indicator anywhere, and the OCR tool's result is clipboard text.
+- The three display-only captures are still only as fresh as the last run with a display; nothing in CI regenerates them.
+
 ## 2026-10-18 — The floating players are photographed on a real display at last
 
 **Changed**

@@ -64,9 +64,11 @@ npm run shots -- markup hide-emails --force   # recapture named tools
 
 The script needs Chrome on `PATH` (or `CHROME=/path/to/chrome`). It writes `screenshots/<slug>.png` and `data/screenshots.json`.
 
-Tools that only make sense once you have used them are driven with real input first — a stroke drawn on the page, an element picked to blur, a search typed into the find bar, a screenshot pasted into the annotation editor — so the capture shows the result rather than the blank canvas.
+Tools that only make sense once you have used them are driven with real input first — a stroke drawn on the page, an element picked to blur, a search typed into the find bar, a snippet run in the JS console, a region redacted with the pixelate picker, a screenshot pasted into the annotation editor — so the capture shows the result rather than the blank canvas.
 
-Tools whose work never reaches the page get no image at all. Instead the manifest records why, and the card and detail view say it plainly: **Saves a file** (12 tools), **Copies to clipboard** (5), **Records your screen** (1), **Opens another site** (3), plus reads aloud, reloads the page, needs a certain page and works outside the page. A screenshot of an untouched demo page would be worse than no screenshot.
+Tools that open a window are driven there too: the camera and audio recorders are photographed while recording, not sitting at "ready".
+
+Tools whose work never reaches the page get no image at all. Instead the manifest records why, and the card and detail view say it plainly: **Saves a file** (12 tools), **Copies to clipboard** (3), **Opens another site** (3), **Records your screen** (1), plus reads aloud, reloads the page, needs a certain page and works outside the page. A screenshot of an untouched demo page would be worse than no screenshot.
 
 Picture-in-picture windows live on the display rather than in the page, so the video and audio players are captured with a display running. Xvfb is enough and needs no admin rights, since it can start in a container:
 
