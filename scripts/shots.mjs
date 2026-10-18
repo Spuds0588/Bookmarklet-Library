@@ -11,9 +11,15 @@
  *   node scripts/shots.mjs markup --force  recapture named tools only
  *   node scripts/shots.mjs --display=:99   run on a real display (see DISPLAY_TOOLS)
  *
+ * A floating player is a window of its own, so it only shows up on a real
+ * display. Xvfb is enough, and it can run in a container without root:
+ *
+ *   docker run -d --name bl-xvfb -v /tmp/.X11-unix:/tmp/.X11-unix alpine:3.20 \
+ *     sh -c 'apk add --no-cache xvfb && exec Xvfb :99 -screen 0 1200x750x24 -ac -nolisten tcp'
+ *
  * Tools whose output never reaches the page — a download, the clipboard, a
- * floating player — get no image at all and a reason in the manifest, so the
- * catalog can say what happened instead of showing a page that looks untouched.
+ * recording — get no image at all and a reason in the manifest, so the catalog
+ * can say what happened instead of showing a page that looks untouched.
  */
 import { execFile, spawn } from "node:child_process";
 import { readdir, readFile, unlink, writeFile, mkdir, stat } from "node:fs/promises";
@@ -47,6 +53,13 @@ const STEPS = {
   "record-actions": [{ click: 'a[href="#faq"]' }, { wait: 400 }],
 };
 
+/* Live media before the tool runs, so a floating player shows a picture rather
+ * than a poster: the point is to hand it something already playing. */
+const PREP = {
+  "video-pip": ["document.querySelector('video').play()"],
+  "audio-pip": ["document.querySelector('audio').play()"],
+};
+
 /* Tools that leave the page alone. The key becomes copy on the page, so it has
  * to be true: a download really lands in the downloads folder, a clipboard tool
  * really writes the clipboard, and so on. */
@@ -74,17 +87,23 @@ const REASONS = {
   "clear-site-data": "reload",
   "force-scroll": "no-effect",
   "pixelate-section": "clipboard",
-  "video-pip": "display",
-  "audio-pip": "display",
-  "web-zoom-pip": "display",
+  "grab-text": "clipboard",
   "record-tab": "display",
-  "grab-text": "display",
 };
 
-// These need a real display server: a picture-in-picture window, a screen
-// recorder or a screen grab is not part of the page surface, so headless
-// Chrome cannot photograph it. Pass --display=:99 (Xvfb) to capture them.
-const DISPLAY_TOOLS = new Set(["video-pip", "audio-pip", "web-zoom-pip", "record-tab", "grab-text"]);
+// A floating player is its own window rather than part of the page surface, so
+// headless Chrome cannot photograph it and Chrome exposes no target for it
+// either. These three are captured on a real display, with --display=:99.
+const DISPLAY_TOOLS = new Set(["video-pip", "audio-pip", "web-zoom-pip"]);
+
+// In display mode the shot is only honest if the player really opened: the
+// check runs on the live page, and a tool that did not float fails the run
+// instead of shipping a capture of the page it did nothing to.
+const CHECKS = {
+  "video-pip": "document.pictureInPictureElement ? document.pictureInPictureElement.videoWidth : 0",
+  "audio-pip": "documentPictureInPicture.window ? documentPictureInPicture.window.innerWidth : 0",
+  "web-zoom-pip": "documentPictureInPicture.window ? documentPictureInPicture.window.innerWidth : 0",
+};
 
 const args = process.argv.slice(2);
 const force = args.includes("--force");
@@ -169,14 +188,23 @@ async function launchChrome(display) {
     `--window-size=${WIDTH},${HEIGHT}`,
   ];
   if (display) {
-    flags.push("--window-position=0,0", "--app=" + DEMO_URL);
+    // On a display the page is an ordinary Chrome window, pinned to the whole
+    // screen so the capture is the page. Ozone is forced to X11 so a Wayland
+    // desktop cannot answer instead of the display we were handed.
+    flags.push("--ozone-platform=x11", "--window-position=0,0", "--app=" + DEMO_URL);
   } else {
     flags.push("--headless=new", "about:blank");
   }
 
+  const env = { ...process.env };
+  if (display) {
+    env.DISPLAY = display;
+    delete env.WAYLAND_DISPLAY;
+  }
+
   const child = spawn(CHROME, flags, {
     stdio: ["ignore", "ignore", "pipe", "pipe", "pipe"],
-    env: display ? { ...process.env, DISPLAY: display } : process.env,
+    env,
   });
   child.on("error", (error) => {
     console.error(`Could not start ${CHROME}: ${error.message}`);
@@ -217,6 +245,13 @@ async function openTool(cdp, url) {
   const { sessionId } = await cdp.send("Target.attachToTarget", { targetId, flatten: true });
   await cdp.send("Page.enable", {}, sessionId);
   await cdp.send("Runtime.enable", {}, sessionId);
+  // Pin the page to its light palette: the fixture follows the desktop's
+  // colour scheme, and a dark desktop would recapture every tool dark.
+  await cdp.send(
+    "Emulation.setEmulatedMedia",
+    { features: [{ name: "prefers-color-scheme", value: "light" }] },
+    sessionId,
+  );
   await cdp.send("Emulation.setDeviceMetricsOverride", {
     width: WIDTH,
     height: HEIGHT,
@@ -375,6 +410,8 @@ async function shoot(cdp, item, baselinePng) {
   try {
     await evaluate(cdp, sessionId, STUBS);
     if (item) {
+      for (const script of PREP[item.slug] ?? []) await evaluate(cdp, sessionId, script).catch(() => {});
+      await sleep(500);
       try {
         await evaluate(cdp, sessionId, item.code);
       } catch (error) {
@@ -436,15 +473,42 @@ async function displayWindow(cdp) {
   const { sessionId } = await cdp.send("Target.attachToTarget", { targetId: page.targetId, flatten: true });
   await cdp.send("Page.enable", {}, sessionId);
   await cdp.send("Runtime.enable", {}, sessionId);
+  // Same light palette as the headless captures: on a display the page would
+  // otherwise follow the desktop's own colour scheme.
+  await cdp.send(
+    "Emulation.setEmulatedMedia",
+    { features: [{ name: "prefers-color-scheme", value: "light" }] },
+    sessionId,
+  );
   return { targetId: page.targetId, sessionId };
+}
+
+// A document picture-in-picture window opens in the top-left corner, where it
+// hides the page it came from. Move it to the corner Chrome uses for the video
+// player, so the capture shows the page and the floating window together.
+async function settleFloating(cdp, opened) {
+  for (const target of opened) {
+    const window = await cdp.send("Browser.getWindowForTarget", { targetId: target.targetId }).catch(() => null);
+    const bounds = window?.bounds;
+    if (!bounds?.width || !bounds?.height) continue;
+    await cdp
+      .send("Browser.setWindowBounds", {
+        windowId: window.windowId,
+        bounds: { left: Math.max(0, WIDTH - bounds.width - 15), top: Math.max(0, HEIGHT - bounds.height - 15) },
+      })
+      .catch(() => {});
+  }
 }
 
 async function shootOnDisplay(cdp, item) {
   const { sessionId } = await displayWindow(cdp);
+  const before = new Set((await cdp.send("Target.getTargets")).targetInfos.map((target) => target.targetId));
   await cdp.send("Page.navigate", { url: DEMO_URL }, sessionId);
   await waitForLoad(cdp, sessionId);
   await sleep(600);
   await evaluate(cdp, sessionId, STUBS);
+  for (const script of PREP[item.slug] ?? []) await evaluate(cdp, sessionId, script).catch(() => {});
+  await sleep(500);
   try {
     await evaluate(cdp, sessionId, item.code);
   } catch (error) {
@@ -452,6 +516,17 @@ async function shootOnDisplay(cdp, item) {
   }
   await sleep(1200);
   for (const step of STEPS[item.slug] ?? []) await runStep(cdp, sessionId, step, null);
+
+  // A document player is a target of its own, so it can be placed. The video
+  // player is not: Chrome puts that one in the corner by itself.
+  const opened = (await cdp.send("Target.getTargets")).targetInfos.filter(
+    (target) => target.type === "page" && !before.has(target.targetId),
+  );
+  await settleFloating(cdp, opened);
+  if (opened.length) await sleep(700);
+
+  const check = CHECKS[item.slug];
+  return { floated: check ? await evaluate(cdp, sessionId, check) : true };
 }
 
 /* Main ------------------------------------------------------------------ */
@@ -513,20 +588,22 @@ if (displayArg && !display) {
 const plan = [];
 for (const item of items) {
   const needsDisplay = DISPLAY_TOOLS.has(item.slug);
-  // Tools whose work leaves the page — and the display-only tools when there is
-  // no display — are declared, not photographed. Everything else has to show
-  // its result in an image.
-  const expectedReason = !needsDisplay || !display ? REASONS[item.slug] ?? null : null;
+  // Tools whose work leaves the page are declared, not photographed, and a
+  // floating player without a display to float on keeps its note. Everything
+  // else has to show its result in an image.
+  const expectedReason = needsDisplay ? (display ? null : "display") : REASONS[item.slug] ?? null;
   const stepCount = (STEPS[item.slug] ?? []).length;
   const previousEntry = previous.tools?.[item.slug];
   const exists = await stat(path.join(OUT_DIR, `${item.slug}.png`)).then(() => true).catch(() => false);
+  // A capture already on disk stays up to date even in a run that could not
+  // take it again — a floating player without a display keeps its image, and
+  // everything declared by a reason keeps its note.
+  const hasImage = Boolean(previousEntry?.file) && exists;
   const upToDate =
     !force &&
     previousEntry &&
     (previousEntry.steps ?? 0) === stepCount &&
-    (expectedReason
-      ? !previousEntry.file && previousEntry.reason === expectedReason
-      : Boolean(previousEntry.file) && exists);
+    (hasImage || (!previousEntry.file && previousEntry.reason === expectedReason));
   plan.push({ item, needsDisplay, expectedReason, stepCount, upToDate, previousEntry });
 }
 
@@ -543,8 +620,12 @@ let baseline = null;
 let displayBaseline = null;
 
 try {
-  console.log("capturing the demo page without a tool…");
-  baseline = (await shoot(cdp, null, null)).png;
+  // The headless baseline is a second window. On a display it would sit on top
+  // of the page, so it is only captured when a headless tool needs comparing.
+  if (work.some((entry) => !entry.needsDisplay)) {
+    console.log("capturing the demo page without a tool…");
+    baseline = (await shoot(cdp, null, null)).png;
+  }
 
   let done = 0;
   for (const { item, needsDisplay, stepCount } of work) {
@@ -560,16 +641,24 @@ try {
           await shootOnDisplay(cdp, { code: "void 0", slug: "baseline" });
           displayBaseline = await grabDisplay(display);
         }
-        await shootOnDisplay(cdp, { code, slug: item.slug });
+        const { floated } = await shootOnDisplay(cdp, { code, slug: item.slug });
         const png = await grabDisplay(display);
         const changed = !png.equals(displayBaseline);
+        if (!floated) {
+          failures.push(`${item.slug}: the floating player never opened on ${display}`);
+          manifest.tools[item.slug] = { changed: false, reason: "display" };
+          console.log(`${label.padEnd(46)} FAILED  no floating player`);
+          done++;
+          continue;
+        }
         if (changed) {
           await writeFile(file, png);
           manifest.tools[item.slug] = { file: `screenshots/${item.slug}.png`, changed: true, display: true };
           console.log(`${label.padEnd(46)} ${String(Math.round(png.length / 1024)).padStart(4)} KB  changed (display)`);
         } else {
-          manifest.tools[item.slug] = { changed: false, reason: REASONS[item.slug] ?? "display", display: true };
-          console.log(`${label.padEnd(46)} no capture (nothing visible on the display)`);
+          failures.push(`${item.slug}: the player opened but the display never changed`);
+          manifest.tools[item.slug] = { changed: false, reason: "display" };
+          console.log(`${label.padEnd(46)} FAILED  display unchanged`);
         }
         done++;
         continue;
@@ -609,7 +698,16 @@ try {
 // Everything that needed no browser: reuse the last entry, or state the reason.
 for (const { item, expectedReason, upToDate, previousEntry } of plan) {
   if (manifest.tools[item.slug]) continue;
-  manifest.tools[item.slug] = upToDate ? previousEntry : { changed: false, reason: expectedReason };
+  if (upToDate) {
+    manifest.tools[item.slug] = previousEntry;
+  } else if (previousEntry?.file && expectedReason === "display") {
+    // A forced run with no display cannot recapture a floating player, and the
+    // capture on disk is still true, so keep it rather than deleting it.
+    manifest.tools[item.slug] = previousEntry;
+    notes.push(`${item.slug}: kept the capture from the last display run (none handed to this one)`);
+  } else {
+    manifest.tools[item.slug] = { changed: false, reason: expectedReason };
+  }
 }
 if (!work.length) console.log(`nothing to capture — ${plan.length} tools already up to date`);
 

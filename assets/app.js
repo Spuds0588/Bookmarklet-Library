@@ -109,8 +109,8 @@ const REASON_COPY = {
     long: "Nothing on the demo page needed the change this tool makes, so there is nothing to show.",
   },
   display: {
-    short: "Floating window",
-    long: "It runs in a floating player or records your screen. Those live outside the page surface, so this catalog cannot photograph them.",
+    short: "Records your screen",
+    long: "It records your screen to a video file, and the page it runs on looks the same while it does. The recording lands in your downloads when you stop it, so there is nothing on the page to photograph.",
   },
 };
 const reasonFor = (shot) => REASON_COPY[shot?.reason] ?? REASON_COPY["no-effect"];

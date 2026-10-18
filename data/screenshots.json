@@ -1,7 +1,7 @@
 {
   "width": 1200,
   "height": 750,
-  "generated": "2026-10-17",
+  "generated": "2026-10-18",
   "tools": {
     "record-audio": {
       "file": "screenshots/record-audio.png",
@@ -24,7 +24,7 @@
     },
     "grab-text": {
       "changed": false,
-      "reason": "display"
+      "reason": "clipboard"
     },
     "tab-screenshot": {
       "changed": false,
@@ -206,8 +206,9 @@
       "reason": "external"
     },
     "audio-pip": {
-      "changed": false,
-      "reason": "display"
+      "file": "screenshots/audio-pip.png",
+      "changed": true,
+      "display": true
     },
     "yt-music-pip": {
       "file": "screenshots/yt-music-pip.png",
@@ -219,16 +220,18 @@
       "changed": true
     },
     "video-pip": {
-      "changed": false,
-      "reason": "display"
+      "file": "screenshots/video-pip.png",
+      "changed": true,
+      "display": true
     },
     "social-link-preview": {
       "file": "screenshots/social-link-preview.png",
       "changed": true
     },
     "web-zoom-pip": {
-      "changed": false,
-      "reason": "display"
+      "file": "screenshots/web-zoom-pip.png",
+      "changed": true,
+      "display": true
     },
     "zoom-lens": {
       "file": "screenshots/zoom-lens.png",
