@@ -51,6 +51,24 @@ const STEPS = {
   "advanced-find": [{ type: "demo", into: "#searchInput" }, { wait: 400 }],
   markup: [{ paste: true }, { wait: 600 }],
   "record-actions": [{ click: 'a[href="#faq"]' }, { wait: 400 }],
+  // The picker draws its overlay once the capture is ready, then keeps the
+  // redaction toast up for a few seconds: drag a region before it fades.
+  "pixelate-section": [{ wait: 2400 }, { drag: [280, 320, 780, 580] }, { wait: 250 }],
+  "generate-password": [{ wait: 300 }],
+  // A console is only a console once something has been run in it.
+  "js-runner": [
+    { type: "document.querySelector('h1').textContent = 'JS Runner ran this line';", into: "#js-runner-container textarea" },
+    { clickText: "Run Code" },
+    { wait: 500 },
+  ],
+};
+
+/* Steps for a window the tool opened. A recorder sits there saying "ready"
+ * until someone presses start, so the window is driven before it is shot. */
+const AFTER = {
+  "record-camera": [{ clickText: "Start Recording" }, { wait: 1800 }],
+  // The microphone has to be chosen before the record button even appears.
+  "record-audio": [{ click: "#mic-list button" }, { wait: 700 }, { click: "#recBtn" }, { wait: 1800 }],
 };
 
 /* Live media before the tool runs, so a floating player shows a picture rather
@@ -76,7 +94,6 @@ const REASONS = {
   "save-clipboard-as-txt": "download",
   "loom-links-csv": "download",
   "site-map-csv": "download",
-  "generate-password": "clipboard",
   "generate-passphrase": "clipboard",
   "clipboard-to-code-block": "clipboard",
   "read-aloud": "speech",
@@ -86,7 +103,6 @@ const REASONS = {
   "enable-api-export": "other-page",
   "clear-site-data": "reload",
   "force-scroll": "no-effect",
-  "pixelate-section": "clipboard",
   "grab-text": "clipboard",
   "record-tab": "display",
 };
@@ -301,18 +317,37 @@ async function mouse(cdp, sessionId, type, x, y, extra = {}) {
   await cdp.send("Input.dispatchMouseEvent", { type, x, y, ...extra }, sessionId);
 }
 
+async function clickAt(cdp, sessionId, [x, y]) {
+  await mouse(cdp, sessionId, "mouseMoved", x, y);
+  await mouse(cdp, sessionId, "mousePressed", x, y, { button: "left", buttons: 1, clickCount: 1 });
+  await sleep(30);
+  await mouse(cdp, sessionId, "mouseReleased", x, y, { button: "left", clickCount: 1 });
+}
+
 async function runStep(cdp, sessionId, step, pasteImage) {
   if (step.wait) return sleep(step.wait);
 
   if (step.script) return evaluate(cdp, sessionId, step.script);
 
   if (step.click) {
-    const [x, y] = await pointFor(cdp, sessionId, step.click);
-    await mouse(cdp, sessionId, "mouseMoved", x, y);
-    await mouse(cdp, sessionId, "mousePressed", x, y, { button: "left", buttons: 1, clickCount: 1 });
-    await sleep(30);
-    await mouse(cdp, sessionId, "mouseReleased", x, y, { button: "left", clickCount: 1 });
-    return;
+    return clickAt(cdp, sessionId, await pointFor(cdp, sessionId, step.click));
+  }
+
+  if (step.clickText) {
+    const point = await evaluate(
+      cdp,
+      sessionId,
+      `(() => {
+        const node = [...document.querySelectorAll("button, a, [role=button]")].find((candidate) =>
+          candidate.textContent.trim() === ${JSON.stringify(step.clickText)} &&
+          candidate.getBoundingClientRect().width > 0);
+        if (!node) return null;
+        const box = node.getBoundingClientRect();
+        return [Math.round(box.left + box.width / 2), Math.round(box.top + box.height / 2)];
+      })()`,
+    );
+    if (!point) throw new Error(`step button not found: ${step.clickText}`);
+    return clickAt(cdp, sessionId, point);
   }
 
   if (step.drag) {
@@ -390,6 +425,11 @@ const STUBS = `(() => {
   } catch {}
   window.prompt = () => (++index === 1 ? "demo" : "DEMO");
   window.confirm = () => true;
+  // A save picker is a native dialog no headless run can answer. Recorders ask
+  // for one before they will start, so hand back a writable that goes nowhere.
+  window.showSaveFilePicker = async () => ({
+    createWritable: async () => ({ write: async () => {}, close: async () => {} }),
+  });
   window.alert = (message) => { (window.__blAlerts ||= []).push(String(message)); };
   window.print = () => {};
   return true;
@@ -439,6 +479,7 @@ async function shoot(cdp, item, baselinePng) {
       // A tab a tool opened is often an app that has to load before it looks like anything.
       await waitForLoad(cdp, shotSession).catch(() => {});
       await sleep(1500);
+      for (const step of AFTER[item.slug] ?? []) await runStep(cdp, shotSession, step, baselinePng);
     }
 
     const { data } = await cdp.send("Page.captureScreenshot", { format: "png" }, shotSession);
@@ -592,7 +633,7 @@ for (const item of items) {
   // floating player without a display to float on keeps its note. Everything
   // else has to show its result in an image.
   const expectedReason = needsDisplay ? (display ? null : "display") : REASONS[item.slug] ?? null;
-  const stepCount = (STEPS[item.slug] ?? []).length;
+  const stepCount = (STEPS[item.slug] ?? []).length + (AFTER[item.slug] ?? []).length;
   const previousEntry = previous.tools?.[item.slug];
   const exists = await stat(path.join(OUT_DIR, `${item.slug}.png`)).then(() => true).catch(() => false);
   // A capture already on disk stays up to date even in a run that could not
@@ -610,10 +651,12 @@ for (const item of items) {
 const work = plan.filter((entry) => !entry.upToDate && !entry.expectedReason);
 const failures = [];
 const notes = [];
+let chromeLog = [];
 
 if (work.length) {
 const server = await serveFixture();
 const { child, pipe: cdp, log } = await launchChrome(display);
+chromeLog = log;
 await cdp.send("Target.setDiscoverTargets", { discover: true });
 
 let baseline = null;
@@ -732,6 +775,6 @@ console.log(`\n${withImage} screenshots in screenshots/, ${Object.keys(ordered).
 if (notes.length) console.log(`notes:\n- ${notes.join("\n- ")}`);
 if (failures.length) {
   console.error(`${failures.length} failed:\n- ${failures.join("\n- ")}`);
-  console.error(log.join("").split("\n").filter((line) => /ERROR|error/i.test(line)).slice(-8).join("\n"));
+  console.error(chromeLog.join("").split("\n").filter((line) => /ERROR|error/i.test(line)).slice(-8).join("\n"));
   process.exit(1);
 }

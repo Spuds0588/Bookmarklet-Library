@@ -6,7 +6,8 @@
     "record-audio": {
       "file": "screenshots/record-audio.png",
       "changed": true,
-      "popup": true
+      "popup": true,
+      "steps": 4
     },
     "record-live-mix": {
       "file": "screenshots/record-live-mix.png",
@@ -16,7 +17,8 @@
     "record-camera": {
       "file": "screenshots/record-camera.png",
       "changed": true,
-      "popup": true
+      "popup": true,
+      "steps": 2
     },
     "record-tab": {
       "changed": false,
@@ -29,10 +31,6 @@
     "tab-screenshot": {
       "changed": false,
       "reason": "download"
-    },
-    "tab-screenshot-annotate": {
-      "file": "screenshots/tab-screenshot-annotate.png",
-      "changed": true
     },
     "draw-on-page": {
       "file": "screenshots/draw-on-page.png",
@@ -74,8 +72,9 @@
       "steps": 2
     },
     "generate-password": {
-      "changed": false,
-      "reason": "clipboard"
+      "file": "screenshots/generate-password.png",
+      "changed": true,
+      "steps": 1
     },
     "generate-passphrase": {
       "changed": false,
@@ -143,7 +142,8 @@
     },
     "js-runner": {
       "file": "screenshots/js-runner.png",
-      "changed": true
+      "changed": true,
+      "steps": 3
     },
     "field-label-audit": {
       "changed": false,
@@ -255,8 +255,9 @@
       "changed": true
     },
     "pixelate-section": {
-      "changed": false,
-      "reason": "clipboard"
+      "file": "screenshots/pixelate-section.png",
+      "changed": true,
+      "steps": 3
     },
     "hide-emails": {
       "file": "screenshots/hide-emails.png",

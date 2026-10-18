@@ -1,14 +1,14 @@
 {
-  "updated": "2026-10-17T21:17:36.915Z",
+  "updated": "2026-10-18T01:20:34.354Z",
   "issue": null,
   "issueUrl": null,
   "tools": {
-    "grab-text": {
+    "record-audio": {
       "up": 0,
       "down": 0,
       "url": ""
     },
-    "record-audio": {
+    "record-live-mix": {
       "up": 0,
       "down": 0,
       "url": ""
@@ -23,17 +23,12 @@
       "down": 0,
       "url": ""
     },
-    "record-live-mix": {
+    "grab-text": {
       "up": 0,
       "down": 0,
       "url": ""
     },
     "tab-screenshot": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "tab-screenshot-annotate": {
       "up": 0,
       "down": 0,
       "url": ""
@@ -48,42 +43,7 @@
       "down": 0,
       "url": ""
     },
-    "advanced-find": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "selection-to-markdown": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "generate-passphrase": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "generate-password": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
     "mailto-gmail": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "mailto-outlook": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "website-to-markdown": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "read-aloud": {
       "up": 0,
       "down": 0,
       "url": ""
@@ -93,7 +53,37 @@
       "down": 0,
       "url": ""
     },
+    "website-to-markdown": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "mailto-outlook": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
     "text-replacer": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "read-aloud": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "advanced-find": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "generate-password": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "generate-passphrase": {
       "up": 0,
       "down": 0,
       "url": ""
@@ -103,7 +93,12 @@
       "down": 0,
       "url": ""
     },
-    "clipboard-to-code-block": {
+    "selection-to-markdown": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "save-clipboard-as-html": {
       "up": 0,
       "down": 0,
       "url": ""
@@ -118,27 +113,12 @@
       "down": 0,
       "url": ""
     },
-    "save-clipboard-as-css": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "save-clipboard-as-csv": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "save-clipboard-as-html": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "save-clipboard-as-md": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
     "save-clipboard-as-png": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "save-clipboard-as-css": {
       "up": 0,
       "down": 0,
       "url": ""
@@ -148,37 +128,22 @@
       "down": 0,
       "url": ""
     },
+    "save-clipboard-as-md": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "save-clipboard-as-csv": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "clipboard-to-code-block": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
     "save-html-snippet": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "clear-site-data": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "console-monitor": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "enable-api-export": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "export-local-storage": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "field-label-audit": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "iframe-tester": {
       "up": 0,
       "down": 0,
       "url": ""
@@ -188,32 +153,17 @@
       "down": 0,
       "url": ""
     },
-    "js-runner": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "peek-html": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
     "record-actions": {
       "up": 0,
       "down": 0,
       "url": ""
     },
-    "site-map-csv": {
+    "js-runner": {
       "up": 0,
       "down": 0,
       "url": ""
     },
-    "system-info": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "url-parameter-lab": {
+    "field-label-audit": {
       "up": 0,
       "down": 0,
       "url": ""
@@ -223,7 +173,47 @@
       "down": 0,
       "url": ""
     },
-    "audio-pip": {
+    "system-info": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "console-monitor": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "export-local-storage": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "site-map-csv": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "peek-html": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "url-parameter-lab": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "enable-api-export": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "clear-site-data": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "iframe-tester": {
       "up": 0,
       "down": 0,
       "url": ""
@@ -233,7 +223,7 @@
       "down": 0,
       "url": ""
     },
-    "hide-ads": {
+    "toggle-theme": {
       "up": 0,
       "down": 0,
       "url": ""
@@ -243,32 +233,7 @@
       "down": 0,
       "url": ""
     },
-    "phone-preview": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "replace-ads": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "social-link-preview": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "toggle-theme": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "video-pip": {
-      "up": 0,
-      "down": 0,
-      "url": ""
-    },
-    "web-zoom-pip": {
+    "audio-pip": {
       "up": 0,
       "down": 0,
       "url": ""
@@ -278,17 +243,42 @@
       "down": 0,
       "url": ""
     },
+    "phone-preview": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "video-pip": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "social-link-preview": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "web-zoom-pip": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
     "zoom-lens": {
       "up": 0,
       "down": 0,
       "url": ""
     },
-    "blur-picker": {
+    "replace-ads": {
       "up": 0,
       "down": 0,
       "url": ""
     },
-    "hide-emails": {
+    "hide-ads": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "blur-picker": {
       "up": 0,
       "down": 0,
       "url": ""
@@ -299,6 +289,11 @@
       "url": ""
     },
     "pixelate-section": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "hide-emails": {
       "up": 0,
       "down": 0,
       "url": ""
