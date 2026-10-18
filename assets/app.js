@@ -219,7 +219,7 @@ function card(item) {
         ${voteButtons(item)}
       </div>
       <h3 class="card-title">${esc(item.name)}</h3>
-      <p class="card-desc">${esc(item.description)}</p>
+      ${shot?.file ? `<p class="card-desc">${esc(item.description)}</p>` : ""}
       ${
         shot?.file
           ? `<button class="card-shot" type="button" data-open="${esc(item.slug)}" aria-label="See ${esc(item.name)} at work">
@@ -227,7 +227,8 @@ function card(item) {
             </button>`
           : `<button class="card-shot card-shot-blank" type="button" data-open="${esc(item.slug)}" aria-label="Details for ${esc(item.name)}">
               <span class="card-shot-emoji" aria-hidden="true">${esc(item.name.split(" ")[0])}</span>
-              <span class="card-shot-note">${esc(reasonFor(shot).short)}</span>
+              <span class="card-shot-desc">${esc(item.description)}</span>
+              <span class="card-shot-note">${esc(reasonFor(shot).short)} · no capture</span>
             </button>`
       }
       <a class="install" href="${esc(item.href)}" draggable="true" title="Drag “${esc(item.name)}” onto your bookmarks bar">
@@ -417,7 +418,7 @@ function fillDetail(item) {
     : `<div class="detail-shot-empty">
          <span class="detail-shot-emoji" aria-hidden="true">${esc(item.name.split(" ")[0])}</span>
          <p>${esc(reasonFor(shot).long)}</p>
-         <p class="detail-shot-note">${esc(reasonFor(shot).short)} — no screenshot</p>
+         <p class="detail-shot-note">${esc(reasonFor(shot).short)} · no capture</p>
        </div>`;
 }
 
@@ -720,6 +721,13 @@ async function init() {
     state.categories = catalog.categories;
     if (votes?.tools) state.votes = votes;
     if (shots?.tools) state.shots = shots;
+    // ?q= is the search target the structured data advertises.
+    const shared = new URLSearchParams(location.search).get("q")?.trim();
+    if (shared) {
+      state.query = shared;
+      nodes.search.value = shared;
+      nodes.clearSearch.hidden = false;
+    }
     renderAll();
     const slug = hashSlug();
     if (slug) openDetail(slug, false);

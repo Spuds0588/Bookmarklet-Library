@@ -543,12 +543,24 @@ kbd {
   color: var(--muted);
 }
 .card-shot-emoji { font-size: 22px; line-height: 1; }
+
+/* A tool with no capture says what it does in the space the picture would
+   take, so the tile is content rather than a hole in the grid. */
+.card-shot-desc {
+  max-width: 33ch;
+  padding-inline: 14px;
+  font: 12px/1.5 var(--sans);
+  color: var(--fg);
+  text-align: center;
+  text-wrap: balance;
+}
 .card-shot-note {
   font: 9px/1.4 var(--mono);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   text-align: center;
   padding-inline: 10px;
+  opacity: 0.75;
 }
 
 .card-top {
@@ -716,6 +728,62 @@ kbd {
   font-size: 12.5px;
   line-height: 1.6;
   color: var(--muted);
+}
+
+/* Questions */
+
+.faq { padding-block: clamp(44px, 6vw, 72px); border-top: 1px solid var(--line); }
+
+.faq-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 28px;
+  border-top: 1px solid var(--line);
+}
+
+.faq-item {
+  padding: 22px 24px 24px 0;
+  border-bottom: 1px solid var(--line);
+}
+.faq-item:nth-child(odd) { padding-right: 24px; border-right: 1px solid var(--line); }
+.faq-item:nth-child(even) { padding-left: 24px; }
+
+.faq-item h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.faq-item p {
+  margin: 8px 0 0;
+  max-width: 52ch;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* The catalog is JavaScript. With it off, the tools are still a list. */
+
+.static-index { margin-top: 36px; }
+.static-group { margin-top: 26px; }
+.static-group ul { margin: 10px 0 0; padding: 0; list-style: none; }
+.static-group li {
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.static-group li strong { color: var(--fg); font-weight: 600; }
+
+/* Author */
+
+.author {
+  width: 100%;
+  max-width: var(--max);
+  margin-inline: auto;
+  padding: 8px var(--pad) 40px;
 }
 
 /* Footer */
@@ -986,6 +1054,10 @@ body.has-detail { overflow: hidden; }
   .steps { grid-template-columns: 1fr; border-top: 0; }
   .steps li,
   .steps li + li { padding: 20px 0; border-right: 0; border-top: 1px solid var(--line); }
+  .faq-list { grid-template-columns: 1fr; }
+  .faq-item,
+  .faq-item:nth-child(odd),
+  .faq-item:nth-child(even) { padding: 20px 0; border-right: 0; }
   .composer-note { display: none; }
   .composer-inner { flex-wrap: wrap; }
   .catalog-head { flex-direction: column; align-items: flex-start; }
