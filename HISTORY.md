@@ -2,6 +2,34 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-26 — ZIP files and Unzip join the library
+
+**Changed**
+
+- **🗜️ Zip files** takes files and folders by drag or by picker, keeps the folder tree, and downloads one standard ZIP through the browser's normal download flow. It uses native `CompressionStream("deflate-raw")` with a stored fallback for files that do not shrink, writes UTF-8 names, parent folders and CRC32 checksums, and is ZIP32 without a password. The limit is 1 GB of input and 65,535 entries.
+- **📂 Unzip** reads the central directory first, shows the archive name, unpacked size and a collapsible folder tree, and downloads any file on its own. **Save all to folder** writes the whole tree through `showDirectoryPicker`, so the folders are recreated instead of forcing one download per file. It stops at 4 GB, refuses encrypted, ZIP64, split and symbolic-link archives, rejects unsafe or duplicate paths, verifies every CRC, and removes a partially written folder when an entry fails.
+- Both tools render one panel into an open shadow root over the page. If that mount is blocked, they try Document Picture-in-Picture, then a popup with the same UI, then a native alert asking for popups. The panel uses the window it was given for its pickers, downloads and folder permission prompt.
+- The Files category blurb now says ZIP archives, the Files "how it works" copy covers choosing files and archives, and the page FAQ answers what ZIP tools need. README, AGENTS and TODO carry the same limits and the new test command.
+- The two files are 28,800 and 31,511 bytes of code; their encoded install URLs are 46,615 and 51,082 characters. Both remain self-contained, with no library and no runtime request.
+- Files now has 14 tools, the catalog 63, and the vote file 63 rows. The new captures bring the total to 38 screenshots with 25 tools explained without one.
+- Cards and details use the captured panels: **🗜️ Zip files** shows a selected folder tree and stack of files, and **📂 Unzip** shows an opened archive with its Download buttons and folder warning.
+
+**Verified**
+
+- `npm test`: 10 tests pass. The builder is checked for standard local and central headers, deflate and stored methods, UTF-8 names, folder entries (including an empty folder), duplicate names, 1 GB and 65,535-entry caps, and CRC32. The reader is checked against data descriptors, duplicate and unsafe paths, encrypted, ZIP64, split, symlink and unknown-method archives, the 4 GB cap, bad checksums, and partial-folder cleanup. Folder writing runs against an in-memory directory handle, including the archive-name root that would otherwise become `project/project/`.
+- `node scripts/build.mjs && node scripts/votes.mjs --offline && node scripts/verify.mjs && node scripts/build.mjs --check` exits 0: 63 bookmarklets, 63 vote rows, 38 screenshots, 25 tools explained without one. All structured-data blocks parse; the FAQ has five questions and the page carries the same five.
+- Browser run at `http://127.0.0.1:4173`: **Zip files** accepted a three-file, two-folder selection through its hidden folder picker and **Create ZIP** downloaded `project.zip` (675 bytes, `application/zip`) with an ok status. **Unzip** opened that archive, listed all three paths, downloaded `day-1.md` with the expected text, and **Save all** wrote the complete tree through the picker, correct contents included.
+- The popup fallback was exercised with shadow mounting forced to fail and Document PiP removed: the panel rendered in a 643x762 popup with its drop zone, pickers, list, limits note and **Create ZIP** button.
+- Both captures are 1200x750 and driven through the panels' own hidden inputs: the ZIP builder shows `project/README.md` plus two notes and a CSV, and the Unzip tree shows `field-notes/` with `assets`, `notes` and `README.md`. The unzip capture also caught the drop zone staying visible after an archive loaded; `.bl-drop[hidden]` now hides it and the capture was retaken.
+
+**Limits**
+
+- **Save all to folder** needs the File System Access API, which is Chrome and Edge only. Firefox and Safari keep the per-file downloads. It also needs a secure page, and the directory permission belongs to the page origin rather than the bookmarklet.
+- The builder reads whole files into memory and refuses a selection over 1 GB. It writes ZIP32 only; it cannot make password-protected archives, ZIP64 or split archives.
+- The reader assumes UTF-8 entry names, because it does not decode the legacy CP437 code page. It does not open encrypted or ZIP64 archives, does not join split archives, and refuses symbolic links.
+- A page CSP that blocks `javascript:` URLs stops every bookmarklet, these included. If CSP blocks the panel's shadow styles, the tool falls through to PiP or a popup; a blocked popup is reported through a native alert.
+- The Document PiP branch is implemented but could not be verified in this browser automation setup: a direct `documentPictureInPicture.requestWindow()` call blocks the harness before any panel renders. The primary shadow panel and the popup after PiP were both exercised.
+
 ## 2026-10-26 — The passphrase pool grows from 60 words to 361
 
 **Changed**

@@ -110,6 +110,11 @@
       "changed": false,
       "reason": "download"
     },
+    "unzip": {
+      "file": "screenshots/unzip.png",
+      "changed": true,
+      "steps": 2
+    },
     "save-clipboard-as-txt": {
       "changed": false,
       "reason": "download"
@@ -129,6 +134,11 @@
     "unlock-pdf": {
       "changed": false,
       "reason": "download"
+    },
+    "zip-files": {
+      "file": "screenshots/zip-files.png",
+      "changed": true,
+      "steps": 2
     },
     "clipboard-to-code-block": {
       "changed": false,

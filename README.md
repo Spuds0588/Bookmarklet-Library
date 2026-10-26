@@ -4,7 +4,7 @@
 
 A searchable catalog of small browser tools. Find one that does the job, drag it to your bookmarks bar, click it on any page. Nothing to install, no accounts, no extensions.
 
-61 bookmarklets across seven categories: capture, annotate, text, files, dev tools, view and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site.
+63 bookmarklets across seven categories: capture, annotate, text, files, dev tools, view and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site.
 
 ## Use it
 
@@ -25,10 +25,26 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 | Capture | Tab screenshot, OCR a screen region, record tab/camera/audio, Loom links |
 | Annotate | Screenshot markup (arrows, boxes, numbered steps), freehand draw |
 | Text | Advanced find, find and replace on inputs, page to Markdown, read aloud, password generation |
-| Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, HTML snippet saver, Loom export |
+| Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, ZIP create/extract, HTML snippet saver, Loom export |
 | Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder |
 | View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, force scroll |
 | Privacy | Hide email addresses, blur elements, pixelate a region, hide notification toasts |
+
+## ZIP tools
+
+**🗜️ Zip files** drops a panel over the page, takes files and folders by drag or by picker, and downloads one standard ZIP. It keeps the folder paths, writes UTF-8 names and uses native `CompressionStream` deflate, falling back to stored entries when compression does not help. A selection is limited to 1 GB and 65,535 entries. The output is ZIP32 with no password and no encryption, and nothing is uploaded.
+
+**📂 Unzip** reads a ZIP's central directory, shows the folder tree, and downloads any file on its own. **Save all to folder** writes the whole tree in one step, keeping the folders, which needs the File System Access API: Chrome or Edge on a secure page. Other browsers keep the individual downloads. The reader refuses encrypted archives, ZIP64, split archives, symbolic links and unsafe paths, and stops at the 4 GB ZIP32 limit. It reads entry names as UTF-8.
+
+Both panels render into an open shadow root over the page. If a page blocks that, they try Document Picture-in-Picture, then a popup; if that is blocked too, a native alert asks you to allow popups for the site. On a page whose CSP blocks bookmarklets outright, no bookmarklet runs, these included.
+
+## Tests
+
+```sh
+npm test
+```
+
+`tests/zip-tools.test.mjs` loads both bookmarklets in a VM with only their test exports and Node's web APIs. It builds archives and checks the central directory, deflate and stored entries, folder paths, UTF-8 names, duplicate names, size and entry caps; then reads them back, including data descriptors, duplicate paths, encrypted flags, ZIP64, split archives, symlinks, unknown methods, unsafe paths, and CRC failures with partial-folder cleanup. File System Access is exercised through an in-memory directory handle.
 
 ## Add your own
 

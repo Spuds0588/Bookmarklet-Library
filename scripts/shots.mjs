@@ -61,7 +61,18 @@ const STEPS = {
     { clickText: "Run Code" },
     { wait: 500 },
   ],
+  // Both panels live in an open shadow root, so the sample files are handed to
+  // their real pickers rather than drawn on top of the UI.
+  "zip-files": [{ zipSample: true }, { wait: 500 }],
+  unzip: [{ unzipSample: true }, { wait: 700 }],
 };
+
+const ZIP_SAMPLE = [
+  ["project/README.md", "# Project notes\n\nEverything for the weekly handoff.\n"],
+  ["project/notes/2026-10-20.md", "- Site visit at 9:15\n- Follow-up call at 14:00\n- Send the revised deck\n"],
+  ["project/notes/2026-10-21.md", "- Retry the demo route\n- Check the mobile layout\n- Update the field report\n"],
+  ["project/assets/visits.csv", "date,site,visits\n2026-10-20,Northwind,12\n2026-10-21,Contoso,9\n"],
+];
 
 /* Steps for a window the tool opened. A recorder sits there saying "ready"
  * until someone presses start, so the window is driven before it is shot. */
@@ -385,6 +396,48 @@ async function runStep(cdp, sessionId, step, pasteImage) {
     return;
   }
 
+  if (step.zipSample) {
+    return evaluate(
+      cdp,
+      sessionId,
+      `(() => {
+        const root = document.getElementById("bl-zip-host")?.shadowRoot;
+        if (!root) throw new Error("zip panel is not in the page");
+        const input = root.querySelector("input[webkitdirectory]");
+        if (!input) throw new Error("zip folder picker is missing");
+        const transfer = new DataTransfer();
+        for (const [path, body] of ${JSON.stringify(ZIP_SAMPLE)}) {
+          const file = new File([body], path.split("/").at(-1), { type: "text/plain" });
+          Object.defineProperty(file, "webkitRelativePath", { value: path });
+          transfer.items.add(file);
+        }
+        input.files = transfer.files;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        return true;
+      })()`,
+    );
+  }
+
+  if (step.unzipSample) {
+    return evaluate(
+      cdp,
+      sessionId,
+      `(async () => {
+        const root = document.getElementById("bl-unzip-host")?.shadowRoot;
+        if (!root) throw new Error("unzip panel is not in the page");
+        const response = await fetch("/sample.zip", { cache: "no-store" });
+        if (!response.ok) throw new Error("sample ZIP did not load");
+        const input = root.querySelector('input[type="file"]');
+        if (!input) throw new Error("unzip file picker is missing");
+        const transfer = new DataTransfer();
+        transfer.items.add(new File([await response.blob()], "field-notes.zip", { type: "application/zip" }));
+        input.files = transfer.files;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        return true;
+      })()`,
+    );
+  }
+
   if (step.paste) {
     // Paste the page's own screenshot, the way a person would annotate a capture.
     await evaluate(
@@ -596,6 +649,7 @@ td{padding:5px 18px 5px 0;border-bottom:1px solid #ddd}</style></head>
 const MEDIA = new Map([
   ["/demo.mp4", ["demo.mp4", "video/mp4"]],
   ["/demo.mp3", ["demo.mp3", "audio/mpeg"]],
+  ["/sample.zip", ["sample.zip", "application/zip"]],
 ]);
 
 async function serveFixture() {

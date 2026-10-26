@@ -10,9 +10,10 @@
 
 ## Screenshots
 
-- [x] One capture per tool that shows its result (36 today) in `screenshots/`, taken by `scripts/shots.mjs` in Chrome against `scripts/fixtures/demo-page.html`.
+- [x] One capture per tool that shows its result (38 today) in `screenshots/`, taken by `scripts/shots.mjs` in Chrome against `scripts/fixtures/demo-page.html`.
 - [x] Tools that need using before they show anything are driven with real input first: a stroke on the draw surface, an element picked to blur, a query typed into the find bar, a snippet run in **JS runner**, a region redacted with **Pixelate a section**, an image pasted into the annotation editor, a click recorded by the action recorder. The camera and audio recorders are driven inside the window they open until they say they are recording.
 - [x] Tools whose work never reaches the page get no image and a reason instead (25 today): download, clipboard, records your screen, another site, reads aloud, reloads, needs a certain page, works outside the page. A screenshot of an untouched page was worse than no screenshot.
+- [x] **Zip files** and **Unzip** are photographed with their panels populated: the capture run sets a sample folder tree on the ZIP builder's hidden folder picker and opens a sample archive in the ZIP browser, both through the open shadow root.
 - [x] **The floating players are photographed on a real display.** Xvfb had no root approval, so it runs in a container instead: `docker run -d --name bl-xvfb -v /tmp/.X11-unix:/tmp/.X11-unix alpine:3.20 sh -c 'apk add --no-cache xvfb && exec Xvfb :99 -screen 0 1200x750x24 -ac -nolisten tcp'`, then `node scripts/shots.mjs --display=:99 --force video-pip audio-pip web-zoom-pip`. **Video PiP**, **Audio player in PiP** and **Web Zoom in PiP** all ship a capture now, each one asserting the player really opened first.
 - [x] **Record current tab** and **Grab text from screen** cannot be photographed even with a display: the recorder runs to a file with Chrome painting no indicator on a bare display, and the OCR tool's result is clipboard text. They keep their `display` and `clipboard` reasons. The `display` copy now reads "Records your screen".
 - [ ] **Two captures churn on every run**: `excalidraw-room.png` (a third-party app rendering live) and `system-info.png` (it prints the moment it ran), so a full recapture always shows a diff. Either freeze what can be frozen or stop treating those two as stable.
@@ -22,11 +23,17 @@
 ## Feedback (thumbs)
 
 - [x] GitHub Action route, built: one comment per tool on the **Tool votes** issue, 👍/👎 reactions counted by `scripts/votes.mjs` into `data/votes.json` on a nightly schedule. No server, no browser storage.
-- [ ] Run `.github/workflows/votes.yml` once (Actions → Tally votes → Run workflow) so the issue and its 61 comments exist; until then the page hides the thumbs because there is nothing to link to.
+- [ ] Run `.github/workflows/votes.yml` once (Actions → Tally votes → Run workflow) so the issue and its 63 comments exist; until then the page hides the thumbs because there is nothing to link to.
 - [ ] Pin the **Tool votes** issue so people can find it from the repo page.
 - [ ] GitHub disables scheduled workflows after 60 days without commits; if the counts freeze, run the workflow by hand.
 - [ ] If `main` ever gets branch protection, the tally job needs a bypass or its `git push` will fail and the counts will stop updating.
 - [ ] Voting needs a GitHub account by design. If that proves too high a fence, the alternative is a small counter API, which adds a third-party dependency and is easy to game.
+
+## Tests
+
+- [x] `npm test` covers the ZIP builder and browser cores through `tests/zip-tools.test.mjs`: standard container bytes, folder paths, UTF-8 names, stored and deflated entries, data descriptors, duplicate names, size and entry limits, encrypted/ZIP64/split/symlink/unsafe-path rejection, and CRC failure cleanup.
+- [x] A manual browser pass clicked **Create ZIP**, checked the downloaded archive, downloaded one entry, and wrote a whole folder through a stubbed directory picker. The popup fallback was exercised by blocking shadow mounting and Document PiP.
+- [ ] Turn that browser pass into an automated test, so the panel-to-API wiring is checked by CI rather than by hand.
 
 ## Nice to have, only if it earns its place
 

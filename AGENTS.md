@@ -20,6 +20,8 @@ scripts/build.mjs                   source files -> data/catalog.json + index.ht
 scripts/votes.mjs                   seeds one comment per tool, counts reactions -> data/votes.json
 scripts/shots.mjs                   runs every tool on the demo page, captures screenshots/
 scripts/fixtures/demo-page.html     the page tools are photographed against
+scripts/fixtures/sample.zip         the archive the Unzip capture opens
+tests/zip-tools.test.mjs            ZIP builder and reader tests, run with npm test
 scripts/verify.mjs                  integrity checks (catalog, votes, screenshots)
 robots.txt, sitemap.xml             what crawlers read (hand-written)
 .github/workflows/votes.yml         nightly reaction tally, commits data/votes.json
@@ -64,6 +66,7 @@ Metadata fields, all required:
 - **The demo page carries the hooks a tool looks for**: the ad blocks `.ad-slot` and `.ad-inline`, `.audio-wrapper` around the player, `#toast`, a `<video>` and an `<audio>` clip, an iframe, a form with demo values, and demo addresses to find and hide. Add a hook when a tool needs one — `audio-pip` looks for `.audio-wrapper` — because deleting one leaves that tool nothing to work on.
 - **A tool that shows its result only after you use it gets driven.** `STEPS` in `shots.mjs` holds real input events per slug — draw a stroke, click an element, type a query run a snippet, paste an image — so the capture shows the result rather than the blank canvas or the invite to start.
 - **A window a tool opens is driven too.** `AFTER` holds the steps for a popup the tool opened, run before the capture: a recorder says "ready" until somebody presses start, so it is not photographed until it says "Recording". Buttons are found by their label with `clickText` when the markup has no stable selector, and `STUBS` answers a save-file picker with a writable that goes nowhere, since a native dialog cannot be answered by a headless run.
+- **A panel in the page is a shadow root first.** The ZIP tools mount one panel into an open shadow root, then Document Picture-in-Picture, then a popup, then a native alert if popups are blocked. `render` takes the window and root so the same UI works in all three places; pickers, downloads and `showDirectoryPicker` use that window. The host is probed for a known computed style so a page CSP that blocks the panel's styles falls through instead of leaving an invisible overlay. Because a closed shadow root would be invisible to the capture, both panels are `mode: "open"` and `STEPS` drives their real hidden pickers through `document.getElementById("bl-...-host").shadowRoot`. `mountPanel` is duplicated in the two files to keep each bookmarklet self-contained.
 - **No image beats a misleading image.** A tool whose work never reaches the page — a download, the clipboard, speech, another site, a recording — is recorded in `data/screenshots.json` as a `reason` with no file. The tile then shows the tool's own description with the reason under it, so the space the picture would take still says what the tool does. `REASONS` in `shots.mjs` is that list, and `verify.mjs` fails any entry that has both a file and a reason, neither, or an unknown reason. Every PNG must be named by the manifest.
 - **A floating player needs a real display.** A picture-in-picture window is not part of the page surface and headless Chrome has no target for it, so the video and audio players are photographed on a display: `DISPLAY_TOOLS` lists them, `CHECKS` asserts the player really opened, and `node scripts/shots.mjs --display=:99` grabs the screen with ffmpeg (x11grab) instead of the page. Xvfb is enough and needs no root: `docker run -d --name bl-xvfb -v /tmp/.X11-unix:/tmp/.X11-unix alpine:3.20 sh -c 'apk add --no-cache xvfb && exec Xvfb :99 -screen 0 1200x750x24 -ac -nolisten tcp'`, and `docker start bl-xvfb` brings it back once it exists. Chrome is forced to `--ozone-platform=x11` with `WAYLAND_DISPLAY` dropped so it cannot land on the real desktop instead, the page is pinned to its light palette, and a document PiP window is moved into the corner with `Browser.setWindowBounds`. With no display those captures are kept as they are, and a forced run says so. The video player shows a frame because `PREP` starts playback first.
 - **A screen recorder still has no image.** `record-tab` records to a file and Chrome paints no indicator for it on a bare display, so it keeps its `display` reason — the copy now says "Records your screen" rather than claiming the catalog cannot photograph a floating window. `grab-text` reads the screen and puts the text on the clipboard, so it carries the `clipboard` reason.
@@ -77,11 +80,13 @@ Metadata fields, all required:
 ## Verify before committing
 
 ```sh
-node scripts/build.mjs && node scripts/verify.mjs && node scripts/build.mjs --check
+npm test && node scripts/build.mjs && node scripts/verify.mjs && node scripts/build.mjs --check
 node scripts/shots.mjs        # only when a tool's on-page effect changed
 node scripts/shots.mjs <slug> --force                  # one tool, when it or the fixture changed
 node scripts/shots.mjs --display=:99 <slug> --force    # the floating players, with a display running
 python3 -m http.server 4173   # then open http://127.0.0.1:4173
 ```
+
+`npm test` runs `tests/zip-tools.test.mjs`. It loads the bookmarklets with `globalThis.__BL_TEST__` set, so the ZIP cores run in Node without a panel, and checks archive bytes, limits and extraction. Keep the test export block immediately before the panel code so a browser run never sees it.
 
 Stop any dev server you started and leave the workspace clean when you are done. Commit in small steps with a message that says why.

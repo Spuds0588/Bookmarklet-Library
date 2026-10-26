@@ -26,7 +26,7 @@ const CATEGORIES = [
   ["capture", "📸", "Capture", "Screenshots, screen recording, OCR"],
   ["annotate", "🖍️", "Annotate", "Mark up and draw over pages"],
   ["text", "🔤", "Text", "Find, replace, read and convert text"],
-  ["files", "🗂️", "Files", "Clipboard, PDFs, snippets and exports"],
+  ["files", "🗂️", "Files", "Clipboard, PDFs, ZIP archives and exports"],
   ["devtools", "🛠️", "Dev tools", "Inspect URLs, storage, DOM and console"],
   ["view", "👀", "View", "Preview, magnify, declutter, picture-in-picture"],
   ["privacy", "🕶️", "Privacy", "Redact what should not be seen"],
