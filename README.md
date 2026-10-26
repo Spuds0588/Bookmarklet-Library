@@ -4,7 +4,7 @@
 
 A searchable catalog of small browser tools. Find one that does the job, drag it to your bookmarks bar, click it on any page. Nothing to install, no accounts, no extensions.
 
-59 bookmarklets across seven categories: capture, annotate, text, files, dev tools, view and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site.
+61 bookmarklets across seven categories: capture, annotate, text, files, dev tools, view and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site.
 
 ## Use it
 
@@ -25,7 +25,7 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 | Capture | Tab screenshot, OCR a screen region, record tab/camera/audio, Loom links |
 | Annotate | Screenshot markup (arrows, boxes, numbered steps), freehand draw |
 | Text | Advanced find, find and replace on inputs, page to Markdown, read aloud, password generation |
-| Files | Clipboard to .md/.csv/.txt/.css/.html/.png, HTML snippet saver, Loom export |
+| Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, HTML snippet saver, Loom export |
 | Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder |
 | View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, force scroll |
 | Privacy | Hide email addresses, blur elements, pixelate a region, hide notification toasts |
@@ -70,7 +70,7 @@ Tools that only make sense once you have used them are driven with real input fi
 
 Tools that open a window are driven there too: the camera and audio recorders are photographed while recording, not sitting at "ready".
 
-Tools whose work never reaches the page get no image at all. Instead the manifest records why, and the tile shows the tool's own description with the reason underneath: **Saves a file** (12 tools), **Copies to clipboard** (3), **Opens another site** (3), **Records your screen** (1), plus reads aloud, reloads the page, needs a certain page and works outside the page. A screenshot of an untouched demo page would be worse than no screenshot, and a blank tile would say less than the sentence the tool already carries.
+Tools whose work never reaches the page get no image at all. Instead the manifest records why, and the tile shows the tool's own description with the reason underneath: **Saves a file** (14 tools), **Copies to clipboard** (3), **Opens another site** (3), **Records your screen** (1), plus reads aloud, reloads the page, needs a certain page and works outside the page. A screenshot of an untouched demo page would be worse than no screenshot, and a blank tile would say less than the sentence the tool already carries.
 
 Picture-in-picture windows live on the display rather than in the page, so the video and audio players are captured with a display running. Xvfb is enough and needs no admin rights, since it can start in a container:
 

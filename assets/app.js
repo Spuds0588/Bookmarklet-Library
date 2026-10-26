@@ -301,7 +301,7 @@ const HOW = {
   text:
     "It reads the page you run it on, or asks for a value first, then writes the result back to the page, the clipboard or a download.",
   files:
-    "It turns what is on your clipboard, or in a panel it opens, into a file and saves it to your downloads folder.",
+    "It turns what is on your clipboard or in a panel it opens into a downloaded file, and can add or remove a password on a PDF you pick.",
   devtools:
     "It inspects the page you are on — URL, storage, DOM, scripts or console — and shows what it finds in a panel, a new tab or a downloaded file.",
   view:

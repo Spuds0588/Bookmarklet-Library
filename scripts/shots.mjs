@@ -94,6 +94,8 @@ const REASONS = {
   "save-clipboard-as-txt": "download",
   "loom-links-csv": "download",
   "site-map-csv": "download",
+  "lock-pdf": "download",
+  "unlock-pdf": "download",
   "generate-passphrase": "clipboard",
   "clipboard-to-code-block": "clipboard",
   "read-aloud": "speech",

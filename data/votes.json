@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-18T08:00:19.465Z",
+  "updated": "2026-10-26T18:17:06.995Z",
   "issue": 1,
   "issueUrl": "https://github.com/Spuds0588/Bookmarklet-Library/issues/1",
   "tools": {
@@ -137,6 +137,16 @@
       "up": 0,
       "down": 0,
       "url": "https://github.com/Spuds0588/Bookmarklet-Library/issues/1#issuecomment-6247395397"
+    },
+    "lock-pdf": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "unlock-pdf": {
+      "up": 0,
+      "down": 0,
+      "url": ""
     },
     "clipboard-to-code-block": {
       "up": 0,

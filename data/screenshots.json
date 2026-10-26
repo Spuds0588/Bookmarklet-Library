@@ -1,7 +1,7 @@
 {
   "width": 1200,
   "height": 750,
-  "generated": "2026-10-18",
+  "generated": "2026-10-26",
   "tools": {
     "record-audio": {
       "file": "screenshots/record-audio.png",
@@ -119,6 +119,14 @@
       "reason": "download"
     },
     "save-clipboard-as-csv": {
+      "changed": false,
+      "reason": "download"
+    },
+    "lock-pdf": {
+      "changed": false,
+      "reason": "download"
+    },
+    "unlock-pdf": {
       "changed": false,
       "reason": "download"
     },

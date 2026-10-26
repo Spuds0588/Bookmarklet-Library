@@ -2,6 +2,27 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-26 — PDF passwords join the library
+
+**Changed**
+
+- **🔒 Lock PDF** and **🔓 Unlock PDF** are in the catalog under Files, copied as built from the standalone PDF password bookmarklet project. Lock writes an AES-256 R6 copy with the password used for both the user and owner passwords; unlock removes RC4 40/128, AES-128 or AES-256 protection and asks for the password only when an empty user password does not open the file. Both download `<name>-locked.pdf` or `<name>-unlocked.pdf` and never upload the document.
+- The two files are 18,962 and 18,971 bytes of code. The catalog's `encodeURIComponent` install URLs are 27,945 and 27,972 characters, the longest in the library; the standalone project's own page uses minimal encoding and stays near 21.8 KB.
+- Files now covers PDFs as well as clipboard downloads. The category blurb reads "Clipboard, PDFs, snippets and exports" and the Files "how it works" note says the tool can add or remove a PDF password, instead of implying everything starts on the clipboard.
+- Neither tool gets a capture: the result is a downloaded file behind a dialog, so both are in the manifest with the `download` reason and the card says **Saves a file · no capture**. The counts are now 61 tools, 36 screenshots, 25 tools explained without one, and 61 vote rows.
+
+**Verified**
+
+- `build → votes --offline → shots lock-pdf unlock-pdf → verify → build --check` exits 0: 61 bookmarklets, 61 vote rows, 36 screenshots, 25 tools explained without one.
+- Browser check at `http://127.0.0.1:4173`: 61 cards, the Files chip reads 12, both cards show their description with **Saves a file · no capture**, both detail views open with the right name, description, tags, size, added date and install button, and searching `pdf` returns exactly the two tools.
+- Both catalog URLs were run on the page with `plain.pdf`: **Lock PDF** downloaded `plain-locked.pdf` (4,607 bytes, `/Encrypt` present), **Unlock PDF** downloaded `plain-locked-unlocked.pdf` (3,693 bytes, `/Encrypt` absent, 114 bytes from the original), and unlocking the locked file with a wrong password left no download and reported "That password didn't work." The standalone project's 28 tests pass.
+
+**Limits**
+
+- Both tools need a secure context for Web Crypto: HTTPS, localhost, or a local file in Chrome. On a plain HTTP page the tool refuses with a message saying so.
+- The PDF is rebuilt rather than patched, so existing digital signatures become invalid and the file size can change slightly.
+- The install URLs are about 28 KB of characters. Chrome accepted them; a browser or bookmark manager with a smaller URL cap was not tested.
+
 ## 2026-10-18 — The catalog is published, and it reads like a document
 
 **Changed**
