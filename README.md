@@ -36,7 +36,7 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 
 **📂 Unzip** reads a ZIP's central directory, shows the folder tree, and downloads any file on its own. **Save all to folder** writes the whole tree in one step, keeping the folders, which needs the File System Access API: Chrome or Edge on a secure page. Other browsers keep the individual downloads. The reader refuses encrypted archives, ZIP64, split archives, symbolic links and unsafe paths, and stops at the 4 GB ZIP32 limit. It reads entry names as UTF-8.
 
-Both panels render into an open shadow root over the page. If a page blocks that, they try Document Picture-in-Picture, then a popup; if that is blocked too, a native alert asks you to allow popups for the site. On a page whose CSP blocks bookmarklets outright, no bookmarklet runs, these included.
+Both panels render into an open shadow root over the page. If a page blocks that, they try Document Picture-in-Picture, then a popup; if that is blocked too, a native alert asks you to allow popups for the site. A popup can inherit the page's `style-src`, which drops its `<style>`; the panel then applies its CSS as a constructable stylesheet, which that rule does not cover. On a page whose CSP blocks bookmarklets outright, no bookmarklet runs, these included.
 
 ## Tests
 

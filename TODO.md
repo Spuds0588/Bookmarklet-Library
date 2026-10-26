@@ -32,7 +32,7 @@
 ## Tests
 
 - [x] `npm test` covers the ZIP builder and browser cores through `tests/zip-tools.test.mjs`: standard container bytes, folder paths, UTF-8 names, stored and deflated entries, data descriptors, duplicate names, size and entry limits, encrypted/ZIP64/split/symlink/unsafe-path rejection, and CRC failure cleanup.
-- [x] A manual browser pass clicked **Create ZIP**, checked the downloaded archive, downloaded one entry, and wrote a whole folder through a stubbed directory picker. The popup fallback was exercised by blocking shadow mounting and Document PiP.
+- [x] A manual browser pass clicked **Create ZIP**, checked the downloaded archive, downloaded one entry, and wrote a whole folder through a stubbed directory picker. Both fallback triggers were exercised with a real borrowed window: shadow mounting forced to fail, and a page CSP that dropped the shadow styles, each with a substituted Document PiP window. The popup after an unavailable PiP was exercised too, which caught the inherited `style-src` dropping its styles until the panel adopted a constructable stylesheet.
 - [ ] Turn that browser pass into an automated test, so the panel-to-API wiring is checked by CI rather than by hand.
 
 ## Nice to have, only if it earns its place

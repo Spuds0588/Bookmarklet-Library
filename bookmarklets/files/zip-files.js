@@ -350,6 +350,24 @@
       host = null;
     }
 
+    // A popup opened from a page with style-src 'none' starts as about:blank
+    // and inherits that CSP, so its <style> is dropped. A constructable sheet
+    // is not subject to style-src; use one before giving up on the panel.
+    const styleWindow = (win) => {
+      const probe = win.document.querySelector("[data-probe]");
+      if (!probe) throw new Error("panel did not render");
+      if (win.getComputedStyle(probe).display === "flex") return;
+      if (typeof win.CSSStyleSheet !== "function" || !("adoptedStyleSheets" in win.document)) {
+        throw new Error("This page blocks the panel styles.");
+      }
+      const sheet = new win.CSSStyleSheet();
+      sheet.replaceSync(CSS);
+      win.document.adoptedStyleSheets = [...win.document.adoptedStyleSheets, sheet];
+      if (win.getComputedStyle(probe).display !== "flex") {
+        throw new Error("This page blocks the panel styles.");
+      }
+    };
+
     const startWindow = (win) => {
       if (!win || win.closed) throw new Error("panel window closed");
       uiWindow = win;
@@ -357,6 +375,7 @@
         win.document.title = spec.title;
         win.document.body.innerHTML = "";
         cleanup = spec.render(win, win.document.body, close) || (() => {});
+        styleWindow(win);
         win.addEventListener("pagehide", () => { try { cleanup(); } catch {} }, { once: true });
       } catch (error) {
         try { win.close(); } catch {}
@@ -371,7 +390,7 @@
         win = window.open("", spec.windowName, "popup=yes,width=660,height=760,resizable=yes,scrollbars=yes");
       } catch {}
       if (!win) {
-        alert("This page blocked the ZIP panel. Allow popups for this site, then click the bookmarklet again.");
+        alert(`This page blocked the ${spec.title} panel. Allow popups for this site, then click the bookmarklet again.`);
         return;
       }
       try {
@@ -381,7 +400,7 @@
         startWindow(win);
       } catch {
         try { win.close(); } catch {}
-        alert("This page blocked the ZIP panel. Allow popups for this site, then click the bookmarklet again.");
+        alert(`This page blocked the ${spec.title} panel. Allow popups for this site, then click the bookmarklet again.`);
       }
     };
 
