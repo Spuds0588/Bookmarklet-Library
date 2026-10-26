@@ -11,12 +11,15 @@ What has been done, in order. Newest entries first.
 - Files now covers PDFs as well as clipboard downloads. The category blurb reads "Clipboard, PDFs, snippets and exports" and the Files "how it works" note says the tool can add or remove a PDF password, instead of implying everything starts on the clipboard.
 - Neither tool gets a capture: the result is a downloaded file behind a dialog, so both are in the manifest with the `download` reason and the card says **Saves a file · no capture**. The counts are now 61 tools, 36 screenshots, 25 tools explained without one, and 61 vote rows.
 - **🔓 Unlock PDF** is the featured tool now; **🖼️ Screenshot markup** returns to the grid. The highlighted panel uses the PDF tool's name, description and install button, and because it has no capture its picture slot carries the Files badge and file size instead of an image.
+- The featured side no longer prints the category ordinal — the big **04** was Files' position in the category list, not a count or a rank. The panel now shows only **🗂️ Files · 19 KB** in that corner.
+- Cards keep one height across the grid: `grid-auto-rows: 1fr` plus `height: 100%` on each card, with the screenshot or no-capture tile growing into the leftover space and `object-fit: cover` scaling the image. Install buttons and the Details row now line up across every card.
 
 **Verified**
 
 - `build → votes --offline → shots lock-pdf unlock-pdf → verify → build --check` exits 0: 61 bookmarklets, 61 vote rows, 36 screenshots, 25 tools explained without one.
 - Browser check at `http://127.0.0.1:4173`: 61 cards, the Files chip reads 12, both cards show their description with **Saves a file · no capture**, both detail views open with the right name, description, tags, size, added date and install button, and searching `pdf` returns exactly the two tools.
-- The featured panel names **🔓 Unlock PDF** with its description and named install button; its no-capture side reads **04 · 🗂️ Files · 19 KB**. **See it in action** opens `#t/unlock-pdf`, closing returns to the grid, and **🖼️ Screenshot markup** is still one of the 61 cards.
+- The featured panel names **🔓 Unlock PDF** with its description and named install button; its no-capture side reads **🗂️ Files · 19 KB**. **See it in action** opens `#t/unlock-pdf`, closing returns to the grid, and **🖼️ Screenshot markup** is still one of the 61 cards.
+- Card heights were measured with all 61 cards rendered: 447 px at 1200, 455 px at 900, 655 px at 700 and 481 px at 420, with no card's content exceeding its box. Media heights vary with the text above them, but their bottom edges align with the install button.
 - Both catalog URLs were run on the page with `plain.pdf`: **Lock PDF** downloaded `plain-locked.pdf` (4,607 bytes, `/Encrypt` present), **Unlock PDF** downloaded `plain-locked-unlocked.pdf` (3,693 bytes, `/Encrypt` absent, 114 bytes from the original), and unlocking the locked file with a wrong password left no download and reported "That password didn't work." The standalone project's 28 tests pass.
 
 **Limits**

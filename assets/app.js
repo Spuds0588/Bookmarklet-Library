@@ -139,7 +139,6 @@ function visibleItems() {
 function renderFeatured() {
   if (!state.items.length) return;
   const item = state.items.find((entry) => entry.featured) ?? state.items[0];
-  const index = state.categories.findIndex((category) => category.id === item.category);
   const shot = shotFor(item);
   const date = new Date(`${item.added}T00:00:00`).toLocaleDateString("en-US", {
     month: "short",
@@ -172,7 +171,6 @@ function renderFeatured() {
               <span class="featured-shot-label">See it in action</span>
             </button>`
           : `<div class="featured-side" aria-hidden="true">
-              <span class="featured-index">${String(index + 1).padStart(2, "0")}</span>
               <span class="featured-kind">${esc(badgeFor(item.category))}<br>${Math.round(item.bytes / 1024)} KB</span>
             </div>`
       }
