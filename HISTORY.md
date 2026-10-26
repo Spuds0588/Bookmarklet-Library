@@ -2,6 +2,24 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-26 — The passphrase pool grows from 60 words to 361
+
+**Changed**
+
+- **🔑 Generate passphrase** now draws from 361 words instead of 60, an addition of 301 common, lower-case English nouns, verbs and adjectives. The original 60 are kept, the whole list is sorted, every entry is unique, and words run from 3 to 8 letters.
+- The four-word draw is now about 34 bits of randomness instead of 24. The bookmarklet grows from 707 to 3,171 bytes of code and its encoded install URL to 5,430 characters, still well inside the length the other tools use.
+
+**Verified**
+
+- Parsed both the source and the catalog's encoded install URL: 361 words, 361 unique entries.
+- Ran the built bookmarklet 2,000 times in a VM with a stubbed clipboard and deterministic `Math.random` values: every output was exactly the four drawn words concatenated, and all 2,000 outputs were distinct.
+- `build → votes --offline → verify → build --check` exits 0: 61 bookmarklets, 61 vote rows, 36 screenshots, 25 tools explained without one. The votes file was restored because only its timestamp changed.
+- No capture was recaptured: the result is still clipboard text, and the manifest already records the `clipboard` reason for this tool.
+
+**Limits**
+
+- The format is unchanged: four words joined without separators, using `Math.random`. Only the size of the pool behind those choices changed.
+
 ## 2026-10-26 — PDF passwords join the library
 
 **Changed**
