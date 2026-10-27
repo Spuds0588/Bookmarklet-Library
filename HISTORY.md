@@ -25,6 +25,7 @@ What has been done, in order. Newest entries first.
 - HTML to Word was run in Chrome on two separate ordered lists and an SVG image. The parser gave each list its own id, the DOCX used `numId` 2 for the first and 3 for the second, `numbering.xml` carried both, and the SVG became `word/media/image1.png` with `Extension="png"` and no skipped image.
 - `pdftoppm` rendered the earlier Word to PDF fixture, Python's docx and openpyxl opened the DOCX and XLSX outputs, and `unzip -t` accepted the converter ZIP. The RTF writer output was read back by the RTF reader with its numbered marker intact.
 - The eleven captures are 1200x750 and show populated panels with a selected batch.
+- GitHub Pages rebuilt `07030c4` and the live catalog reports 74 tools, Files 25, all eleven Office cards and the six-question FAQ. A production **Word to HTML** bookmarklet converted `report.docx` to `report.html` with an ok status, and a two-file batch showed `2 files ready` with **Save all to folder** and **Download ZIP** and no automatic download.
 
 **Limits**
 
