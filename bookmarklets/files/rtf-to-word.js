@@ -222,6 +222,7 @@ BL.startTool = (config) => {
   const MAX_FILE_BYTES = 100 * 1024 * 1024;
   const MAX_TOTAL_BYTES = 300 * 1024 * 1024;
   const accept = config.accept;
+  const LEGACY = { ".doc": ".docx", ".xls": ".xlsx" };
 
   const render = (uiWindow, root, close) => {
     const doc = uiWindow.document;
@@ -344,7 +345,14 @@ BL.startTool = (config) => {
       setStatus("");
       for (const file of files) {
         if (!normalize(file)) {
-          setStatus(`"${file.name}" is not one of the formats this tool reads (${accept}).`, "error");
+          const dot = file.name.lastIndexOf(".");
+          const extension = dot >= 0 ? file.name.slice(dot).toLowerCase() : "";
+          const replacement = LEGACY[extension];
+          if (replacement && accept.split(",").map((item) => item.trim()).includes(replacement)) {
+            setStatus(`"${file.name}" is a legacy ${extension} file. Save it as ${replacement} and try again.`, "error");
+          } else {
+            setStatus(`"${file.name}" is not one of the formats this tool reads (${accept}).`, "error");
+          }
           continue;
         }
         if (file.size > MAX_FILE_BYTES) {

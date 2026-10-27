@@ -155,6 +155,7 @@ BL.htmlToModel = async (html, options = {}) => {
         else await flushRuns(child);
       } else if (tag === "ul" || tag === "ol") {
         const currentListId = listId || `html-list-${listCounter++}`;
+        const start = tag === "ol" ? Number(child.getAttribute("start")) || 1 : 0;
         for (const item of child.children) {
           if (item.tagName.toLowerCase() !== "li") continue;
           const runs = [];
@@ -163,7 +164,7 @@ BL.htmlToModel = async (html, options = {}) => {
             if (part.nodeType === 1 && ["ul", "ol"].includes(part.tagName.toLowerCase())) nested.push(part);
             else await inline(part, {}, runs);
           }
-          blocks.push({ type: "list", ordered: tag === "ol", listLevel, listId: currentListId, runs: runs.filter((run) => run.text || run.image !== undefined) });
+          blocks.push({ type: "list", ordered: tag === "ol", listLevel, listId: currentListId, start, runs: runs.filter((run) => run.text || run.image !== undefined) });
           for (const nestedList of nested) await walk(nestedList, listLevel + 1, currentListId);
         }
       } else if (tag === "table") {

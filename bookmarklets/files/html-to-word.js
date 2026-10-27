@@ -222,6 +222,7 @@ BL.startTool = (config) => {
   const MAX_FILE_BYTES = 100 * 1024 * 1024;
   const MAX_TOTAL_BYTES = 300 * 1024 * 1024;
   const accept = config.accept;
+  const LEGACY = { ".doc": ".docx", ".xls": ".xlsx" };
 
   const render = (uiWindow, root, close) => {
     const doc = uiWindow.document;
@@ -344,7 +345,14 @@ BL.startTool = (config) => {
       setStatus("");
       for (const file of files) {
         if (!normalize(file)) {
-          setStatus(`"${file.name}" is not one of the formats this tool reads (${accept}).`, "error");
+          const dot = file.name.lastIndexOf(".");
+          const extension = dot >= 0 ? file.name.slice(dot).toLowerCase() : "";
+          const replacement = LEGACY[extension];
+          if (replacement && accept.split(",").map((item) => item.trim()).includes(replacement)) {
+            setStatus(`"${file.name}" is a legacy ${extension} file. Save it as ${replacement} and try again.`, "error");
+          } else {
+            setStatus(`"${file.name}" is not one of the formats this tool reads (${accept}).`, "error");
+          }
           continue;
         }
         if (file.size > MAX_FILE_BYTES) {
@@ -1099,6 +1107,7 @@ BL.htmlToModel = async (html, options = {}) => {
         else await flushRuns(child);
       } else if (tag === "ul" || tag === "ol") {
         const currentListId = listId || `html-list-${listCounter++}`;
+        const start = tag === "ol" ? Number(child.getAttribute("start")) || 1 : 0;
         for (const item of child.children) {
           if (item.tagName.toLowerCase() !== "li") continue;
           const runs = [];
@@ -1107,7 +1116,7 @@ BL.htmlToModel = async (html, options = {}) => {
             if (part.nodeType === 1 && ["ul", "ol"].includes(part.tagName.toLowerCase())) nested.push(part);
             else await inline(part, {}, runs);
           }
-          blocks.push({ type: "list", ordered: tag === "ol", listLevel, listId: currentListId, runs: runs.filter((run) => run.text || run.image !== undefined) });
+          blocks.push({ type: "list", ordered: tag === "ol", listLevel, listId: currentListId, start, runs: runs.filter((run) => run.text || run.image !== undefined) });
           for (const nestedList of nested) await walk(nestedList, listLevel + 1, currentListId);
         }
       } else if (tag === "table") {

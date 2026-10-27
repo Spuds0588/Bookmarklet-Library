@@ -66,13 +66,16 @@ BL.pdfWidth = (text, fontKey, size) => {
 
 BL.pdfRasterize = async (image, uiWindow) => {
   if (!image?.bytes) return null;
+  const win = uiWindow || globalThis.window;
   try {
-    if (!uiWindow?.document || typeof createImageBitmap !== "function") return null;
-    const bitmap = await createImageBitmap(new Blob([image.bytes], { type: image.mime }));
+    if (!win?.document || typeof createImageBitmap !== "function") return null;
+    const normalized = await BL.rasterizeImage(image, win);
+    if (!normalized) return null;
+    const bitmap = await createImageBitmap(new Blob([normalized.bytes], { type: normalized.mime }));
     const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
     const width = Math.max(1, Math.round(bitmap.width * scale));
     const height = Math.max(1, Math.round(bitmap.height * scale));
-    const canvas = uiWindow.document.createElement("canvas");
+    const canvas = win.document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
     const context = canvas.getContext("2d", { alpha: false });

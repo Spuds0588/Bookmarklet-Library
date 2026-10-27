@@ -38,7 +38,7 @@
 - [ ] Turn that browser pass into an automated test, so the panel-to-API wiring is checked by CI rather than by hand.
 - [ ] Open the generated RTF, DOCX and PDF in desktop Word/LibreOffice once. The current checks use Python's docx/openpyxl, `pdftoppm`, and an RTF round-trip, not a desktop suite.
 - [ ] Check **Save all to folder** on Firefox and Safari; both should fall back to **Download ZIP**, and that fallback has only been reasoned about, not clicked.
-- [ ] Check a legacy `.doc` or `.xls` gives the intended rejection message in the panel, not just in the converter core.
+- [x] Check a legacy `.doc` or `.xls` gives the intended rejection message in the panel: both now say to save as `.docx` or `.xlsx` and try again.
 
 ## Nice to have, only if it earns its place
 

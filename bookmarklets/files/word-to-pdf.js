@@ -222,6 +222,7 @@ BL.startTool = (config) => {
   const MAX_FILE_BYTES = 100 * 1024 * 1024;
   const MAX_TOTAL_BYTES = 300 * 1024 * 1024;
   const accept = config.accept;
+  const LEGACY = { ".doc": ".docx", ".xls": ".xlsx" };
 
   const render = (uiWindow, root, close) => {
     const doc = uiWindow.document;
@@ -344,7 +345,14 @@ BL.startTool = (config) => {
       setStatus("");
       for (const file of files) {
         if (!normalize(file)) {
-          setStatus(`"${file.name}" is not one of the formats this tool reads (${accept}).`, "error");
+          const dot = file.name.lastIndexOf(".");
+          const extension = dot >= 0 ? file.name.slice(dot).toLowerCase() : "";
+          const replacement = LEGACY[extension];
+          if (replacement && accept.split(",").map((item) => item.trim()).includes(replacement)) {
+            setStatus(`"${file.name}" is a legacy ${extension} file. Save it as ${replacement} and try again.`, "error");
+          } else {
+            setStatus(`"${file.name}" is not one of the formats this tool reads (${accept}).`, "error");
+          }
           continue;
         }
         if (file.size > MAX_FILE_BYTES) {
@@ -1562,13 +1570,16 @@ BL.pdfWidth = (text, fontKey, size) => {
 
 BL.pdfRasterize = async (image, uiWindow) => {
   if (!image?.bytes) return null;
+  const win = uiWindow || globalThis.window;
   try {
-    if (!uiWindow?.document || typeof createImageBitmap !== "function") return null;
-    const bitmap = await createImageBitmap(new Blob([image.bytes], { type: image.mime }));
+    if (!win?.document || typeof createImageBitmap !== "function") return null;
+    const normalized = await BL.rasterizeImage(image, win);
+    if (!normalized) return null;
+    const bitmap = await createImageBitmap(new Blob([normalized.bytes], { type: normalized.mime }));
     const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
     const width = Math.max(1, Math.round(bitmap.width * scale));
     const height = Math.max(1, Math.round(bitmap.height * scale));
-    const canvas = uiWindow.document.createElement("canvas");
+    const canvas = win.document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
     const context = canvas.getContext("2d", { alpha: false });

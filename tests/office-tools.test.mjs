@@ -225,8 +225,8 @@ test("HTML to Word gives separate ordered lists their own numbering", async () =
   const blob = await BL.writeDocx({
     title: "Lists",
     blocks: [
-      { type: "list", ordered: true, listId: "first", listLevel: 0, runs: [{ text: "One" }] },
-      { type: "list", ordered: true, listId: "first", listLevel: 0, runs: [{ text: "Two" }] },
+      { type: "list", ordered: true, listId: "first", listLevel: 0, start: 3, runs: [{ text: "One" }] },
+      { type: "list", ordered: true, listId: "first", listLevel: 0, start: 3, runs: [{ text: "Two" }] },
       { type: "paragraph", runs: [{ text: "Break" }] },
       { type: "list", ordered: true, listId: "second", listLevel: 0, runs: [{ text: "Three" }] },
     ],
@@ -240,6 +240,7 @@ test("HTML to Word gives separate ordered lists their own numbering", async () =
   assert.deepEqual([...xml.matchAll(/w:numId w:val="(\d+)"/g)].map((match) => match[1]), ["2", "2", "3"]);
   assert.match(numbering, /w:num w:numId="2"/);
   assert.match(numbering, /w:num w:numId="3"/);
+  assert.match(numbering, /w:startOverride w:val="3"/);
 });
 
 test("Word table images survive DOCX reading and Markdown output", async () => {

@@ -56,7 +56,7 @@ One output downloads by itself. Two or more outputs stay in the panel with **Sav
 
 The Word readers carry paragraphs, headings, bold/italic/underline/strike, hyperlinks, bullet and numbered lists, tables, page breaks and images. They do not carry fonts, colours, columns, text boxes, headers, footers, footnotes, comments or tracked changes. DOCX images become data URLs in HTML and Markdown, hex pictures in RTF and rasterized blocks in PDF. Data-URL and CORS-accessible remote images are embedded; relative paths and blocked images are skipped. HTML and Markdown readers rasterize GIF, BMP, WebP and SVG to PNG before writing Word when the browser can draw them. DOCX images keep their format in HTML and Markdown, while RTF keeps only PNG and JPEG.
 
-The PDF writer uses the Helvetica family, Latin-1 text, the DOCX page size and margins, simple table grids and images as blocks without text wrap. Unsupported characters are replaced and counted. Links, headers, footers and text wrap around images are not reproduced. Legacy `.doc` and `.xls` files are not read; save them as OOXML first. Nothing is uploaded.
+The PDF writer uses the Helvetica family, Latin-1 text, the DOCX page size and margins, simple table grids and images as blocks without text wrap. It rasterizes images through the browser, so PNG, JPEG, GIF, BMP, WebP and SVG sources can be drawn. Unsupported characters are replaced and counted. Links, headers, footers and text wrap around images are not reproduced. Legacy `.doc` and `.xls` files are not read; save them as OOXML first. Nothing is uploaded.
 
 ## Tests
 

@@ -2,6 +2,28 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-26 — Office converters: legacy hints, list starts and SVG PDFs
+
+**Changed**
+
+- The Word and Excel tools now name a legacy `.doc` or `.xls` file and tell you to save it as `.docx` or `.xlsx`, instead of falling back to the generic “not one of the formats this tool reads” message.
+- HTML ordered lists now carry their `start` attribute into Word. `<ol start="3">` writes a `startOverride` of 3 in `numbering.xml` instead of always starting at 1.
+- Word to PDF now sends every source image through the same browser rasterizer used by Word output. PNG, JPEG, GIF, BMP, WebP and SVG sources can be drawn; unsupported images are still counted as skipped.
+- The Office suite adds an ordered-list start-override assertion. The eleven generated files are now 59,045 to 89,617 bytes of code; their encoded install URLs are 96,976 to 148,006 characters.
+- README and AGENTS now say PDF uses the browser rasterizer for GIF, BMP, WebP and SVG, and TODO records the legacy-format panel check as done.
+
+**Verified**
+
+- `npm test`: 28 tests pass. `node scripts/compose.mjs --check`, `node scripts/build.mjs`, `node scripts/verify.mjs` and `node scripts/build.mjs --check` exit 0 after the catalog is rebuilt.
+- Chrome: dragging `legacy.doc` into **Word to HTML** reports `"legacy.doc" is a legacy .doc file. Save it as .docx and try again.`; `legacy.xls` in **Excel to CSV** reports the matching `.xlsx` message.
+- Chrome: `<ol start="3">` produces `start: 3` in the model and `w:startOverride w:val="3"` in `numbering.xml`.
+- Chrome: Word to PDF with an inline SVG image reports `skippedImages: 0`, writes an image XObject, and keeps `Before` and `after` text in the content stream.
+- No desktop Office suite is installed on this machine, so the Word/LibreOffice render check remains open.
+
+**Limits**
+
+- The same limits as the entry below apply: no desktop Word/LibreOffice pass, PDF is Latin-1 Helvetica with images as blocks, and legacy `.doc`/`.xls` files must be saved as OOXML first.
+
 ## 2026-10-26 — Eleven Office converters join Files
 
 **Changed**
@@ -10,7 +32,7 @@ What has been done, in order. Newest entries first.
 - One output downloads directly. Two or more outputs stay in the panel with **Save all to folder** (File System Access, Chrome or Edge) and **Download ZIP**; a multi-sheet workbook counts as several outputs, so it never starts an automatic download. A batch is capped at 100 files, 100 MB each and 300 MB total.
 - The Word readers carry paragraphs, headings, bold/italic/underline/strike, hyperlinks, bullet and numbered lists, tables, page breaks and images. They do not carry fonts, colours, columns, text boxes, headers, footers, footnotes, comments or tracked changes. DOCX images become data URLs in HTML and Markdown, hex `\pict` pictures in RTF and rasterized blocks in PDF. Data-URL and CORS-readable remote images are embedded; relative, blocked and undrawable images are skipped. HTML and Markdown readers rasterize GIF, BMP, WebP and SVG to PNG before writing Word when the browser can draw them. DOCX images keep their format in HTML and Markdown, while RTF keeps only PNG and JPEG.
 - The PDF writer uses Helvetica, Latin-1, the DOCX page size and margins, simple table grids and images as blocks without text wrap. Unsupported characters are replaced and counted. Links, headers, footers and text wrap around images are not reproduced. Legacy `.doc` and `.xls` files are rejected; save them as OOXML first.
-- The eleven tools share `bookmarklets/src/parts` and are composed by `scripts/compose.mjs` into self-contained `bookmarklets/files/<slug>.js` files. There is no runtime dependency and no change to how a bookmarklet is installed. The generated files are 58,557 to 88,990 bytes of code; their encoded install URLs are 96,114 to 146,937 characters.
+- The eleven tools share `bookmarklets/src/parts` and are composed by `scripts/compose.mjs` into self-contained `bookmarklets/files/<slug>.js` files. There is no runtime dependency and no change to how a bookmarklet is installed. At that commit, the generated files were 58,557 to 88,990 bytes of code; their encoded install URLs were 96,114 to 146,937 characters.
 - Fixed the conversion paths found in review: RTF numbered lists now carry their label and spacing, PDF keeps text in a paragraph that also holds an image and draws table images, DOCX keeps table images, separate ordered lists restart instead of continuing, TXT keeps text that shares a paragraph with an image, SVG/GIF/BMP/WebP are rasterized to PNG instead of being written into DOCX as `.bin` media, a failed batch shows the converter's reason in the panel instead of only in a row tooltip, and the progress bar hides when work finishes.
 - README, AGENTS, TODO and the page FAQ cover the converters, their fidelity and their limits. The Files category blurb and the Files "how it works" copy now mention Office conversion. The page FAQ schema carries the same question as the visible FAQ.
 - Files now has 25 tools, the catalog 74, the vote file 74 rows, 49 screenshots and 25 tools explained without one. **🔓 Unlock PDF** remains the featured tool.
