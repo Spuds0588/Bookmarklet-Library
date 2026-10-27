@@ -10,6 +10,9 @@ A static, zero-dependency catalog of bookmarklets. GitHub Pages serves <https://
 
 ```
 bookmarklets/<category>/<slug>.js   one bookmarklet per file: metadata comment + raw code
+bookmarklets/files/<slug>.js        generated Office converters — never edit by hand
+bookmarklets/src/tools/<slug>.js    Office converter source: metadata + @parts + startTool
+bookmarklets/src/parts/*.js         shared panel, ZIP, XML, DOCX, PDF, RTF, Markdown, HTML and sheets
 data/catalog.json                   generated — never edit by hand
 data/votes.json                     generated — 👍/👎 tally, never edit by hand
 data/screenshots.json               generated — screenshot manifest, never edit by hand
@@ -18,10 +21,13 @@ assets/style.css                    the whole theme, monochrome, CSS variables o
 assets/app.js                       catalog rendering, search, picks, detail view, export
 scripts/build.mjs                   source files -> data/catalog.json + index.html blocks
 scripts/votes.mjs                   seeds one comment per tool, counts reactions -> data/votes.json
+scripts/compose.mjs                 source parts + tool -> bookmarklets/files/<slug>.js
 scripts/shots.mjs                   runs every tool on the demo page, captures screenshots/
 scripts/fixtures/demo-page.html     the page tools are photographed against
 scripts/fixtures/sample.zip         the archive the Unzip capture opens
+scripts/fixtures/office/…           sample DOCX, XLSX, RTF, TXT, MD and CSV inputs
 tests/zip-tools.test.mjs            ZIP builder and reader tests, run with npm test
+tests/office-tools.test.mjs         Office conversion tests, run with npm test
 scripts/verify.mjs                  integrity checks (catalog, votes, screenshots)
 robots.txt, sitemap.xml             what crawlers read (hand-written)
 .github/workflows/votes.yml         nightly reaction tally, commits data/votes.json
@@ -33,6 +39,8 @@ robots.txt, sitemap.xml             what crawlers read (hand-written)
 2. Run `node scripts/build.mjs`, then `node scripts/votes.mjs --offline`, then `node scripts/verify.mjs`. The vote step adds the new row; the nightly workflow creates its comment.
 3. Run `node scripts/shots.mjs <slug> --force` if the tool's effect on the demo page changed.
 4. Check it in a browser before committing.
+
+An Office converter is generated instead. Create `bookmarklets/src/tools/<slug>.js` with the metadata block, a `// @parts ...` line and a `startTool({...})` call, then run `node scripts/compose.mjs`. That writes `bookmarklets/files/<slug>.js`, which `build.mjs` reads. Edit the source, never the generated file. `node scripts/compose.mjs --check` fails when a generated file is stale, and the composer appends the test export at the end so the browser run never sees it.
 
 Metadata fields, all required:
 
@@ -66,7 +74,7 @@ Metadata fields, all required:
 - **The demo page carries the hooks a tool looks for**: the ad blocks `.ad-slot` and `.ad-inline`, `.audio-wrapper` around the player, `#toast`, a `<video>` and an `<audio>` clip, an iframe, a form with demo values, and demo addresses to find and hide. Add a hook when a tool needs one — `audio-pip` looks for `.audio-wrapper` — because deleting one leaves that tool nothing to work on.
 - **A tool that shows its result only after you use it gets driven.** `STEPS` in `shots.mjs` holds real input events per slug — draw a stroke, click an element, type a query run a snippet, paste an image — so the capture shows the result rather than the blank canvas or the invite to start.
 - **A window a tool opens is driven too.** `AFTER` holds the steps for a popup the tool opened, run before the capture: a recorder says "ready" until somebody presses start, so it is not photographed until it says "Recording". Buttons are found by their label with `clickText` when the markup has no stable selector, and `STUBS` answers a save-file picker with a writable that goes nowhere, since a native dialog cannot be answered by a headless run.
-- **A panel in the page is a shadow root first.** The ZIP tools mount one panel into an open shadow root, then Document Picture-in-Picture, then a popup, then a native alert if popups are blocked. `render` takes the window and root so the same UI works in all three places; pickers, downloads and `showDirectoryPicker` use that window. The host is probed for a known computed style so a page CSP that blocks the panel's styles falls through instead of leaving an invisible overlay. A borrowed window (Document PiP or popup) gets the same probe: `about:blank` inherits the opener's CSP, so when its `<style>` is dropped the panel adopts the CSS as a constructable stylesheet. Because a closed shadow root would be invisible to the capture, both panels are `mode: "open"` and `STEPS` drives their real hidden pickers through `document.getElementById("bl-...-host").shadowRoot`. `mountPanel` is duplicated in the two files to keep each bookmarklet self-contained.
+- **A panel in the page is a shadow root first.** The ZIP tools and the Office converters mount one panel into an open shadow root, then Document Picture-in-Picture, then a popup, then a native alert if popups are blocked. `render` takes the window and root so the same UI works in all three places; pickers, downloads and `showDirectoryPicker` use that window. The host is probed for a known computed style so a page CSP that blocks the panel's styles falls through instead of leaving an invisible overlay. A borrowed window (Document PiP or popup) gets the same probe: `about:blank` inherits the opener's CSP, so when its `<style>` is dropped the panel adopts the CSS as a constructable stylesheet. Because a closed shadow root would be invisible to the capture, both panels are `mode: "open"` and `STEPS` drives their real hidden pickers through `document.getElementById("bl-...-host").shadowRoot`. The Office converters share `bookmarklets/src/parts/ui.js` and are generated into self-contained files; the two ZIP files keep their own copy of `mountPanel` to stay installable on their own.
 - **No image beats a misleading image.** A tool whose work never reaches the page — a download, the clipboard, speech, another site, a recording — is recorded in `data/screenshots.json` as a `reason` with no file. The tile then shows the tool's own description with the reason under it, so the space the picture would take still says what the tool does. `REASONS` in `shots.mjs` is that list, and `verify.mjs` fails any entry that has both a file and a reason, neither, or an unknown reason. Every PNG must be named by the manifest.
 - **A floating player needs a real display.** A picture-in-picture window is not part of the page surface and headless Chrome has no target for it, so the video and audio players are photographed on a display: `DISPLAY_TOOLS` lists them, `CHECKS` asserts the player really opened, and `node scripts/shots.mjs --display=:99` grabs the screen with ffmpeg (x11grab) instead of the page. Xvfb is enough and needs no root: `docker run -d --name bl-xvfb -v /tmp/.X11-unix:/tmp/.X11-unix alpine:3.20 sh -c 'apk add --no-cache xvfb && exec Xvfb :99 -screen 0 1200x750x24 -ac -nolisten tcp'`, and `docker start bl-xvfb` brings it back once it exists. Chrome is forced to `--ozone-platform=x11` with `WAYLAND_DISPLAY` dropped so it cannot land on the real desktop instead, the page is pinned to its light palette, and a document PiP window is moved into the corner with `Browser.setWindowBounds`. With no display those captures are kept as they are, and a forced run says so. The video player shows a frame because `PREP` starts playback first.
 - **A screen recorder still has no image.** `record-tab` records to a file and Chrome paints no indicator for it on a bare display, so it keeps its `display` reason — the copy now says "Records your screen" rather than claiming the catalog cannot photograph a floating window. `grab-text` reads the screen and puts the text on the clipboard, so it carries the `clipboard` reason.
@@ -75,18 +83,19 @@ Metadata fields, all required:
 - **The page is also a document.** The grid is built by `fetch()`, so anything that does not run scripts would see an empty page. `build.mjs` therefore writes two blocks into `index.html` between `<!-- tools:start -->` and `<!-- tools:end -->`: a `<noscript>` list of every tool with its description, and an `ItemList` of `SoftwareApplication` entries. Edit the tool files, never those blocks — `build.mjs --check` fails when they drift. Canonical URL, Open Graph, Twitter cards, `WebSite` and `FAQPage` structured data, `robots.txt` and `sitemap.xml` are hand-written; keep the FAQ text in the page and the FAQ schema saying the same thing. `?q=` preselects the search box because the `SearchAction` advertises it.
 - **The author card is one line of markup.** The footer holds `<burns-dev-card layout="full-width"></burns-dev-card>` and the script is loaded once in the head from the shared component URL. Standalone placement is `full-width`; never put the element inside a flex or grid row. Do not restyle its internals — the component owns its look, and a local override forks it.
 - **Votes live on GitHub, never in the page.** One comment per tool on the issue titled "Tool votes"; 👍 and 👎 reactions are the ballots. `scripts/votes.mjs` seeds comments and tallies them into `data/votes.json`, and the workflow commits it. No `localStorage` votes, no counter API.
+- **Office converters are deliberately small.** They read `.docx`/`.docm`, `.xlsx`/`.xlsm`, `.html`, `.rtf`, `.txt`, `.md`, `.csv` and `.tsv`; legacy `.doc` and `.xls` are rejected. Word output carries paragraphs, headings, emphasis, links, lists, tables, page breaks and images, not fonts, colours, columns, text boxes, headers, footers, footnotes, comments or tracked changes. PDF output is Helvetica, Latin-1, with simple table grids and images as blocks; links and text wrap around images are not reproduced. Images are embedded when they are data URLs or CORS-readable, and otherwise skipped. HTML and Markdown readers rasterize GIF, BMP, WebP and SVG to PNG before writing Word; RTF keeps only PNG and JPEG. One output downloads directly; two or more stay in the panel for **Save all to folder** (Chrome/Edge) or **Download ZIP**. A batch is capped at 100 files, 100 MB each and 300 MB total.
 - **YAGNI.** Add the smallest thing that works; delete what nothing uses.
 
 ## Verify before committing
 
 ```sh
-npm test && node scripts/build.mjs && node scripts/verify.mjs && node scripts/build.mjs --check
+npm test && node scripts/compose.mjs --check && node scripts/build.mjs && node scripts/verify.mjs && node scripts/build.mjs --check
 node scripts/shots.mjs        # only when a tool's on-page effect changed
 node scripts/shots.mjs <slug> --force                  # one tool, when it or the fixture changed
 node scripts/shots.mjs --display=:99 <slug> --force    # the floating players, with a display running
 python3 -m http.server 4173   # then open http://127.0.0.1:4173
 ```
 
-`npm test` runs `tests/zip-tools.test.mjs`. It loads the bookmarklets with `globalThis.__BL_TEST__` set, so the ZIP cores run in Node without a panel, and checks archive bytes, limits and extraction. Keep the test export block immediately before the panel code so a browser run never sees it.
+`npm test` runs `tests/zip-tools.test.mjs` and `tests/office-tools.test.mjs`. Both load the built bookmarklets with `globalThis.__BL_TEST__` set, so their cores run in Node without a panel. The ZIP suite checks archive bytes, limits and extraction. The Office suite builds and reads DOCX, XLSX, PDF and RTF output, including ordered-list restarts, table images and PDF text around an image. The composer appends the test export at the end of each generated file; never add one by hand.
 
 Stop any dev server you started and leave the workspace clean when you are done. Commit in small steps with a message that says why.

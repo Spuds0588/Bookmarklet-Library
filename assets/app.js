@@ -299,7 +299,7 @@ const HOW = {
   text:
     "It reads the page you run it on, or asks for a value first, then writes the result back to the page, the clipboard or a download.",
   files:
-    "It turns the clipboard, the files you choose or a ZIP archive into a downloaded file or folder, and can add or remove a PDF password. Nothing is uploaded.",
+    "It turns the clipboard, the files you choose or a ZIP archive into a downloaded file or folder, converts Word, Excel, HTML, RTF, text and Markdown files, and can add or remove a PDF password. Nothing is uploaded.",
   devtools:
     "It inspects the page you are on — URL, storage, DOM, scripts or console — and shows what it finds in a panel, a new tab or a downloaded file.",
   view:

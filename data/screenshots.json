@@ -1,7 +1,7 @@
 {
   "width": 1200,
   "height": 750,
-  "generated": "2026-10-26",
+  "generated": "2026-10-27",
   "tools": {
     "record-audio": {
       "file": "screenshots/record-audio.png",
@@ -123,9 +123,64 @@
       "changed": false,
       "reason": "download"
     },
+    "word-to-html": {
+      "file": "screenshots/word-to-html.png",
+      "changed": true,
+      "steps": 3
+    },
+    "word-to-markdown": {
+      "file": "screenshots/word-to-markdown.png",
+      "changed": true,
+      "steps": 3
+    },
+    "word-to-pdf": {
+      "file": "screenshots/word-to-pdf.png",
+      "changed": true,
+      "steps": 3
+    },
+    "word-to-rtf": {
+      "file": "screenshots/word-to-rtf.png",
+      "changed": true,
+      "steps": 3
+    },
+    "word-to-txt": {
+      "file": "screenshots/word-to-txt.png",
+      "changed": true,
+      "steps": 3
+    },
+    "csv-to-excel": {
+      "file": "screenshots/csv-to-excel.png",
+      "changed": true,
+      "steps": 3
+    },
+    "excel-to-csv": {
+      "file": "screenshots/excel-to-csv.png",
+      "changed": true,
+      "steps": 3
+    },
     "save-clipboard-as-csv": {
       "changed": false,
       "reason": "download"
+    },
+    "html-to-word": {
+      "file": "screenshots/html-to-word.png",
+      "changed": true,
+      "steps": 3
+    },
+    "markdown-to-word": {
+      "file": "screenshots/markdown-to-word.png",
+      "changed": true,
+      "steps": 3
+    },
+    "rtf-to-word": {
+      "file": "screenshots/rtf-to-word.png",
+      "changed": true,
+      "steps": 3
+    },
+    "txt-to-word": {
+      "file": "screenshots/txt-to-word.png",
+      "changed": true,
+      "steps": 3
     },
     "lock-pdf": {
       "changed": false,

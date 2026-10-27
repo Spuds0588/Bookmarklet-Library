@@ -2,6 +2,39 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-26 — Eleven Office converters join Files
+
+**Changed**
+
+- Added **📄 Word to HTML**, **📄 Word to TXT**, **📄 Word to RTF**, **📄 Word to PDF**, **📄 Word to Markdown**, **📝 HTML to Word**, **📝 RTF to Word**, **📝 TXT to Word**, **📝 Markdown to Word**, **📊 Excel to CSV** and **📈 CSV to Excel**. Each card accepts one file or a batch and writes the converted files locally.
+- One output downloads directly. Two or more outputs stay in the panel with **Save all to folder** (File System Access, Chrome or Edge) and **Download ZIP**; a multi-sheet workbook counts as several outputs, so it never starts an automatic download. A batch is capped at 100 files, 100 MB each and 300 MB total.
+- The Word readers carry paragraphs, headings, bold/italic/underline/strike, hyperlinks, bullet and numbered lists, tables, page breaks and images. They do not carry fonts, colours, columns, text boxes, headers, footers, footnotes, comments or tracked changes. DOCX images become data URLs in HTML and Markdown, hex `\pict` pictures in RTF and rasterized blocks in PDF. Data-URL and CORS-readable remote images are embedded; relative, blocked and undrawable images are skipped. HTML and Markdown readers rasterize GIF, BMP, WebP and SVG to PNG before writing Word when the browser can draw them. DOCX images keep their format in HTML and Markdown, while RTF keeps only PNG and JPEG.
+- The PDF writer uses Helvetica, Latin-1, the DOCX page size and margins, simple table grids and images as blocks without text wrap. Unsupported characters are replaced and counted. Links, headers, footers and text wrap around images are not reproduced. Legacy `.doc` and `.xls` files are rejected; save them as OOXML first.
+- The eleven tools share `bookmarklets/src/parts` and are composed by `scripts/compose.mjs` into self-contained `bookmarklets/files/<slug>.js` files. There is no runtime dependency and no change to how a bookmarklet is installed. The generated files are 58,557 to 88,990 bytes of code; their encoded install URLs are 96,114 to 146,937 characters.
+- Fixed the conversion paths found in review: RTF numbered lists now carry their label and spacing, PDF keeps text in a paragraph that also holds an image and draws table images, DOCX keeps table images, separate ordered lists restart instead of continuing, TXT keeps text that shares a paragraph with an image, SVG/GIF/BMP/WebP are rasterized to PNG instead of being written into DOCX as `.bin` media, a failed batch shows the converter's reason in the panel instead of only in a row tooltip, and the progress bar hides when work finishes.
+- README, AGENTS, TODO and the page FAQ cover the converters, their fidelity and their limits. The Files category blurb and the Files "how it works" copy now mention Office conversion. The page FAQ schema carries the same question as the visible FAQ.
+- Files now has 25 tools, the catalog 74, the vote file 74 rows, 49 screenshots and 25 tools explained without one. **🔓 Unlock PDF** remains the featured tool.
+
+**Verified**
+
+- `npm test`: 28 tests pass. The Office suite builds and reads DOCX, XLSX, PDF and RTF output, checks HTML/Markdown/RTF/TXT to Word, CSV quoting, Excel sheet export, ordered-list restarts, table images, RTF numbered markers and PDF text around an image. The ZIP suite is unchanged and still passes.
+- `node scripts/compose.mjs --check`, `node scripts/build.mjs`, `node scripts/verify.mjs` and `node scripts/build.mjs --check` exit 0 after the docs and catalog are rebuilt.
+- In Chrome at `http://127.0.0.1:4173`, the Word to HTML panel opened in the page's shadow root. A corrupt `.docx` produced `broken.docx: This is not a ZIP-based Office file.` in the visible status, marked the row failed, and hid the progress bar.
+- The Office panel fallback was driven through a real borrowed window: `attachShadow` was forced to fail, a substituted `documentPictureInPicture.requestWindow` returned a separate same-origin window, and the panel rendered there. Its file input, convert action, error status and close all worked, and the page kept no host element.
+- Word to PDF was run in Chrome on a paragraph containing text before and after a PNG. The PDF was 2,720 bytes with one page, one `/Subtype /Image`, and `skippedImages` 0; with compression temporarily disabled, the content stream contained `(Before)` and `(After)`.
+- HTML to Word was run in Chrome on two separate ordered lists and an SVG image. The parser gave each list its own id, the DOCX used `numId` 2 for the first and 3 for the second, `numbering.xml` carried both, and the SVG became `word/media/image1.png` with `Extension="png"` and no skipped image.
+- `pdftoppm` rendered the earlier Word to PDF fixture, Python's docx and openpyxl opened the DOCX and XLSX outputs, and `unzip -t` accepted the converter ZIP. The RTF writer output was read back by the RTF reader with its numbered marker intact.
+- The eleven captures are 1200x750 and show populated panels with a selected batch.
+
+**Limits**
+
+- No desktop Word, Excel or LibreOffice run yet. The checks use Python readers, `pdftoppm`, Chrome and RTF round-trips.
+- PDF is deliberately simple: Helvetica only, Latin-1 only, no clickable links, no headers or footers, no text wrap around images, and table images are blocks inside the cell. Fonts, colours, columns, text boxes, comments and tracked changes are dropped in every format.
+- Images must be data URLs or CORS-readable remote images. Relative paths cannot be resolved from one selected file, and images the browser cannot draw are skipped with a count.
+- **Save all to folder** needs the File System Access API and a secure page; Firefox and Safari keep the ZIP fallback. The folder permission belongs to the page origin.
+- Legacy `.doc` and `.xls` are not read, and encrypted or password-protected Office files are not supported.
+- A page CSP that blocks bookmarklets stops every tool here, these included. If it blocks the panel's shadow styles, the panel falls through to Document PiP or a popup.
+
 ## 2026-10-26 — ZIP files and Unzip join the library
 
 **Changed**

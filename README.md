@@ -4,7 +4,7 @@
 
 A searchable catalog of small browser tools. Find one that does the job, drag it to your bookmarks bar, click it on any page. Nothing to install, no accounts, no extensions.
 
-63 bookmarklets across seven categories: capture, annotate, text, files, dev tools, view and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site.
+74 bookmarklets across seven categories: capture, annotate, text, files, dev tools, view and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site.
 
 ## Use it
 
@@ -25,7 +25,7 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 | Capture | Tab screenshot, OCR a screen region, record tab/camera/audio, Loom links |
 | Annotate | Screenshot markup (arrows, boxes, numbered steps), freehand draw |
 | Text | Advanced find, find and replace on inputs, page to Markdown, read aloud, password generation |
-| Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, ZIP create/extract, HTML snippet saver, Loom export |
+| Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, ZIP create/extract, Word/HTML/RTF/TXT/Markdown and Excel/CSV conversion, HTML snippet saver, Loom export |
 | Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder |
 | View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, force scroll |
 | Privacy | Hide email addresses, blur elements, pixelate a region, hide notification toasts |
@@ -38,17 +38,39 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 
 Both panels render into an open shadow root over the page. If a page blocks that, they try Document Picture-in-Picture, then a popup; if that is blocked too, a native alert asks you to allow popups for the site. A popup can inherit the page's `style-src`, which drops its `<style>`; the panel then applies its CSS as a constructable stylesheet, which that rule does not cover. On a page whose CSP blocks bookmarklets outright, no bookmarklet runs, these included.
 
+## Office conversions
+
+Eleven tools convert one file or a batch without opening Office:
+
+| From | To |
+| --- | --- |
+| Word `.docx` / `.docm` | HTML, TXT, RTF, PDF, Markdown |
+| HTML `.html` / `.htm` | Word `.docx` |
+| RTF `.rtf` | Word `.docx` |
+| TXT `.txt` | Word `.docx` |
+| Markdown `.md` / `.markdown` | Word `.docx` |
+| Excel `.xlsx` / `.xlsm` | CSV or TSV |
+| CSV / TSV | Excel `.xlsx` |
+
+One output downloads by itself. Two or more outputs stay in the panel with **Save all to folder** (File System Access, Chrome or Edge) and **Download ZIP**; a workbook with several sheets counts as several outputs. A batch is limited to 100 files, 100 MB each and 300 MB in total.
+
+The Word readers carry paragraphs, headings, bold/italic/underline/strike, hyperlinks, bullet and numbered lists, tables, page breaks and images. They do not carry fonts, colours, columns, text boxes, headers, footers, footnotes, comments or tracked changes. DOCX images become data URLs in HTML and Markdown, hex pictures in RTF and rasterized blocks in PDF. Data-URL and CORS-accessible remote images are embedded; relative paths and blocked images are skipped. HTML and Markdown readers rasterize GIF, BMP, WebP and SVG to PNG before writing Word when the browser can draw them. DOCX images keep their format in HTML and Markdown, while RTF keeps only PNG and JPEG.
+
+The PDF writer uses the Helvetica family, Latin-1 text, the DOCX page size and margins, simple table grids and images as blocks without text wrap. Unsupported characters are replaced and counted. Links, headers, footers and text wrap around images are not reproduced. Legacy `.doc` and `.xls` files are not read; save them as OOXML first. Nothing is uploaded.
+
 ## Tests
 
 ```sh
 npm test
 ```
 
-`tests/zip-tools.test.mjs` loads both bookmarklets in a VM with only their test exports and Node's web APIs. It builds archives and checks the central directory, deflate and stored entries, folder paths, UTF-8 names, duplicate names, size and entry caps; then reads them back, including data descriptors, duplicate paths, encrypted flags, ZIP64, split archives, symlinks, unknown methods, unsafe paths, and CRC failures with partial-folder cleanup. File System Access is exercised through an in-memory directory handle.
+`tests/zip-tools.test.mjs` loads both ZIP bookmarklets in a VM with only their test exports and Node's web APIs. It builds archives and checks the central directory, deflate and stored entries, folder paths, UTF-8 names, duplicate names, size and entry caps; then reads them back, including data descriptors, duplicate paths, encrypted flags, ZIP64, split archives, symlinks, unknown methods, unsafe paths, and CRC failures with partial-folder cleanup. File System Access is exercised through an in-memory directory handle.
+
+`tests/office-tools.test.mjs` builds and reads DOCX, XLSX, PDF and RTF output in Node: Word paragraphs, headings, lists, tables and images; HTML/Markdown/RTF/TXT to Word; CSV quoting; Excel sheet export; ordered-list restarts; table images; and PDF text in a paragraph that also carries an image. Node has no canvas, so the PDF tests assert the skipped-image path; the image path is checked in Chrome.
 
 ## Add your own
 
-Create `bookmarklets/<category>/<slug>.js` with a metadata comment, then rebuild:
+For a normal tool, create `bookmarklets/<category>/<slug>.js` with a metadata comment, then rebuild:
 
 ```
 /**
@@ -67,6 +89,8 @@ node scripts/verify.mjs    # parses every tool, checks hrefs, votes and screensh
 ```
 
 The name must start with an emoji: it becomes the card title, the install button and the bookmark in someone's bar.
+
+An Office converter is generated instead. Create `bookmarklets/src/tools/<slug>.js` with the same metadata plus a `// @parts ...` line, run `node scripts/compose.mjs`, and edit the source rather than `bookmarklets/files/<slug>.js`. Shared readers and writers live in `bookmarklets/src/parts`. `node scripts/compose.mjs --check` fails if a generated file is stale.
 
 See [AGENTS.md](AGENTS.md) for the full conventions (no runtime dependencies, monochrome theme, no vendor-specific tooling).
 
@@ -135,11 +159,17 @@ index.html                     the catalog page and the full-page detail view
 assets/style.css               theme (light and dark, same monochrome palette)
 assets/app.js                  search, filters, picks, detail view, bookmark export
 bookmarklets/<category>/*.js   one file per tool, code plus metadata
+bookmarklets/src/tools/*.js    source for the generated Office converters
+bookmarklets/src/parts/*.js    shared panel, ZIP, DOCX, PDF, RTF, Markdown and HTML code
+scripts/compose.mjs            source parts + tool -> bookmarklets/files/<slug>.js
 data/catalog.json              generated catalog the page reads
 data/votes.json                generated vote tally the page reads
 data/screenshots.json          generated screenshot manifest the page reads
 screenshots/<slug>.png         one capture per tool
 scripts/fixtures/…             the demo page and media clips tools are captured against
+scripts/fixtures/office/…      sample DOCX, XLSX, RTF, TXT, MD and CSV inputs
+tests/zip-tools.test.mjs       ZIP builder and reader tests
+tests/office-tools.test.mjs    Office conversion tests
 scripts/build.mjs              builds the catalog
 scripts/votes.mjs              seeds vote comments, counts reactions
 scripts/shots.mjs              runs tools in headless Chrome, captures screenshots

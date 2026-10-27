@@ -67,6 +67,30 @@ const STEPS = {
   unzip: [{ unzipSample: true }, { wait: 700 }],
 };
 
+/* Office converters are filled through their real hidden picker, then run so
+ * the capture shows the converted batch rather than an empty queue. */
+const OFFICE_SAMPLES = {
+  "word-to-html": ["/report.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "field-report.docx", "site-report.docx"],
+  "word-to-txt": ["/report.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "field-report.docx", "site-report.docx"],
+  "word-to-rtf": ["/report.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "field-report.docx", "site-report.docx"],
+  "word-to-pdf": ["/report.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "field-report.docx", "site-report.docx"],
+  "word-to-markdown": ["/report.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "field-report.docx", "site-report.docx"],
+  "html-to-word": ["/report.html", "text/html", "field-report.html", "site-report.html"],
+  "rtf-to-word": ["/report.rtf", "application/rtf", "field-report.rtf", "site-report.rtf"],
+  "txt-to-word": ["/report.txt", "text/plain", "field-report.txt", "site-report.txt"],
+  "markdown-to-word": ["/report.md", "text/markdown", "field-report.md", "site-report.md"],
+  "excel-to-csv": ["/report.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "field-report.xlsx"],
+  "csv-to-excel": ["/report.csv", "text/csv", "field-report.csv", "site-report.csv"],
+};
+for (const [slug, sample] of Object.entries(OFFICE_SAMPLES)) {
+  const [url, type, ...names] = sample;
+  STEPS[slug] = [
+    { officeSample: { host: `bl-${slug}-host`, url, type, names } },
+    { shadowClick: { host: `bl-${slug}-host`, selector: "[data-convert]" } },
+    { wait: 1300 },
+  ];
+}
+
 const ZIP_SAMPLE = [
   ["project/README.md", "# Project notes\n\nEverything for the weekly handoff.\n"],
   ["project/notes/2026-10-20.md", "- Site visit at 9:15\n- Follow-up call at 14:00\n- Send the revised deck\n"],
@@ -418,6 +442,44 @@ async function runStep(cdp, sessionId, step, pasteImage) {
     );
   }
 
+  if (step.officeSample) {
+    return evaluate(
+      cdp,
+      sessionId,
+      `(async () => {
+        const spec = ${JSON.stringify(step.officeSample)};
+        const root = document.getElementById(spec.host)?.shadowRoot;
+        if (!root) throw new Error("office panel is not in the page");
+        const response = await fetch(spec.url, { cache: "no-store" });
+        if (!response.ok) throw new Error("office sample did not load");
+        const bytes = await response.arrayBuffer();
+        const transfer = new DataTransfer();
+        for (const name of spec.names) transfer.items.add(new File([bytes], name, { type: spec.type }));
+        const input = root.querySelector('input[type="file"]');
+        if (!input) throw new Error("office file picker is missing");
+        input.files = transfer.files;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        return true;
+      })()`,
+    );
+  }
+
+  if (step.shadowClick) {
+    return evaluate(
+      cdp,
+      sessionId,
+      `(() => {
+        const spec = ${JSON.stringify(step.shadowClick)};
+        const root = document.getElementById(spec.host)?.shadowRoot;
+        if (!root) throw new Error("office panel is not in the page");
+        const button = root.querySelector(spec.selector);
+        if (!button) throw new Error("office action button is missing");
+        button.click();
+        return true;
+      })()`,
+    );
+  }
+
   if (step.unzipSample) {
     return evaluate(
       cdp,
@@ -650,6 +712,13 @@ const MEDIA = new Map([
   ["/demo.mp4", ["demo.mp4", "video/mp4"]],
   ["/demo.mp3", ["demo.mp3", "audio/mpeg"]],
   ["/sample.zip", ["sample.zip", "application/zip"]],
+  ["/report.docx", ["office/report.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]],
+  ["/report.xlsx", ["office/report.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]],
+  ["/report.html", ["office/report.html", "text/html"]],
+  ["/report.rtf", ["office/report.rtf", "application/rtf"]],
+  ["/report.md", ["office/report.md", "text/markdown"]],
+  ["/report.txt", ["office/report.txt", "text/plain"]],
+  ["/report.csv", ["office/report.csv", "text/csv"]],
 ]);
 
 async function serveFixture() {
