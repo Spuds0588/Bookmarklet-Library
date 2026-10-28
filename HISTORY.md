@@ -2,6 +2,24 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-28 — Doom becomes a window, not a takeover
+
+**Changed**
+
+- **💥 Will it run Doom?** now opens as a centered 960 px, 16:10 window over a dimmed page instead of filling the viewport. The header has **Expand** (fills the browser), **Open in tab** and **Close**; **Shrink** returns to the window. On narrow screens the tab label shortens to **Tab**.
+- Opening no longer focuses the iframe or the game canvas, so typing stays on the page until the game is clicked. The hosted page requests pointer lock only from a real canvas click, explicitly exits pointer lock on Esc, and listens for a close message from the loader. Closing the loader sends that message, restores the page's previous focus and scroll, and leaves no frame or overlay behind. Escape while expanded shrinks first and closes on the next press.
+- README, AGENTS, TODO, the bookmarklet description and both FAQ copies now describe the window, Expand and the focus behaviour. The 1200×750 capture was regenerated from the new panel.
+
+**Verified**
+
+- `npm test`: 49 tests pass. `build.mjs --check`, `compose.mjs --check` and `verify.mjs` pass with 114 bookmarklets, 79 screenshots and 35 explained tools. `node scripts/shots.mjs doom --force` captured the real game in the new window.
+- Local Chrome at 1280×901: the window is 960×652 with a 958×599 stage, focus stays on the link that had it, Expand fills the 1120×887 viewport, Shrink returns to 960×652, the first Escape shrinks, the second closes, and close restores the link's focus and the page's `overflow`.
+- The hosted page loads with `activeElement` on `BODY`, no pointer lock, and the hint visible. A synthetic canvas click focuses the canvas but this embedded preview refuses pointer lock with `SecurityError: The root document of this element is not valid for pointer lock`, so the game's mouse-look and the Esc release need a regular browser window.
+
+**Limit**
+
+- The first load is still about 7 MB. There are no touch controls, and a strict `frame-src` CSP needs **Open in tab**. Pointer lock cannot be exercised inside the Freebuff preview surface; the release path itself is explicit in the hosted page and the loader.
+
 ## 2026-10-28 — Actual Doom replaces the raycaster
 
 **Changed**

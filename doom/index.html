@@ -97,7 +97,7 @@
   </div>
 </div>
 <div id="error" role="alert" hidden></div>
-<div id="hint">Click the game for sound · Esc releases the mouse</div>
+<div id="hint">Click the game to play and enable sound · Esc releases the mouse</div>
 <noscript>This page needs JavaScript and WebAssembly to run Doom.</noscript>
 <script>
 (() => {
@@ -108,6 +108,30 @@
   const hint = document.getElementById("hint");
   const home = document.getElementById("home");
   let failed = false;
+  let hintTimer = 0;
+
+  const showHint = (text, duration = 7000) => {
+    hint.textContent = text;
+    hint.classList.add("show");
+    clearTimeout(hintTimer);
+    if (duration > 0) hintTimer = setTimeout(() => hint.classList.remove("show"), duration);
+  };
+
+  // Esc is the browser's own way out of pointer lock. Calling it here makes the
+  // release explicit, and closing the panel asks for the same release first.
+  const releasePointer = () => {
+    if (document.pointerLockElement) document.exitPointerLock();
+  };
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") releasePointer();
+  });
+  document.addEventListener("pointerlockchange", () => {
+    if (document.pointerLockElement === canvas) showHint("Mouse captured · Esc releases it", 3000);
+    else showHint("Mouse released · click the game to play again", 3500);
+  });
+  window.addEventListener("message", (event) => {
+    if (event.data?.source === "bl-doom" && event.data.type === "release") releasePointer();
+  });
 
   // The hosted page is normally inside the bookmarklet's overlay. Hiding the
   // library link there keeps every click inside the game and its header.
@@ -140,9 +164,7 @@
     },
     onRuntimeInitialized() {
       loading.classList.add("hidden");
-      canvas.focus();
-      hint.classList.add("show");
-      setTimeout(() => hint.classList.remove("show"), 7000);
+      showHint("Click the game to play and enable sound · Esc releases the mouse");
     },
   };
 
