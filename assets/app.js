@@ -299,11 +299,15 @@ const HOW = {
     "It inspects the page you are on — URL, storage, DOM, scripts or console — and shows what it finds in a panel, a new tab or a downloaded file.",
   view:
     "It changes how the page in front of you is shown, or hands its media to a floating player. Run it again or reload to undo.",
+  games:
+    "It opens a self-contained game in a floating window over the page. The controls are on screen; Esc pauses, F expands and Close removes it without touching the page.",
   privacy:
     "It rewrites the page in place so the details you do not want to share stay out of a screenshot or screen share. Reload to restore the page.",
 };
 
 const HOW_TOOL = {
+  "neon-hell":
+    "A neon bullet-hell arena in a 960×600 window. WASD or the arrow keys move with inertia, the mouse aims, and holding the left button fires 10 shots a second. Chasers home in, drifters ricochet off the walls, and each purple grunt takes three hits before it bursts into micro-chasers. The clock raises the enemy cap and shortens the spawn gap continuously. Esc pauses and hands the page back, F fills the screen, and the best score is stored for the origin you are on. Close removes the window; the game is one self-contained file.",
   doom:
     "It opens a centered window and loads actual shareware Doom Episode 1: a WebAssembly engine and the shareware WAD, about 7 MB on the first visit. The game starts frozen behind a Click to play gate, so loading or hovering never takes the mouse or keyboard. Play asks for pointer lock; until the canvas holds it, mouse movement and wheel input are dropped. Esc pauses and releases the mouse without opening the engine menu, and F1–F10 stay suppressed. Free-look is on, so the mouse tilts the view as well as turning it; aiming still uses Doom's autoaim. The footer lists the controls; Close exits, and Expand or Open in tab are in the header.",
 };

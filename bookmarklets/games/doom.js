@@ -1,6 +1,6 @@
 /**
  * @name 💥 Will it run Doom?
- * @category view
+ * @category games
  * @description Open actual shareware Doom, Episode 1, in a window with a real WAD and WebAssembly engine.
  * @tags doom, game, wasm, shareware, fun, easter egg
  * @added 2026-10-28

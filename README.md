@@ -4,7 +4,7 @@
 
 A searchable catalog of small browser tools. Find one that does the job, drag it to your bookmarks bar, click it on any page. Nothing to install, no accounts, no extensions.
 
-114 bookmarklets across seven categories: capture, annotate, text, files, dev tools, view and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site. Two tools use a hosted helper page: the URL chat loads PeerJS from a CDN, and Doom loads its own WebAssembly engine and shareware WAD from this site.
+115 bookmarklets across eight categories: capture, annotate, text, files, dev tools, view, games and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site. Two tools use a hosted helper page: the URL chat loads PeerJS from a CDN, and Doom loads its own WebAssembly engine and shareware WAD from this site.
 
 ## Use it
 
@@ -27,7 +27,8 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 | Text | Advanced find, find and replace on inputs, page to Markdown, read aloud, extract emails, table to CSV/Markdown, text-fragment citations, password generation |
 | Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, ZIP create/extract, Word/HTML/RTF/TXT/Markdown and Excel/CSV conversion both ways, OpenDocument `.odt`/`.ods` conversion both ways, HTML snippet saver, Loom export |
 | Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder, layout and accessibility overlays, environment switcher, form harvester/stamper, webhook dispatcher |
-| View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, sticky-header removal, link highlighting, dark mode, force scroll, presenter spotlight, Jitsi meeting, URL chat, voice commands, Doom |
+| View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, sticky-header removal, link highlighting, dark mode, force scroll, presenter spotlight, Jitsi meeting, URL chat, voice commands |
+| Games | Doom, Neon Hell |
 | Privacy | Redact page text, hide email addresses, blur elements, pixelate a region, hide notification toasts, PII masker |
 
 ## Community tools
@@ -117,6 +118,10 @@ The PDF writer uses the Helvetica family, Latin-1 text, the DOCX page size and m
 **💥 Will it run Doom?** opens a centered window with actual shareware **DOOM** Episode 1, not a lookalike. The bookmarklet is a small loader; [doom/](doom/index.html) hosts the unmodified Dwasm 2.2.0 WebAssembly engine and the shareware `DOOM1.WAD`. It starts on E1M1 at Hurt Me Plenty. **Expand** fills the browser, and **Open in tab** is there because a strict `frame-src` CSP can block the iframe.
 
 The game loads frozen behind a **Click to play** gate. Opening the window, hovering over it or scrolling past it does not take the keyboard or the mouse. **Play** resumes the engine, asks for pointer lock and enables sound. `WASD` moves, `←`/`→` turn, the mouse looks, click or Ctrl fires, Space opens, Shift runs and Tab shows the map; the same list sits in the footer under the window. Mouse movement is only read while the canvas holds pointer lock, so a released pointer cannot spin or fire the player. Free-look is on: moving the mouse up or down tilts the view, while aiming still uses Doom's autoaim. Esc is captured before the engine sees it: it pauses the game and releases the mouse instead of opening the engine menu. The other menu keys (F1–F10) are captured as well, so save, load, options and help screens never interrupt the level. Close (or the header **×**) exits; Esc does not close the window. Closing releases the pointer, removes the overlay and restores the page's scroll and focus. The first load is about 7 MB; later visits use the browser cache. The engine and WAD provenance, licenses and hashes are in [doom/README.md](doom/README.md).
+
+## Neon Hell
+
+**👾 Neon Hell** is a self-contained neon bullet-hell arena in a floating 960×600 window. There is no hosted page and no external asset: the bookmarklet is the whole game. `WASD` or the arrow keys move with inertia, the mouse aims, and holding the left button fires 10 shots a second. Chasers follow you, drifters ricochet, and purple grunts take three hits before splitting into micro-chasers. The enemy cap and spawn rate scale with the session clock. `Esc` pauses, releases the page and lets you use the page behind the window; `Esc` again or a click on the canvas resumes. `F` expands to the viewport, and **Close** (or **×**) tears the game down and restores the page. The best score is stored in `localStorage` under `NEON_HELL_HS`, scoped to the origin you are on; storage failures fall back to the in-memory score. There are no touch controls yet.
 
 ## Tests
 

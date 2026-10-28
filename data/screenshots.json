@@ -430,6 +430,11 @@
       "changed": true,
       "popup": true
     },
+    "neon-hell": {
+      "file": "screenshots/neon-hell.png",
+      "changed": true,
+      "steps": 3
+    },
     "doom": {
       "file": "screenshots/doom.png",
       "changed": true,

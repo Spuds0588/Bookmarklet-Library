@@ -29,6 +29,7 @@ const CATEGORIES = [
   ["files", "🗂️", "Files", "Clipboard, PDFs, ZIP, Office converters and exports"],
   ["devtools", "🛠️", "Dev tools", "Inspect URLs, storage, DOM and console"],
   ["view", "👀", "View", "Preview, magnify, declutter, picture-in-picture"],
+  ["games", "🎮", "Games", "Arcade, shooters and browser game experiments"],
   ["privacy", "🕶️", "Privacy", "Redact what should not be seen"],
 ];
 const categoryIndex = new Map(CATEGORIES.map(([id], i) => [id, i]));

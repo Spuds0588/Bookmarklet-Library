@@ -71,6 +71,13 @@ const STEPS = {
     // Let the mouse-captured hint fade so it does not sit over the status bar.
     { wait: 3800 },
   ],
+  // Let a couple of enemies arrive, then aim right and hold fire so the capture
+  // shows the arena in motion rather than an empty opening frame.
+  "neon-hell": [
+    { wait: 2200 },
+    { script: 'const r=document.getElementById("nh-root").shadowRoot; const c=r.querySelector("canvas"); const b=c.getBoundingClientRect(); c.dispatchEvent(new PointerEvent("pointermove",{bubbles:true,clientX:b.left+720,clientY:b.top+300})); c.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,button:0,clientX:b.left+720,clientY:b.top+300}));' },
+    { wait: 1400 },
+  ],
   // The picker draws its overlay once the capture is ready, then keeps the
   // redaction toast up for a few seconds: drag a region before it fades.
   "pixelate-section": [{ wait: 2400 }, { drag: [280, 320, 780, 580] }, { wait: 250 }],

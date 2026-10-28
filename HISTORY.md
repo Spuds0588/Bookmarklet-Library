@@ -2,6 +2,27 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-28 — Neon Hell opens the Games category
+
+**Changed**
+
+- Added **👾 Neon Hell**, a self-contained neon bullet-hell arena in a shadow-root window. `WASD` or the arrow keys move with inertia, the mouse aims, and holding the left button fires ten shots a second. Chasers home in, drifters ricochet, and purple grunts take three hits before splitting. The enemy cap and spawn rate rise with the session clock; particles, screen shake, a live score and a local best score keep the run readable. Esc pauses, F expands and Close tears down every node and listener.
+- Added a **🎮 Games** category after View, with `Doom, Neon Hell` in the README and its own how-to copy on the detail page. **💥 Will it run Doom?** moved from `bookmarklets/view/` to `bookmarklets/games/`; `build.mjs` now emits the category, the catalog, the crawlable `<noscript>` block and the `ItemList` all agree, and the old path is gone.
+- The game's best score lives in `localStorage` under `NEON_HELL_HS`, scoped to the origin it runs on. A blocked store leaves the in-memory score working rather than breaking the game. There is no network request and no hosted page.
+- README, AGENTS, TODO, the Games chip, the catalog card and the full-page controls note describe the game and the new category. `scripts/shots.mjs` waits for enemies, aims right and holds fire, so the capture shows the arena in motion.
+- The source is 19.1 KB and its bookmark URL is 32.4 KB, under the 64 KB self-imposed ceiling.
+
+**Verified**
+
+- `npm test`: 49 tests pass. `build.mjs --check`, `compose.mjs --check` and `verify.mjs` pass with 115 bookmarklets, eight categories, 80 screenshots and 35 explained tools.
+- Headless Chrome, built bookmarklet on the demo page: the window opened at 960×600 with the canvas focused; `d` moved the player 41 px in 300 ms; holding the left button produced four bullets and killed a target for 100 points; Esc paused and released the page, and Esc or a click on the canvas resumed it and hid the page overflow again; F filled a 1200×750 viewport; the game-over path wrote a best of 1234 to storage; restart returned three lives and no enemies; Close removed `#nh-root`, restored overflow and focus, and a second run reopened cleanly.
+- Local catalog: the Games chip reads 2, filtering shows only Neon Hell and Doom, both cards use `screenshots/neon-hell.png` and `screenshots/doom.png`, and the detail view names the category and links `bookmarklets/games/neon-hell.js`.
+- Structured data: the ItemList carries 115 items and both games point at `bookmarklets/games/` rather than the old `view/` path.
+
+**Limit**
+
+- The game has no touch controls, sound or shared high-score table. It has only been played in Chrome; Firefox and Safari are untested. This entry records the local checks; production verification follows in the deploy step.
+
 ## 2026-10-28 — Doom stops taking input until Play, and looks up
 
 **Changed**
