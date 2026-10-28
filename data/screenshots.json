@@ -89,6 +89,10 @@
       "changed": false,
       "reason": "clipboard"
     },
+    "citation-link": {
+      "changed": false,
+      "reason": "clipboard"
+    },
     "scratchpad": {
       "file": "screenshots/scratchpad.png",
       "changed": true,

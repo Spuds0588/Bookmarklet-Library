@@ -162,6 +162,7 @@ const REASONS = {
   "jitsi-instant-call": "external",
   "url-anchored-chat": "external",
   "voice-commander": "dialog",
+  "citation-link": "clipboard",
   "enable-api-export": "other-page",
   "clear-site-data": "reload",
   "force-scroll": "no-effect",
