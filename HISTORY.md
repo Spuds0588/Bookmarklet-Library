@@ -2,6 +2,25 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-28 — Actual Doom replaces the raycaster
+
+**Changed**
+
+- **💥 Will it run Doom?** opens actual shareware DOOM Episode 1 instead of the 19 KB E1M1-inspired raycaster. The bookmarklet is a 4.5 KB loader; `doom/` hosts Dwasm 2.2.0 (`index.js`, `index.wasm`, `index.data`) and the 4,196,020-byte shareware `DOOM1.WAD`. It starts on E1M1 at Hurt Me Plenty.
+- The panel is a shadow-root full-screen iframe. It grants `autoplay`, `fullscreen` and `gamepad`, keeps **Open in tab** for pages whose `frame-src` CSP blocks the iframe, and restores the host page's previous `overflow` when it closes. The hosted page writes the WAD into the engine's memory filesystem and starts with `-iwad doom1.wad -warp 1 1 -skill 3`.
+- `doom/` carries GPLv2 (`COPYING`), id's shareware terms (`LICENSE-DOOM.txt`) and provenance with SHA-256 hashes. The page is `noindex`. The detail view has a Doom-specific note; README, AGENTS, TODO and the FAQ now describe the hosted load and the tab fallback. The old raycaster specification is marked superseded.
+- The screenshot fixture server serves `doom/`; the 1200×750 card capture is the real game, not a blank frame.
+
+**Verified**
+
+- `npm test`: 49 tests pass. `build.mjs --check`, `compose.mjs --check` and `verify.mjs` pass with 114 bookmarklets, 79 screenshots and 35 explained tools. The visible FAQ and FAQPage schema match 10 for 10.
+- Local Chrome: the overlay reaches E1M1, the iframe is `Dwasm 2.2.0` with a 1366×768 canvas, `Space` reaches the game, **Open in tab** points at `/doom/`, and the close button removes the host and restores `overflow`. The page and all engine assets hash as committed.
+- Production: `/doom/` returns 200 for the page, JS, WASM, config and WAD; the WASM is `application/wasm`, the WAD `application/x-doom`. All seven served files match their local SHA-256. The live bookmarklet opens E1M1 from the production page, `Space` registers, and close restores the page. The live detail view shows the new capture and the Doom-specific note.
+
+**Limit**
+
+- The first load is about 7 MB. There are no touch controls; pointer lock was not exercised in the preview browser, though keyboard input was. A strict `frame-src` CSP requires **Open in tab**.
+
 ## 2026-10-28 — Twelve browser tools for presenting, forms and demos
 
 **Changed**

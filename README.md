@@ -114,7 +114,7 @@ The PDF writer uses the Helvetica family, Latin-1 text, the DOCX page size and m
 
 ## Doom
 
-**💥 Will it run Doom?** opens a full-screen panel with actual shareware **DOOM** Episode 1, not a lookalike. The bookmarklet is a small loader; [doom/](doom/index.html) hosts the unmodified Dwasm 2.2.0 WebAssembly engine and the shareware `DOOM1.WAD`. It starts on E1M1 at Hurt Me Plenty. `WASD` and the arrow keys move, the mouse turns and fires, Space uses, Esc opens the menu and Tab shows the automap. Click the game once for sound. The first load is about 7 MB; later visits use the browser cache. **Open in tab** is there because a strict `frame-src` CSP can block the iframe. Closing, Esc or `pagehide` removes the overlay and restores the page's scroll. The engine and WAD provenance, licenses and hashes are in [doom/README.md](doom/README.md).
+**💥 Will it run Doom?** opens a full-screen panel with actual shareware **DOOM** Episode 1, not a lookalike. The bookmarklet is a small loader; [doom/](doom/index.html) hosts the unmodified Dwasm 2.2.0 WebAssembly engine and the shareware `DOOM1.WAD`. It starts on E1M1 at Hurt Me Plenty. `WASD` and the arrow keys move, the mouse turns and fires when the browser grants pointer lock, Space uses, Esc opens the game's menu and Tab shows the automap. Click the game once for sound. The first load is about 7 MB; later visits use the browser cache. **Open in tab** is there because a strict `frame-src` CSP can block the iframe. Closing the panel or `pagehide` removes the overlay and restores the page's scroll. The engine and WAD provenance, licenses and hashes are in [doom/README.md](doom/README.md).
 
 ## Tests
 
