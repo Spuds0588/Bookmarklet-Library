@@ -20,8 +20,8 @@ What has been done, in order. Newest entries first.
 
 **Production**
 
-- After the push (`435536d`), GitHub Pages served 116 tools with the QR card. The served source matched the checkout's SHA-256 (`0649de85…20d94b`), the catalog reported 31,387 bytes and a 47.8 KB URL, and `screenshots/qr-code.png` matched.
-- The live install opened a 37×37 version 5 code for the production URL. Copy PNG and Copy SVG both reported success in Chrome. Download PNG produced a 990×990 PNG; Download SVG produced a 5,003-byte, 45×45 unit SVG. UTF-8 and too-long states behaved, and Esc closed the panel.
+- After the final push (`25b2cc9`), GitHub Pages served 116 tools with the QR card. The served source matched the checkout's SHA-256 (`b07e2009…62855`), the catalog reported 31,388 bytes and a 47.8 KB URL, and `screenshots/qr-code.png` matched.
+- The live install opened a 41×41 version 6 code for the production URL. Copy PNG and Copy SVG both reported success in Chrome. Download PNG produced a 980×980 PNG; Download SVG produced a 6,112-byte, 49×49 unit SVG. UTF-8 and too-long states behaved, and Esc closed the panel.
 
 **Limit**
 
