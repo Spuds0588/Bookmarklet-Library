@@ -731,17 +731,15 @@ kbd {
 
 .faq-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   margin-top: 28px;
   border-top: 1px solid var(--line);
 }
 
 .faq-item {
-  padding: 22px 24px 24px 0;
+  padding: 20px 0 22px;
   border-bottom: 1px solid var(--line);
 }
-.faq-item:nth-child(odd) { padding-right: 24px; border-right: 1px solid var(--line); }
-.faq-item:nth-child(even) { padding-left: 24px; }
 
 .faq-item h3 {
   margin: 0;
@@ -752,7 +750,7 @@ kbd {
 
 .faq-item p {
   margin: 8px 0 0;
-  max-width: 52ch;
+  max-width: 68ch;
   font-size: 13px;
   line-height: 1.6;
   color: var(--muted);
@@ -1049,10 +1047,6 @@ body.has-detail { overflow: hidden; }
   .steps { grid-template-columns: 1fr; border-top: 0; }
   .steps li,
   .steps li + li { padding: 20px 0; border-right: 0; border-top: 1px solid var(--line); }
-  .faq-list { grid-template-columns: 1fr; }
-  .faq-item,
-  .faq-item:nth-child(odd),
-  .faq-item:nth-child(even) { padding: 20px 0; border-right: 0; }
   .composer-note { display: none; }
   .composer-inner { flex-wrap: wrap; }
   .catalog-head { flex-direction: column; align-items: flex-start; }

@@ -1411,9 +1411,10 @@ BL.odfParagraph = (element, ctx, heading) => {
 /* A list item's first paragraph carries the marker; further paragraphs and
    nested lists follow it as ordinary blocks, which is how the flat model holds
    lists everywhere else in the library. */
-BL.odfList = (element, ctx, level) => {
+BL.odfList = (element, ctx, level, inheritedId = "") => {
   const definition = ctx.book.listLevel(BL.odfAttr(element, "text:style-name"), level + 1);
-  const listId = `odf-list-${++ctx.listSeq}`;
+  // Nested lists continue the parent list's numbering, so they share its id.
+  const listId = inheritedId || `odf-list-${++ctx.listSeq}`;
   const blocks = [];
   let counter = definition.start || 1;
   let first = true;
@@ -1422,7 +1423,7 @@ BL.odfList = (element, ctx, level) => {
     if (item.name === "#text") continue;
     const tag = BL.localName(item.name);
     if (tag === "list") {
-      blocks.push(...BL.odfList(item, ctx, level + 1));
+      blocks.push(...BL.odfList(item, ctx, level + 1, listId));
       continue;
     }
     if (tag !== "list-item" && tag !== "list-header") continue;
@@ -1453,7 +1454,7 @@ BL.odfList = (element, ctx, level) => {
         if (first && definition.ordered && counter !== (definition.start || 1)) lead.start = counter;
         blocks.push(lead);
       } else if (kind === "list") {
-        blocks.push(...BL.odfList(child, ctx, level + 1));
+        blocks.push(...BL.odfList(child, ctx, level + 1, listId));
       }
     }
     if (definition.ordered) counter++;
@@ -1585,7 +1586,7 @@ BL.parseOdt = async (file, options = {}) => {
    way the OpenDocument Engine Suite clamps them, so a padded sheet never asks for
    a million rows. */
 
-BL.odsLimits = { rows: 10000, columns: 1024, cellRepeat: 1024, rowRepeat: 10000, cells: 300000 };
+BL.odsLimits = { rows: 100000, columns: 1024, cellRepeat: 1024, cells: 300000 };
 
 BL.odfCellText = (cell) => {
   const paragraphs = BL.odfChildren(cell, "p");
@@ -1619,18 +1620,32 @@ BL.odsValue = (cell) => {
 
 BL.odsCells = (rowElement, budget) => {
   const cells = [];
+  let pending = 0;
+  // LibreOffice pads every row with one blank cell repeated across the full
+  // remaining width. Keeping a blank run pending means trailing padding costs
+  // nothing and only an interior run is materialized to keep columns aligned.
+  const add = (value, repeat) => {
+    if (value === "" || value === null || value === undefined) {
+      pending = Math.min(pending + repeat, BL.odsLimits.columns);
+      return;
+    }
+    if (pending + repeat > BL.odsLimits.columns - cells.length) throw new Error(`This spreadsheet is wider than the converter handles (${BL.odsLimits.columns} columns).`);
+    const fill = pending;
+    const take = repeat;
+    budget.count += fill + take;
+    if (budget.count > BL.odsLimits.cells) throw new Error("This spreadsheet has too many cells for the converter. Try a smaller sheet.");
+    for (let index = 0; index < fill; index++) cells.push("");
+    for (let index = 0; index < take; index++) cells.push(value);
+    pending = 0;
+  };
   for (const child of rowElement.children || []) {
     if (child.name === "#text" || cells.length >= BL.odsLimits.columns) continue;
     const tag = BL.localName(child.name);
     if (tag !== "table-cell" && tag !== "covered-table-cell") continue;
     const repeat = Math.min(Math.max(Number(BL.odfAttr(child, "table:number-columns-repeated", "1")) || 1, 1), BL.odsLimits.cellRepeat);
-    budget.count += repeat;
-    if (budget.count > BL.odsLimits.cells) throw new Error("This spreadsheet has too many cells for the converter. Try a smaller sheet.");
     // Covered cells keep merged ranges aligned with the visual grid.
-    const value = tag === "covered-table-cell" ? "" : BL.odsValue(child);
-    for (let index = 0; index < repeat && cells.length < BL.odsLimits.columns; index++) cells.push(value);
+    add(tag === "covered-table-cell" ? "" : BL.odsValue(child), repeat);
   }
-  while (cells.length && cells[cells.length - 1] === "") cells.pop();
   return cells;
 };
 
@@ -1640,19 +1655,22 @@ BL.odsRows = (table) => {
   let blanks = 0;
 
   const pushRow = (rowElement) => {
-    const repeat = Math.min(Math.max(Number(BL.odfAttr(rowElement, "table:number-rows-repeated", "1")) || 1, 1), BL.odsLimits.rowRepeat);
+    const repeat = Math.max(Number(BL.odfAttr(rowElement, "table:number-rows-repeated", "1")) || 1, 1);
     const cells = BL.odsCells(rowElement, budget);
     if (!cells.length) {
       // Blank runs are deferred: trailing ones are dropped, interior ones are
       // restored when a row with content arrives.
-      blanks = Math.min(blanks + repeat, BL.odsLimits.rows);
+      blanks += repeat;
       return;
     }
-    while (blanks > 0 && rows.length < BL.odsLimits.rows) {
+    if (blanks + repeat > BL.odsLimits.rows - rows.length) {
+      throw new Error(`This spreadsheet has more rows than the converter handles (${BL.odsLimits.rows} per sheet).`);
+    }
+    while (blanks > 0) {
       rows.push([]);
       blanks--;
     }
-    for (let index = 0; index < repeat && rows.length < BL.odsLimits.rows; index++) rows.push(cells.slice());
+    for (let index = 0; index < repeat; index++) rows.push(cells.slice());
   };
 
   const readRows = (node) => {
@@ -1828,9 +1846,10 @@ BL.parseXlsx = async (file, options = {}) => {
     }
     const matrix = [];
     for (const row of rows) {
-      const normalized = Array.isArray(row) ? row.slice(0, maxColumn + 1) : [];
-      while (normalized.length < maxColumn + 1) normalized.push("");
-      matrix.push(normalized.map((value) => value ?? ""));
+      // Build densely: slicing a sparse row leaves holes that Array#map skips,
+      // which shifts every later cell one column to the left.
+      const normalized = Array.from({ length: maxColumn + 1 }, (_, column) => row?.[column] ?? "");
+      matrix.push(normalized);
     }
     while (matrix.length && matrix.at(-1).every((value) => value === "")) matrix.pop();
     let width = maxColumn + 1;

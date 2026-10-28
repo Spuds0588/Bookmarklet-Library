@@ -1554,9 +1554,10 @@ BL.odfParagraph = (element, ctx, heading) => {
 /* A list item's first paragraph carries the marker; further paragraphs and
    nested lists follow it as ordinary blocks, which is how the flat model holds
    lists everywhere else in the library. */
-BL.odfList = (element, ctx, level) => {
+BL.odfList = (element, ctx, level, inheritedId = "") => {
   const definition = ctx.book.listLevel(BL.odfAttr(element, "text:style-name"), level + 1);
-  const listId = `odf-list-${++ctx.listSeq}`;
+  // Nested lists continue the parent list's numbering, so they share its id.
+  const listId = inheritedId || `odf-list-${++ctx.listSeq}`;
   const blocks = [];
   let counter = definition.start || 1;
   let first = true;
@@ -1565,7 +1566,7 @@ BL.odfList = (element, ctx, level) => {
     if (item.name === "#text") continue;
     const tag = BL.localName(item.name);
     if (tag === "list") {
-      blocks.push(...BL.odfList(item, ctx, level + 1));
+      blocks.push(...BL.odfList(item, ctx, level + 1, listId));
       continue;
     }
     if (tag !== "list-item" && tag !== "list-header") continue;
@@ -1596,7 +1597,7 @@ BL.odfList = (element, ctx, level) => {
         if (first && definition.ordered && counter !== (definition.start || 1)) lead.start = counter;
         blocks.push(lead);
       } else if (kind === "list") {
-        blocks.push(...BL.odfList(child, ctx, level + 1));
+        blocks.push(...BL.odfList(child, ctx, level + 1, listId));
       }
     }
     if (definition.ordered) counter++;
@@ -1834,8 +1835,8 @@ BL.rtfFromModel = (model) => {
         }
         cells += " ";
         for (const cell of row.cells) {
-          const runs = (cell.runs || []).map((run) => ({ ...run, bold: run.bold || row.header }));
-          cells += `\\pard\\intbl ${runs.map(runText).join("")}\\cell `;
+          const text = BL.cellBlocks(cell).map((block) => (block.runs || []).map((run) => runText({ ...run, bold: run.bold || row.header })).join("")).join("\\line ");
+          cells += `\\pard\\intbl ${text}\\cell `;
         }
         cells += "\\row\n";
         chunks.push(cells);
@@ -1866,19 +1867,48 @@ BL.parseRtf = async (source, options = {}) => {
   if (!/^\s*{\\rtf/i.test(text)) throw new Error("This file is not RTF.");
   const fonts = BL.rtfFontTable(text);
   const images = [];
-  const pictPattern = /\{\\pict([\s\S]*?)\}/g;
-  const withoutPictures = text.replace(pictPattern, (match, body) => {
-    const type = /\\pngblip/i.test(body) ? "image/png" : /\\jpe?gblip/i.test(body) ? "image/jpeg" : "";
-    if (!type) return "";
-    const hex = (body.replace(/\\[a-z]+\d* ?/gi, " ").match(/[0-9a-f]{2,}/gi) || []).join("");
-    if (!hex || hex.length % 2) return "";
-    const bytes = new Uint8Array(hex.length / 2);
-    for (let index = 0; index < bytes.length; index++) bytes[index] = parseInt(hex.slice(index * 2, index * 2 + 2), 16);
-    const picw = Number(/\\picw(\d+)/.exec(body)?.[1]) || BL.imageSize(bytes)?.width || 320;
-    const pich = Number(/\\pich(\d+)/.exec(body)?.[1]) || BL.imageSize(bytes)?.height || 200;
-    const index = images.push({ bytes, mime: type, width: picw, height: pich, alt: "" }) - 1;
-    return `\u0001${index}\u0001`;
-  });
+  // A picture group can contain nested groups (\*\blipuid, \*\picprop), so a
+  // non-greedy regex would stop at the first inner brace and leak the rest of
+  // the hex into the document text. Match braces instead.
+  const stripPictures = (source) => {
+    let output = "";
+    let index = 0;
+    while (index < source.length) {
+      if (!source.startsWith("{\\pict", index)) { output += source[index++]; continue; }
+      let depth = 0;
+      let end = source.length - 1;
+      for (let scan = index; scan < source.length; scan++) {
+        const character = source[scan];
+        if (character === "\\") {
+          if (source[scan + 1] === "{" || source[scan + 1] === "}" || source[scan + 1] === "\\") { scan++; continue; }
+          const binary = /^\\bin(\d+)\s?/.exec(source.slice(scan, scan + 24));
+          if (binary) { scan += binary[0].length + Number(binary[1]) - 1; continue; }
+          scan++;
+          continue;
+        }
+        if (character === "{") depth++;
+        else if (character === "}" && --depth === 0) { end = scan; break; }
+      }
+      const body = source.slice(index + 6, end);
+      const type = /\\pngblip/i.test(body) ? "image/png" : /\\jpe?gblip/i.test(body) ? "image/jpeg" : "";
+      if (type) {
+        let cleaned = body;
+        for (let guard = 0; guard < 20 && /\{[^{}]*\}/.test(cleaned); guard++) cleaned = cleaned.replace(/\{[^{}]*\}/g, " ");
+        const hex = cleaned.replace(/\\[a-zA-Z]+-?\d* ?/g, " ").replace(/[^0-9a-f]/gi, "");
+        if (hex.length >= 4 && hex.length % 2 === 0) {
+          const bytes = new Uint8Array(hex.length / 2);
+          for (let offset = 0; offset < bytes.length; offset++) bytes[offset] = parseInt(hex.slice(offset * 2, offset * 2 + 2), 16);
+          const picw = Number(/\\picw(\d+)/.exec(body)?.[1]) || BL.imageSize(bytes)?.width || 320;
+          const pich = Number(/\\pich(\d+)/.exec(body)?.[1]) || BL.imageSize(bytes)?.height || 200;
+          const image = images.push({ bytes, mime: type, width: picw, height: pich, alt: "" }) - 1;
+          output += `\u0001${image}\u0001`;
+        }
+      }
+      index = end + 1;
+    }
+    return output;
+  };
+  const withoutPictures = stripPictures(text);
 
   const blocks = [];
   let paragraph = { type: "paragraph", runs: [], align: "", pageBreak: false };
@@ -1895,6 +1925,8 @@ BL.parseRtf = async (source, options = {}) => {
   let outline = -1;
   let codepage = 1252;
   let pendingSkip = 0;
+  let unicodeSkip = 1;
+  let star = false;
   let groupDepth = 0;
   let table = null;
   let cell = null;
@@ -1930,18 +1962,24 @@ BL.parseRtf = async (source, options = {}) => {
     paragraph.runs.push(run);
   };
 
-  const parseHex = (hex) => {
-    const byte = parseInt(hex, 16);
-    try { return new TextDecoder(`windows-${codepage === 65001 ? "1252" : codepage}`).decode(new Uint8Array([byte])); }
-    catch { return new TextDecoder("windows-1252").decode(new Uint8Array([byte])); }
+  const decodeBytes = (bytes) => {
+    const label = {
+      932: "shift_jis", 936: "gbk", 949: "euc-kr", 950: "big5", 65001: "utf-8", 874: "windows-874",
+    }[codepage] || `windows-${codepage}`;
+    const view = Uint8Array.from(bytes);
+    try { return new TextDecoder(label).decode(view); }
+    catch { return new TextDecoder("windows-1252").decode(view); }
   };
 
   for (let index = 0; index < withoutPictures.length; index++) {
     const character = withoutPictures[index];
     if (pendingSkip > 0 && character !== "\\") { pendingSkip--; continue; }
     if (character === "{") {
+      star = false;
       groupDepth++;
-      stack.push({ format: { ...format }, skip, skipDepth, destination, fieldDepth, fieldLink, inFieldResult, bullet, outline, table, cell });
+      // Table and row state is structural, not formatting: restoring it when a
+      // group closes would resurrect a table that a \\row already emitted.
+      stack.push({ format: { ...format }, skip, skipDepth, destination, fieldDepth, fieldLink, inFieldResult, bullet, outline });
       continue;
     }
     if (character === "}") {
@@ -1957,11 +1995,10 @@ BL.parseRtf = async (source, options = {}) => {
         inFieldResult = state.inFieldResult;
         bullet = state.bullet;
         outline = state.outline;
-        table = state.table;
-        cell = state.cell;
       }
       groupDepth--;
       inPntext = false;
+      star = false;
       if (fieldDepth >= 0 && groupDepth < fieldDepth) {
         fieldDepth = -1;
         fieldLink = "";
@@ -1987,11 +2024,20 @@ BL.parseRtf = async (source, options = {}) => {
     if (next === undefined) break;
     index++;
     if (next === "\\" || next === "{" || next === "}") { addText(next); continue; }
-    if (next === "*") { continue; }
+    if (next === "*") { star = true; continue; }
     if (next === "'") {
-      const hex = withoutPictures.slice(index + 1, index + 3);
-      index += 2;
-      addText(parseHex(hex));
+      // A Big5 or GBK character arrives as several \'hh escapes; decoding each
+      // byte alone would turn every CJK document into mojibake.
+      const bytes = [];
+      for (;;) {
+        const quote = withoutPictures[index] === "'" ? index
+          : withoutPictures[index] === "\\" && withoutPictures[index + 1] === "'" ? index + 1 : -1;
+        if (quote < 0 || !/^[0-9a-f]{2}$/i.test(withoutPictures.slice(quote + 1, quote + 3))) break;
+        bytes.push(parseInt(withoutPictures.slice(quote + 1, quote + 3), 16));
+        index = quote + 3;
+      }
+      index--;
+      addText(decodeBytes(bytes));
       continue;
     }
     if (next === "~") { addText("\u00a0"); continue; }
@@ -2006,8 +2052,20 @@ BL.parseRtf = async (source, options = {}) => {
     if (withoutPictures[index] !== " ") index--;
     const value = param === "" ? 1 : Number(param) || 0;
     const lower = word.toLowerCase();
+    // \binN carries N raw bytes; braces inside it are data, not structure.
+    if (lower === "bin") {
+      if (withoutPictures[index] === " ") index++;
+      index += Math.max(0, value) - 1;
+      continue;
+    }
+    if (star) {
+      star = false;
+      // An unknown optional destination (data store, theme, user props) is
+      // metadata; skipping the whole group keeps it out of the document text.
+      if (lower !== "fldinst" && lower !== "fldrslt") { skip = true; continue; }
+    }
 
-    if (lower === "fonttbl" || lower === "colortbl" || lower === "stylesheet" || lower === "info" || lower === "header" || lower === "footer" || lower === "footnote" || lower === "annotation" || lower === "object" || lower === "listtable" || lower === "rsidtbl" || lower === "generator") {
+    if (lower === "fonttbl" || lower === "colortbl" || lower === "stylesheet" || lower === "info" || lower === "header" || lower === "footer" || lower === "footnote" || lower === "annotation" || lower === "object" || lower === "listtable" || lower === "listoverridetable" || lower === "rsidtbl" || lower === "generator" || lower === "datastore" || lower === "themedata" || lower === "colorschememapping" || lower === "latentstyles" || lower === "xmlnstbl" || lower === "pgptbl") {
       skip = true;
       continue;
     }
@@ -2042,7 +2100,7 @@ BL.parseRtf = async (source, options = {}) => {
     else if (lower === "pntext") { inPntext = true; }
     else if (lower === "outlinelevel") outline = value;
     else if (lower === "ansicpg") codepage = value;
-    else if (lower === "uc") pendingSkip = value;
+    else if (lower === "uc") unicodeSkip = value;
     else if (lower === "u") {
       let unit = value < 0 ? value + 65536 : value;
       if (unit >= 0xd800 && unit <= 0xdbff) {
@@ -2062,7 +2120,7 @@ BL.parseRtf = async (source, options = {}) => {
         index = saved;
       }
       addText(String.fromCharCode(unit));
-      pendingSkip = 1;
+      pendingSkip = unicodeSkip;
     } else if (lower === "pict") {
       skip = true;
     } else if (lower === "trowd") {
@@ -2115,13 +2173,21 @@ BL.runText = (runs, model = null) => (runs || []).map((run) => {
   return run.text || "";
 }).join("");
 
+/* A table cell can hold several paragraphs; writers that emit one line per
+   cell join them so a label and its amount never run together. */
+BL.cellBlocks = (cell) => (cell?.blocks?.length ? cell.blocks : [{ runs: cell?.runs || [] }]);
+BL.cellText = (cell, joiner = " ") => BL.cellBlocks(cell)
+  .map((block) => BL.runText(block.runs).replace(/\s+/g, " ").trim())
+  .filter(Boolean)
+  .join(joiner);
+
 /* The text renderer works on the shared model, so the ODF tools use it too. */
 BL.modelToText = (model) => {
   const lines = [];
   for (const block of model.blocks || []) {
     if (block.type === "pagebreak") { lines.push(""); continue; }
     if (block.type === "table") {
-      for (const row of block.rows) lines.push(row.cells.map((cell) => BL.runText(cell.runs).replace(/\s+/g, " ").trim()).join("\t"));
+      for (const row of block.rows) lines.push(row.cells.map((cell) => BL.cellText(cell)).join("\t"));
       lines.push("");
       continue;
     }

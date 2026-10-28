@@ -39,7 +39,10 @@ BL.htmlFromModel = (model) => {
     if (block.type === "heading") chunks.push(paragraph(block, `h${Math.min(6, block.level || 1)}`));
     else if (block.type === "table") {
       const header = block.rows.find((row) => row.header);
-      const renderRow = (row, tag = "td") => `<tr>${row.cells.map((cell) => `<${tag}${cell.colspan > 1 ? ` colspan="${cell.colspan}"` : ""}>${(cell.runs || []).map(runHtml).join(" ")}</${tag}>`).join("")}</tr>`;
+      const renderRow = (row, tag = "td") => `<tr>${row.cells.map((cell) => {
+        const inner = BL.cellBlocks(cell).map((block) => (block.runs || []).map(runHtml).join("")).filter(Boolean).join("<br>");
+        return `<${tag}${cell.colspan > 1 ? ` colspan="${cell.colspan}"` : ""}>${inner}</${tag}>`;
+      }).join("")}</tr>`;
       const head = header ? `<thead>${renderRow(header, "th")}</thead>` : "";
       const rows = block.rows.filter((row) => row !== header).map((row) => renderRow(row)).join("");
       chunks.push(`<table>${head}<tbody>${rows}</tbody></table>`);
@@ -180,7 +183,11 @@ BL.htmlToModel = async (html, options = {}) => {
           }
           if (cells.length) rows.push({ cells, header: header || cells.every((cell) => cell.header) });
         }
-        if (rows.length) blocks.push({ type: "table", rows, grid: [] });
+        if (rows.length) {
+          const caption = child.querySelector("caption")?.textContent.trim();
+          if (caption) blocks.push({ type: "paragraph", runs: [{ text: caption }], align: "" });
+          blocks.push({ type: "table", rows, grid: [] });
+        }
       } else if (tag === "blockquote") {
         const runs = [];
         for (const item of child.childNodes) await inline(item, {}, runs);

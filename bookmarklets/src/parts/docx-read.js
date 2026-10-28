@@ -336,34 +336,47 @@ BL.parseDocx = async (file, options = {}) => {
   const readTable = (table) => {
     const rows = [];
     const grid = BL.children(BL.child(table, "w:tblgrid"), "w:gridcol").map((col) => Number(BL.attr(col, "w:w", 0)) / 20);
-    for (const rowNode of BL.children(table, "w:tr")) {
-      const header = BL.docxOn(BL.child(BL.child(rowNode, "w:trpr"), "w:tblheader"));
-      const cells = [];
-      for (const cellNode of BL.children(rowNode, "w:tc")) {
-        const cellProps = BL.child(cellNode, "w:tcpr");
-        const spanNode = BL.child(cellProps, "w:gridspan");
-        const vMerge = BL.child(cellProps, "w:vmerge");
-        const colspan = spanNode ? Number(BL.attr(spanNode, "w:val", 1)) : 1;
-        if (vMerge && BL.attr(vMerge, "w:val") !== "restart" && rows.length) {
-          const above = rows.at(-1).cells[cells.length];
-          if (above) above.rowspan = (above.rowspan || 1) + 1;
+    const readCellBlocks = (node, blocks) => {
+      for (const child of node.children || []) {
+        if (child.name === "w:p") {
+          const paragraph = readParagraph(child);
+          if (paragraph.runs.length) blocks.push(paragraph);
+        } else if (child.name === "w:tbl") {
+          const nested = readTable(child);
+          for (const nestedRow of nested.rows) blocks.push({ type: "paragraph", runs: nestedRow.cells.flatMap((cell) => cell.runs || []) });
+        } else if (child.name === "w:sdt" || child.name === "w:sdtcontent" || child.name === "w:customxml" || child.name === "w:ins") {
+          readCellBlocks(child, blocks);
+        }
+      }
+    };
+    const readRows = (node) => {
+      for (const child of node.children || []) {
+        if (child.name === "w:sdt" || child.name === "w:sdtcontent" || child.name === "w:customxml") {
+          readRows(child);
           continue;
         }
-        const blocks = [];
-        for (const child of cellNode.children || []) {
-          if (child.name === "w:p") {
-            const paragraph = readParagraph(child);
-            if (paragraph.runs.length) blocks.push(paragraph);
-          } else if (child.name === "w:tbl") {
-            const nested = readTable(child);
-            for (const nestedRow of nested.rows) blocks.push({ type: "paragraph", runs: nestedRow.cells.flatMap((cell) => cell.runs || []) });
+        if (child.name !== "w:tr") continue;
+        const header = BL.docxOn(BL.child(BL.child(child, "w:trpr"), "w:tblheader"));
+        const cells = [];
+        for (const cellNode of BL.children(child, "w:tc")) {
+          const cellProps = BL.child(cellNode, "w:tcpr");
+          const spanNode = BL.child(cellProps, "w:gridspan");
+          const vMerge = BL.child(cellProps, "w:vmerge");
+          const colspan = spanNode ? Number(BL.attr(spanNode, "w:val", 1)) : 1;
+          if (vMerge && BL.attr(vMerge, "w:val") !== "restart" && rows.length) {
+            const above = rows.at(-1).cells[cells.length];
+            if (above) above.rowspan = (above.rowspan || 1) + 1;
+            continue;
           }
+          const blocks = [];
+          readCellBlocks(cellNode, blocks);
+          const runs = blocks.flatMap((block) => block.runs || []);
+          cells.push({ runs, blocks, colspan, rowspan: vMerge && BL.attr(vMerge, "w:val") === "restart" ? 1 : 1 });
         }
-        const runs = blocks.flatMap((block) => block.runs || []);
-        cells.push({ runs, blocks, colspan, rowspan: vMerge && BL.attr(vMerge, "w:val") === "restart" ? 1 : 1 });
+        rows.push({ cells, header });
       }
-      rows.push({ cells, header });
-    }
+    };
+    readRows(table);
     return { type: "table", rows, grid };
   };
 
@@ -378,7 +391,7 @@ BL.parseDocx = async (file, options = {}) => {
         blocks.push(readTable(child));
       } else if (child.name === "w:sectpr") {
         readSect(child);
-      } else if (child.name === "w:sdt" || child.name === "w:sdtcontent" || child.name === "w:customxml" || child.name === "w:ins") {
+      } else if (child.name === "w:sdt" || child.name === "w:sdtcontent" || child.name === "w:customxml" || child.name === "w:ins" || child.name === "w:smarttag") {
         visit(child);
       }
     }

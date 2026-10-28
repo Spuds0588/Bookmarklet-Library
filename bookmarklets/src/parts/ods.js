@@ -3,7 +3,7 @@
    way the OpenDocument Engine Suite clamps them, so a padded sheet never asks for
    a million rows. */
 
-BL.odsLimits = { rows: 10000, columns: 1024, cellRepeat: 1024, rowRepeat: 10000, cells: 300000 };
+BL.odsLimits = { rows: 100000, columns: 1024, cellRepeat: 1024, cells: 300000 };
 
 BL.odfCellText = (cell) => {
   const paragraphs = BL.odfChildren(cell, "p");
@@ -37,18 +37,32 @@ BL.odsValue = (cell) => {
 
 BL.odsCells = (rowElement, budget) => {
   const cells = [];
+  let pending = 0;
+  // LibreOffice pads every row with one blank cell repeated across the full
+  // remaining width. Keeping a blank run pending means trailing padding costs
+  // nothing and only an interior run is materialized to keep columns aligned.
+  const add = (value, repeat) => {
+    if (value === "" || value === null || value === undefined) {
+      pending = Math.min(pending + repeat, BL.odsLimits.columns);
+      return;
+    }
+    if (pending + repeat > BL.odsLimits.columns - cells.length) throw new Error(`This spreadsheet is wider than the converter handles (${BL.odsLimits.columns} columns).`);
+    const fill = pending;
+    const take = repeat;
+    budget.count += fill + take;
+    if (budget.count > BL.odsLimits.cells) throw new Error("This spreadsheet has too many cells for the converter. Try a smaller sheet.");
+    for (let index = 0; index < fill; index++) cells.push("");
+    for (let index = 0; index < take; index++) cells.push(value);
+    pending = 0;
+  };
   for (const child of rowElement.children || []) {
     if (child.name === "#text" || cells.length >= BL.odsLimits.columns) continue;
     const tag = BL.localName(child.name);
     if (tag !== "table-cell" && tag !== "covered-table-cell") continue;
     const repeat = Math.min(Math.max(Number(BL.odfAttr(child, "table:number-columns-repeated", "1")) || 1, 1), BL.odsLimits.cellRepeat);
-    budget.count += repeat;
-    if (budget.count > BL.odsLimits.cells) throw new Error("This spreadsheet has too many cells for the converter. Try a smaller sheet.");
     // Covered cells keep merged ranges aligned with the visual grid.
-    const value = tag === "covered-table-cell" ? "" : BL.odsValue(child);
-    for (let index = 0; index < repeat && cells.length < BL.odsLimits.columns; index++) cells.push(value);
+    add(tag === "covered-table-cell" ? "" : BL.odsValue(child), repeat);
   }
-  while (cells.length && cells[cells.length - 1] === "") cells.pop();
   return cells;
 };
 
@@ -58,19 +72,22 @@ BL.odsRows = (table) => {
   let blanks = 0;
 
   const pushRow = (rowElement) => {
-    const repeat = Math.min(Math.max(Number(BL.odfAttr(rowElement, "table:number-rows-repeated", "1")) || 1, 1), BL.odsLimits.rowRepeat);
+    const repeat = Math.max(Number(BL.odfAttr(rowElement, "table:number-rows-repeated", "1")) || 1, 1);
     const cells = BL.odsCells(rowElement, budget);
     if (!cells.length) {
       // Blank runs are deferred: trailing ones are dropped, interior ones are
       // restored when a row with content arrives.
-      blanks = Math.min(blanks + repeat, BL.odsLimits.rows);
+      blanks += repeat;
       return;
     }
-    while (blanks > 0 && rows.length < BL.odsLimits.rows) {
+    if (blanks + repeat > BL.odsLimits.rows - rows.length) {
+      throw new Error(`This spreadsheet has more rows than the converter handles (${BL.odsLimits.rows} per sheet).`);
+    }
+    while (blanks > 0) {
       rows.push([]);
       blanks--;
     }
-    for (let index = 0; index < repeat && rows.length < BL.odsLimits.rows; index++) rows.push(cells.slice());
+    for (let index = 0; index < repeat; index++) rows.push(cells.slice());
   };
 
   const readRows = (node) => {

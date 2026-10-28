@@ -1001,12 +1001,12 @@ BL.markdownFromModel = (model) => {
       if (lines.length && lines.at(-1) !== "") lines.push("");
       const header = block.rows.find((row) => row.header) || block.rows[0];
       if (!header) continue;
-      const cell = (item) => {
-        const runs = item.runs || [];
+      const cell = (item) => BL.cellBlocks(item).map((block) => {
+        const runs = block.runs || [];
         const text = runs.filter((run) => run.image === undefined).map((run) => run.text || "").join("");
         const images = runs.filter((run) => run.image !== undefined).map((run) => BL.markdownInline(run, model)).join(" ");
         return [BL.markdownEscape(text.replace(/\n/g, " ")), images].filter(Boolean).join(" ");
-      };
+      }).filter(Boolean).join("<br>");
       const rowLine = (row) => `| ${row.cells.map((item) => cell(item)).join(" | ")} |`;
       lines.push(rowLine(header));
       lines.push(`| ${header.cells.map(() => "---").join(" | ")} |`);
@@ -1623,13 +1623,21 @@ BL.runText = (runs, model = null) => (runs || []).map((run) => {
   return run.text || "";
 }).join("");
 
+/* A table cell can hold several paragraphs; writers that emit one line per
+   cell join them so a label and its amount never run together. */
+BL.cellBlocks = (cell) => (cell?.blocks?.length ? cell.blocks : [{ runs: cell?.runs || [] }]);
+BL.cellText = (cell, joiner = " ") => BL.cellBlocks(cell)
+  .map((block) => BL.runText(block.runs).replace(/\s+/g, " ").trim())
+  .filter(Boolean)
+  .join(joiner);
+
 /* The text renderer works on the shared model, so the ODF tools use it too. */
 BL.modelToText = (model) => {
   const lines = [];
   for (const block of model.blocks || []) {
     if (block.type === "pagebreak") { lines.push(""); continue; }
     if (block.type === "table") {
-      for (const row of block.rows) lines.push(row.cells.map((cell) => BL.runText(cell.runs).replace(/\s+/g, " ").trim()).join("\t"));
+      for (const row of block.rows) lines.push(row.cells.map((cell) => BL.cellText(cell)).join("\t"));
       lines.push("");
       continue;
     }

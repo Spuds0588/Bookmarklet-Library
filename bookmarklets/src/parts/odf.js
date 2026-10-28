@@ -456,9 +456,10 @@ BL.odfParagraph = (element, ctx, heading) => {
 /* A list item's first paragraph carries the marker; further paragraphs and
    nested lists follow it as ordinary blocks, which is how the flat model holds
    lists everywhere else in the library. */
-BL.odfList = (element, ctx, level) => {
+BL.odfList = (element, ctx, level, inheritedId = "") => {
   const definition = ctx.book.listLevel(BL.odfAttr(element, "text:style-name"), level + 1);
-  const listId = `odf-list-${++ctx.listSeq}`;
+  // Nested lists continue the parent list's numbering, so they share its id.
+  const listId = inheritedId || `odf-list-${++ctx.listSeq}`;
   const blocks = [];
   let counter = definition.start || 1;
   let first = true;
@@ -467,7 +468,7 @@ BL.odfList = (element, ctx, level) => {
     if (item.name === "#text") continue;
     const tag = BL.localName(item.name);
     if (tag === "list") {
-      blocks.push(...BL.odfList(item, ctx, level + 1));
+      blocks.push(...BL.odfList(item, ctx, level + 1, listId));
       continue;
     }
     if (tag !== "list-item" && tag !== "list-header") continue;
@@ -498,7 +499,7 @@ BL.odfList = (element, ctx, level) => {
         if (first && definition.ordered && counter !== (definition.start || 1)) lead.start = counter;
         blocks.push(lead);
       } else if (kind === "list") {
-        blocks.push(...BL.odfList(child, ctx, level + 1));
+        blocks.push(...BL.odfList(child, ctx, level + 1, listId));
       }
     }
     if (definition.ordered) counter++;

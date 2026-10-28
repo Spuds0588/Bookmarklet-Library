@@ -1061,9 +1061,10 @@ BL.parseXlsx = async (file, options = {}) => {
     }
     const matrix = [];
     for (const row of rows) {
-      const normalized = Array.isArray(row) ? row.slice(0, maxColumn + 1) : [];
-      while (normalized.length < maxColumn + 1) normalized.push("");
-      matrix.push(normalized.map((value) => value ?? ""));
+      // Build densely: slicing a sparse row leaves holes that Array#map skips,
+      // which shifts every later cell one column to the left.
+      const normalized = Array.from({ length: maxColumn + 1 }, (_, column) => row?.[column] ?? "");
+      matrix.push(normalized);
     }
     while (matrix.length && matrix.at(-1).every((value) => value === "")) matrix.pop();
     let width = maxColumn + 1;

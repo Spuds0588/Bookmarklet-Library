@@ -270,3 +270,61 @@ test("the OOXML ZIP writer keeps package paths instead of flattening them", asyn
   assert.deepEqual([...zip.parts.keys()].sort(), ["[Content_Types].xml", "_rels/.rels", "word/document.xml"]);
   assert.equal(zip.text("_rels/.rels"), "rels");
 });
+
+test("XLSX cells that start in a later column keep their position", async () => {
+  const BL = load("excel-to-csv");
+  const blob = await BL.makeZip([
+    { name: "xl/workbook.xml", blob: new Blob([`<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="S" sheetId="1" r:id="rId1"/></sheets></workbook>`]) },
+    { name: "xl/_rels/workbook.xml.rels", blob: new Blob([`<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Target="worksheets/sheet1.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"/></Relationships>`]) },
+    { name: "xl/worksheets/sheet1.xml", blob: new Blob([`<?xml version="1.0"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="B1" t="inlineStr"><is><t>Right</t></is></c></row></sheetData></worksheet>`]) },
+  ]);
+  const sheets = await BL.parseXlsx(file("sparse.xlsx", new Uint8Array(await blob.arrayBuffer())));
+  assert.deepEqual(sheets[0].rows, [["", "Right"]]);
+});
+
+test("DOCX content controls that wrap table rows keep their text", async () => {
+  const BL = load("word-to-txt");
+  const document = `<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:tbl><w:sdt><w:sdtPr><w:id w:val="1"/></w:sdtPr><w:sdtContent><w:tr><w:tc><w:p><w:r><w:t>Inside control</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Second cell</w:t></w:r></w:p></w:tc></w:tr></w:sdtContent></w:sdt></w:tbl></w:body></w:document>`;
+  const blob = await BL.makeZip([{ name: "word/document.xml", blob: new Blob([document]) }]);
+  const model = await BL.parseDocx(file("sdt.docx", new Uint8Array(await blob.arrayBuffer())));
+  assert.equal(model.blocks[0].type, "table");
+  assert.equal(BL.modelToText(model), "Inside control\tSecond cell\n");
+});
+
+test("table cells with several paragraphs stay readable in text output", async () => {
+  const BL = load("word-to-txt");
+  const text = BL.modelToText({
+    blocks: [{
+      type: "table",
+      rows: [{ cells: [{ runs: [], blocks: [{ runs: [{ text: "Label" }] }, { runs: [{ text: "1200" }] }] }] }],
+    }],
+  });
+  assert.match(text, /Label 1200/);
+});
+
+test("RTF keeps a Big5 run together and does not treat \\uc as literal skips", async () => {
+  const BL = load("rtf-to-word");
+  const rtf = "{\\rtf1\\ansi\\ansicpg950\\uc2{\\fonttbl{\\f0\\fbidi \\fcharset136 Arial;}}\\f0 \\'a4\\'40\\'a1\\'42\\par}";
+  const model = await BL.parseRtf(rtf, { name: "cjk.rtf" });
+  assert.equal(BL.modelToText(model), "一、\n");
+});
+
+test("RTF table rows merge into one table instead of duplicating it", async () => {
+  const BL = load("rtf-to-word");
+  const rtf = "{\\rtf1\\ansi\\uc1\\trowd\\cellx1000\\cellx2000\\intbl A\\cell B\\cell\\row\\trowd\\cellx1000\\cellx2000\\intbl C\\cell D\\cell\\row}";
+  const model = await BL.parseRtf(rtf, { name: "table.rtf" });
+  assert.equal(model.blocks.length, 1);
+  assert.equal(model.blocks[0].type, "table");
+  assert.deepEqual(model.blocks[0].rows.map((row) => row.cells.map((cell) => BL.runText(cell.runs))), [["A", "B"], ["C", "D"]]);
+});
+
+test("RTF pictures with nested blip groups keep their bytes and stay out of the text", async () => {
+  const BL = load("rtf-to-word");
+  const png = fixture("field.png");
+  const hex = png.toString("hex");
+  const rtf = `{\\rtf1\\ansi{\\pict\\pngblip\\picw${png.readUInt32BE(16)}\\pich${png.readUInt32BE(20)}{\\*\\blipuid 00112233} ${hex}}\\par}`;
+  const model = await BL.parseRtf(rtf, { name: "image.rtf" });
+  assert.equal(model.images.length, 1);
+  assert.deepEqual(Buffer.from(model.images[0].bytes), png);
+  assert.doesNotMatch(BL.modelToText(model), /89504e47/i);
+});

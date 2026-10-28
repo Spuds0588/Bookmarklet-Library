@@ -46,12 +46,12 @@ BL.markdownFromModel = (model) => {
       if (lines.length && lines.at(-1) !== "") lines.push("");
       const header = block.rows.find((row) => row.header) || block.rows[0];
       if (!header) continue;
-      const cell = (item) => {
-        const runs = item.runs || [];
+      const cell = (item) => BL.cellBlocks(item).map((block) => {
+        const runs = block.runs || [];
         const text = runs.filter((run) => run.image === undefined).map((run) => run.text || "").join("");
         const images = runs.filter((run) => run.image !== undefined).map((run) => BL.markdownInline(run, model)).join(" ");
         return [BL.markdownEscape(text.replace(/\n/g, " ")), images].filter(Boolean).join(" ");
-      };
+      }).filter(Boolean).join("<br>");
       const rowLine = (row) => `| ${row.cells.map((item) => cell(item)).join(" | ")} |`;
       lines.push(rowLine(header));
       lines.push(`| ${header.cells.map(() => "---").join(" | ")} |`);

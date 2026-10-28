@@ -2,6 +2,25 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-27 — Converter corpus fixes, and one stack for the questions
+
+**Changed**
+
+- The Office and OpenDocument converters were run against a wider corpus of real documents. The fixes:
+  - A DOCX table row inside a content control, custom XML or smart tag is read, and a cell with several paragraphs keeps its lines in every target instead of running them together.
+  - Nested numbered lists write `1.1.` and `1.1.1.` in Word instead of restarting at `1.` at each depth.
+  - HTML `<caption>` becomes a paragraph. Table cells with several paragraphs join with `<br>` in HTML and Markdown, `\line` in RTF, and a space in PDF and plain text.
+  - An XLSX row whose first value starts in a later column keeps its position instead of sliding left. ODS keeps a numeric zero, leading blank column runs keep later cells aligned, trailing padding costs nothing, and a repeated row run over the 100,000-row limit is refused by name rather than silently truncated (the old 10,000-row cap is gone).
+  - ODT nested lists continue their parent's numbering.
+  - RTF matches `\pict` groups by braces, so a nested `\*\blipuid` group no longer leaks hex into the text; `\ucN` skips are honored; Big5, Shift-JIS, GBK, EUC-KR and UTF-8 runs decode as units; and table rows merge into one table instead of duplicating it.
+- The page's Questions section is a single stack with a readable measure, replacing the two-column pairs whose ragged bottoms cut the last answer under the row rule.
+- README now says cells keep their paragraphs and OpenDocument lists continue numbering, and the test summary names the real-document cases.
+
+**Verified**
+
+- `npm test`: 49 tests pass (10 ZIP, 24 Office, 15 OpenDocument). `node scripts/compose.mjs --check`, `node scripts/build.mjs`, `node scripts/verify.mjs` and `node scripts/build.mjs --check` exit 0; the catalog reports 89 bookmarklets, 89 vote rows and 64 screenshots.
+- The FAQ was inspected in Chrome at 1440px: six questions in one column, every answer at a 68-character measure, and the last answer ending at the section rule with no overflow.
+
 ## 2026-10-27 — OpenDocument converters: ODT and ODS, both ways
 
 **Changed**

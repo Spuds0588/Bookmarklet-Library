@@ -1554,9 +1554,10 @@ BL.odfParagraph = (element, ctx, heading) => {
 /* A list item's first paragraph carries the marker; further paragraphs and
    nested lists follow it as ordinary blocks, which is how the flat model holds
    lists everywhere else in the library. */
-BL.odfList = (element, ctx, level) => {
+BL.odfList = (element, ctx, level, inheritedId = "") => {
   const definition = ctx.book.listLevel(BL.odfAttr(element, "text:style-name"), level + 1);
-  const listId = `odf-list-${++ctx.listSeq}`;
+  // Nested lists continue the parent list's numbering, so they share its id.
+  const listId = inheritedId || `odf-list-${++ctx.listSeq}`;
   const blocks = [];
   let counter = definition.start || 1;
   let first = true;
@@ -1565,7 +1566,7 @@ BL.odfList = (element, ctx, level) => {
     if (item.name === "#text") continue;
     const tag = BL.localName(item.name);
     if (tag === "list") {
-      blocks.push(...BL.odfList(item, ctx, level + 1));
+      blocks.push(...BL.odfList(item, ctx, level + 1, listId));
       continue;
     }
     if (tag !== "list-item" && tag !== "list-header") continue;
@@ -1596,7 +1597,7 @@ BL.odfList = (element, ctx, level) => {
         if (first && definition.ordered && counter !== (definition.start || 1)) lead.start = counter;
         blocks.push(lead);
       } else if (kind === "list") {
-        blocks.push(...BL.odfList(child, ctx, level + 1));
+        blocks.push(...BL.odfList(child, ctx, level + 1, listId));
       }
     }
     if (definition.ordered) counter++;
@@ -1764,7 +1765,10 @@ BL.htmlFromModel = (model) => {
     if (block.type === "heading") chunks.push(paragraph(block, `h${Math.min(6, block.level || 1)}`));
     else if (block.type === "table") {
       const header = block.rows.find((row) => row.header);
-      const renderRow = (row, tag = "td") => `<tr>${row.cells.map((cell) => `<${tag}${cell.colspan > 1 ? ` colspan="${cell.colspan}"` : ""}>${(cell.runs || []).map(runHtml).join(" ")}</${tag}>`).join("")}</tr>`;
+      const renderRow = (row, tag = "td") => `<tr>${row.cells.map((cell) => {
+        const inner = BL.cellBlocks(cell).map((block) => (block.runs || []).map(runHtml).join("")).filter(Boolean).join("<br>");
+        return `<${tag}${cell.colspan > 1 ? ` colspan="${cell.colspan}"` : ""}>${inner}</${tag}>`;
+      }).join("")}</tr>`;
       const head = header ? `<thead>${renderRow(header, "th")}</thead>` : "";
       const rows = block.rows.filter((row) => row !== header).map((row) => renderRow(row)).join("");
       chunks.push(`<table>${head}<tbody>${rows}</tbody></table>`);
@@ -1905,7 +1909,11 @@ BL.htmlToModel = async (html, options = {}) => {
           }
           if (cells.length) rows.push({ cells, header: header || cells.every((cell) => cell.header) });
         }
-        if (rows.length) blocks.push({ type: "table", rows, grid: [] });
+        if (rows.length) {
+          const caption = child.querySelector("caption")?.textContent.trim();
+          if (caption) blocks.push({ type: "paragraph", runs: [{ text: caption }], align: "" });
+          blocks.push({ type: "table", rows, grid: [] });
+        }
       } else if (tag === "blockquote") {
         const runs = [];
         for (const item of child.childNodes) await inline(item, {}, runs);
@@ -1938,13 +1946,21 @@ BL.runText = (runs, model = null) => (runs || []).map((run) => {
   return run.text || "";
 }).join("");
 
+/* A table cell can hold several paragraphs; writers that emit one line per
+   cell join them so a label and its amount never run together. */
+BL.cellBlocks = (cell) => (cell?.blocks?.length ? cell.blocks : [{ runs: cell?.runs || [] }]);
+BL.cellText = (cell, joiner = " ") => BL.cellBlocks(cell)
+  .map((block) => BL.runText(block.runs).replace(/\s+/g, " ").trim())
+  .filter(Boolean)
+  .join(joiner);
+
 /* The text renderer works on the shared model, so the ODF tools use it too. */
 BL.modelToText = (model) => {
   const lines = [];
   for (const block of model.blocks || []) {
     if (block.type === "pagebreak") { lines.push(""); continue; }
     if (block.type === "table") {
-      for (const row of block.rows) lines.push(row.cells.map((cell) => BL.runText(cell.runs).replace(/\s+/g, " ").trim()).join("\t"));
+      for (const row of block.rows) lines.push(row.cells.map((cell) => BL.cellText(cell)).join("\t"));
       lines.push("");
       continue;
     }

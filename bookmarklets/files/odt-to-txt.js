@@ -1554,9 +1554,10 @@ BL.odfParagraph = (element, ctx, heading) => {
 /* A list item's first paragraph carries the marker; further paragraphs and
    nested lists follow it as ordinary blocks, which is how the flat model holds
    lists everywhere else in the library. */
-BL.odfList = (element, ctx, level) => {
+BL.odfList = (element, ctx, level, inheritedId = "") => {
   const definition = ctx.book.listLevel(BL.odfAttr(element, "text:style-name"), level + 1);
-  const listId = `odf-list-${++ctx.listSeq}`;
+  // Nested lists continue the parent list's numbering, so they share its id.
+  const listId = inheritedId || `odf-list-${++ctx.listSeq}`;
   const blocks = [];
   let counter = definition.start || 1;
   let first = true;
@@ -1565,7 +1566,7 @@ BL.odfList = (element, ctx, level) => {
     if (item.name === "#text") continue;
     const tag = BL.localName(item.name);
     if (tag === "list") {
-      blocks.push(...BL.odfList(item, ctx, level + 1));
+      blocks.push(...BL.odfList(item, ctx, level + 1, listId));
       continue;
     }
     if (tag !== "list-item" && tag !== "list-header") continue;
@@ -1596,7 +1597,7 @@ BL.odfList = (element, ctx, level) => {
         if (first && definition.ordered && counter !== (definition.start || 1)) lead.start = counter;
         blocks.push(lead);
       } else if (kind === "list") {
-        blocks.push(...BL.odfList(child, ctx, level + 1));
+        blocks.push(...BL.odfList(child, ctx, level + 1, listId));
       }
     }
     if (definition.ordered) counter++;
@@ -1730,13 +1731,21 @@ BL.runText = (runs, model = null) => (runs || []).map((run) => {
   return run.text || "";
 }).join("");
 
+/* A table cell can hold several paragraphs; writers that emit one line per
+   cell join them so a label and its amount never run together. */
+BL.cellBlocks = (cell) => (cell?.blocks?.length ? cell.blocks : [{ runs: cell?.runs || [] }]);
+BL.cellText = (cell, joiner = " ") => BL.cellBlocks(cell)
+  .map((block) => BL.runText(block.runs).replace(/\s+/g, " ").trim())
+  .filter(Boolean)
+  .join(joiner);
+
 /* The text renderer works on the shared model, so the ODF tools use it too. */
 BL.modelToText = (model) => {
   const lines = [];
   for (const block of model.blocks || []) {
     if (block.type === "pagebreak") { lines.push(""); continue; }
     if (block.type === "table") {
-      for (const row of block.rows) lines.push(row.cells.map((cell) => BL.runText(cell.runs).replace(/\s+/g, " ").trim()).join("\t"));
+      for (const row of block.rows) lines.push(row.cells.map((cell) => BL.cellText(cell)).join("\t"));
       lines.push("");
       continue;
     }

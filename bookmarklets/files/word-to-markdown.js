@@ -1434,34 +1434,47 @@ BL.parseDocx = async (file, options = {}) => {
   const readTable = (table) => {
     const rows = [];
     const grid = BL.children(BL.child(table, "w:tblgrid"), "w:gridcol").map((col) => Number(BL.attr(col, "w:w", 0)) / 20);
-    for (const rowNode of BL.children(table, "w:tr")) {
-      const header = BL.docxOn(BL.child(BL.child(rowNode, "w:trpr"), "w:tblheader"));
-      const cells = [];
-      for (const cellNode of BL.children(rowNode, "w:tc")) {
-        const cellProps = BL.child(cellNode, "w:tcpr");
-        const spanNode = BL.child(cellProps, "w:gridspan");
-        const vMerge = BL.child(cellProps, "w:vmerge");
-        const colspan = spanNode ? Number(BL.attr(spanNode, "w:val", 1)) : 1;
-        if (vMerge && BL.attr(vMerge, "w:val") !== "restart" && rows.length) {
-          const above = rows.at(-1).cells[cells.length];
-          if (above) above.rowspan = (above.rowspan || 1) + 1;
+    const readCellBlocks = (node, blocks) => {
+      for (const child of node.children || []) {
+        if (child.name === "w:p") {
+          const paragraph = readParagraph(child);
+          if (paragraph.runs.length) blocks.push(paragraph);
+        } else if (child.name === "w:tbl") {
+          const nested = readTable(child);
+          for (const nestedRow of nested.rows) blocks.push({ type: "paragraph", runs: nestedRow.cells.flatMap((cell) => cell.runs || []) });
+        } else if (child.name === "w:sdt" || child.name === "w:sdtcontent" || child.name === "w:customxml" || child.name === "w:ins") {
+          readCellBlocks(child, blocks);
+        }
+      }
+    };
+    const readRows = (node) => {
+      for (const child of node.children || []) {
+        if (child.name === "w:sdt" || child.name === "w:sdtcontent" || child.name === "w:customxml") {
+          readRows(child);
           continue;
         }
-        const blocks = [];
-        for (const child of cellNode.children || []) {
-          if (child.name === "w:p") {
-            const paragraph = readParagraph(child);
-            if (paragraph.runs.length) blocks.push(paragraph);
-          } else if (child.name === "w:tbl") {
-            const nested = readTable(child);
-            for (const nestedRow of nested.rows) blocks.push({ type: "paragraph", runs: nestedRow.cells.flatMap((cell) => cell.runs || []) });
+        if (child.name !== "w:tr") continue;
+        const header = BL.docxOn(BL.child(BL.child(child, "w:trpr"), "w:tblheader"));
+        const cells = [];
+        for (const cellNode of BL.children(child, "w:tc")) {
+          const cellProps = BL.child(cellNode, "w:tcpr");
+          const spanNode = BL.child(cellProps, "w:gridspan");
+          const vMerge = BL.child(cellProps, "w:vmerge");
+          const colspan = spanNode ? Number(BL.attr(spanNode, "w:val", 1)) : 1;
+          if (vMerge && BL.attr(vMerge, "w:val") !== "restart" && rows.length) {
+            const above = rows.at(-1).cells[cells.length];
+            if (above) above.rowspan = (above.rowspan || 1) + 1;
+            continue;
           }
+          const blocks = [];
+          readCellBlocks(cellNode, blocks);
+          const runs = blocks.flatMap((block) => block.runs || []);
+          cells.push({ runs, blocks, colspan, rowspan: vMerge && BL.attr(vMerge, "w:val") === "restart" ? 1 : 1 });
         }
-        const runs = blocks.flatMap((block) => block.runs || []);
-        cells.push({ runs, blocks, colspan, rowspan: vMerge && BL.attr(vMerge, "w:val") === "restart" ? 1 : 1 });
+        rows.push({ cells, header });
       }
-      rows.push({ cells, header });
-    }
+    };
+    readRows(table);
     return { type: "table", rows, grid };
   };
 
@@ -1476,7 +1489,7 @@ BL.parseDocx = async (file, options = {}) => {
         blocks.push(readTable(child));
       } else if (child.name === "w:sectpr") {
         readSect(child);
-      } else if (child.name === "w:sdt" || child.name === "w:sdtcontent" || child.name === "w:customxml" || child.name === "w:ins") {
+      } else if (child.name === "w:sdt" || child.name === "w:sdtcontent" || child.name === "w:customxml" || child.name === "w:ins" || child.name === "w:smarttag") {
         visit(child);
       }
     }
@@ -1553,12 +1566,12 @@ BL.markdownFromModel = (model) => {
       if (lines.length && lines.at(-1) !== "") lines.push("");
       const header = block.rows.find((row) => row.header) || block.rows[0];
       if (!header) continue;
-      const cell = (item) => {
-        const runs = item.runs || [];
+      const cell = (item) => BL.cellBlocks(item).map((block) => {
+        const runs = block.runs || [];
         const text = runs.filter((run) => run.image === undefined).map((run) => run.text || "").join("");
         const images = runs.filter((run) => run.image !== undefined).map((run) => BL.markdownInline(run, model)).join(" ");
         return [BL.markdownEscape(text.replace(/\n/g, " ")), images].filter(Boolean).join(" ");
-      };
+      }).filter(Boolean).join("<br>");
       const rowLine = (row) => `| ${row.cells.map((item) => cell(item)).join(" | ")} |`;
       lines.push(rowLine(header));
       lines.push(`| ${header.cells.map(() => "---").join(" | ")} |`);
@@ -1737,13 +1750,21 @@ BL.runText = (runs, model = null) => (runs || []).map((run) => {
   return run.text || "";
 }).join("");
 
+/* A table cell can hold several paragraphs; writers that emit one line per
+   cell join them so a label and its amount never run together. */
+BL.cellBlocks = (cell) => (cell?.blocks?.length ? cell.blocks : [{ runs: cell?.runs || [] }]);
+BL.cellText = (cell, joiner = " ") => BL.cellBlocks(cell)
+  .map((block) => BL.runText(block.runs).replace(/\s+/g, " ").trim())
+  .filter(Boolean)
+  .join(joiner);
+
 /* The text renderer works on the shared model, so the ODF tools use it too. */
 BL.modelToText = (model) => {
   const lines = [];
   for (const block of model.blocks || []) {
     if (block.type === "pagebreak") { lines.push(""); continue; }
     if (block.type === "table") {
-      for (const row of block.rows) lines.push(row.cells.map((cell) => BL.runText(cell.runs).replace(/\s+/g, " ").trim()).join("\t"));
+      for (const row of block.rows) lines.push(row.cells.map((cell) => BL.cellText(cell)).join("\t"));
       lines.push("");
       continue;
     }

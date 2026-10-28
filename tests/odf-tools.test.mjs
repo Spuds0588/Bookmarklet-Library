@@ -328,3 +328,28 @@ test("documents written by LibreOffice and OpenOffice parse as they are", async 
   assert.equal(typeof sheets[0].rows[1][0], "number");
   assert.equal(sheets[0].rows[0][0], "Participant ID [1000: PartID]");
 });
+
+test("ODS keeps a numeric zero instead of treating it as an empty cell", async () => {
+  const writer = load("csv-to-ods");
+  const reader = load("ods-to-csv");
+  const made = await writer.csvToOds(file("zeros.csv", new TextEncoder().encode("a,b\n0,0\n")), {});
+  const sheets = await reader.parseOds(file("zeros.ods", await bytesOf(made.output.blob)));
+  assert.deepEqual(sheets[0].rows, [["a", "b"], [0, 0]]);
+  const csv = await reader.odsToCsv(file("zeros.ods", await bytesOf(made.output.blob)), {});
+  assert.equal(await csv.outputs[0].blob.text(), "a,b\r\n0,0\r\n");
+});
+
+test("ODS blank repeat counters keep leading columns aligned", async () => {
+  const BL = load("ods-to-csv");
+  const content = `<?xml version="1.0"?><office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"><office:body><office:spreadsheet><table:table table:name="S"><table:table-row><table:table-cell table:number-columns-repeated="3"/><table:table-cell office:value-type="string"><text:p>Hit</text:p></table:table-cell></table:table-row></table:table></office:spreadsheet></office:body></office:document-content>`;
+  const blob = await BL.makeZip([{ name: "content.xml", blob: new Blob([content]) }]);
+  const sheets = await BL.parseOds(file("repeats.ods", new Uint8Array(await blob.arrayBuffer())));
+  assert.deepEqual(sheets[0].rows, [["", "", "", "Hit"]]);
+});
+
+test("ODS rejects a repeated row run that is larger than the converter handles", async () => {
+  const BL = load("ods-to-csv");
+  const content = `<?xml version="1.0"?><office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"><office:body><office:spreadsheet><table:table table:name="S"><table:table-row table:number-rows-repeated="200000"><table:table-cell office:value-type="string"><text:p>row</text:p></table:table-cell></table:table-row></table:table></office:spreadsheet></office:body></office:document-content>`;
+  const blob = await BL.makeZip([{ name: "content.xml", blob: new Blob([content]) }]);
+  await assert.rejects(BL.parseOds(file("huge.ods", new Uint8Array(await blob.arrayBuffer()))), /more rows/);
+});

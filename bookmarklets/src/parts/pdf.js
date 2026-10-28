@@ -216,7 +216,9 @@ BL.pdfFromModel = async (model, options = {}) => {
         for (const cell of row.cells) {
           const span = Math.max(1, cell.colspan || 1);
           const width = baseWidth * span - 8;
-          const runs = (cell.runs || []).map((run) => ({ ...run, bold: run.bold || row.header }));
+          const runs = BL.cellBlocks(cell)
+            .flatMap((cellBlock, index) => [...(index ? [{ text: " " }] : []), ...(cellBlock.runs || [])])
+            .map((run) => ({ ...run, bold: run.bold || row.header }));
           const lines = wrap(runs, 9.5, Math.max(20, width), row.header);
           const cellImages = [];
           for (const run of runs) {
