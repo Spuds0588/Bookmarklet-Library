@@ -20,7 +20,7 @@
   host.id = "nh-root";
   host.style.cssText = "position:fixed;inset:0;z-index:2147483647;pointer-events:none";
   const root = host.attachShadow({ mode: "open" });
-  root.innerHTML = `<style>:host{all:initial;display:block}*{box-sizing:border-box}.overlay{position:fixed;inset:0;display:grid;place-items:center;padding:16px;background:#020308b8;pointer-events:auto;font:12px monospace;color:#e8f7ff}.overlay.full{padding:0;background:#000}.overlay.paused{pointer-events:none;background:#02030859}.overlay.paused .modal{pointer-events:auto}.modal{display:flex;flex-direction:column;width:min(960px,90vw);height:min(600px,85vh);min-width:280px;min-height:240px;border:1px solid #00d9ff;background:#05050a;box-shadow:0 0 30px #0ff4;overflow:hidden;pointer-events:auto}.overlay.full .modal{width:100vw;height:100vh;border:0;box-shadow:none}header{flex:none;display:flex;align-items:center;gap:10px;padding:7px 8px 7px 12px;background:#080b12;border-bottom:1px solid #0d5666}.status{margin-left:auto;font-size:9px;letter-spacing:.15em;color:#7ff;white-space:nowrap}button{width:30px;height:28px;flex:none;border:1px solid #1a6675;background:#06151c;color:#9df;font:15px monospace;cursor:pointer}button:hover{border-color:#00e5ff;color:#fff}button:focus-visible{outline:1px solid #fff;outline-offset:2px}.stage{position:relative;flex:1;min-height:0;background:#05050a}canvas{position:absolute;inset:0;display:block;width:100%;height:100%;cursor:crosshair;touch-action:none;outline:none;background:#05050a}footer{flex:none;padding:5px 8px;border-top:1px solid #0d5666;background:#080b12;color:#5d8290;font-size:9px;line-height:1.4;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}@media(max-width:560px){.overlay{padding:8px}.modal{width:94vw;height:88vh}footer{font-size:8px}}</style><div class=overlay><section class=modal role=dialog aria-modal=true aria-label='Neon Hell'><header><span class=status id=state>RUNNING</span><button id=full type=button aria-label='Expand to full screen'>F</button><button id=close type=button aria-label='Close Neon Hell'>x</button></header><div class=stage><canvas tabindex=0 aria-label='Neon Hell game canvas'></canvas></div><footer>WASD / arrows move / mouse aim / hold LMB fire / Esc pause / F expand</footer></section></div>`;
+  root.innerHTML = `<style>:host{all:initial;display:block}*{box-sizing:border-box}.overlay{position:fixed;inset:0;display:grid;place-items:center;padding:16px;background:#020308b8;pointer-events:auto;font:12px monospace;color:#e8f7ff}.overlay.full{padding:0;background:#000}.overlay.paused{pointer-events:none;background:#02030859}.overlay.paused .modal{pointer-events:auto}.modal{display:flex;flex-direction:column;width:min(960px,90vw);height:min(600px,85vh);min-width:280px;min-height:240px;border:1px solid #00d9ff;background:#05050a;box-shadow:0 0 30px #0ff4;overflow:hidden;pointer-events:auto}.overlay.full .modal{width:100vw;height:100vh;border:0;box-shadow:none}header{flex:none;display:flex;align-items:center;gap:10px;padding:7px 8px 7px 12px;background:#080b12;border-bottom:1px solid #0d5666}.status{margin-left:auto;font-size:9px;letter-spacing:.15em;color:#7ff;white-space:nowrap}button{width:30px;height:28px;flex:none;border:1px solid #1a6675;background:#06151c;color:#9df;font:15px monospace;cursor:pointer}button:hover{border-color:#00e5ff;color:#fff}button:focus-visible{outline:1px solid #fff;outline-offset:2px}.stage{position:relative;flex:1;min-height:0;background:#05050a}canvas{position:absolute;inset:0;display:block;width:100%;height:100%;cursor:crosshair;touch-action:none;outline:none;background:#05050a}footer{flex:none;padding:5px 8px;border-top:1px solid #0d5666;background:#080b12;color:#5d8290;font-size:9px;line-height:1.4;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}@media(max-width:560px){.overlay{padding:8px}.modal{width:94vw;height:88vh}footer{font-size:8px}}</style><div class=overlay><section class=modal role=dialog aria-modal=true aria-label='Neon Hell'><header><span class=status id=state>RUNNING</span><button id=full type=button aria-label='Expand to full screen'>F</button><button id=close type=button aria-label='Close Neon Hell'>x</button></header><div class=stage><canvas tabindex=0 aria-label='Neon Hell game canvas'></canvas></div><footer>WASD / arrows move / mouse aim / LMB fire / Space bomb / Esc pause / F expand</footer></section></div>`;
 
   const overlay = root.querySelector(".overlay");
   const canvas = root.querySelector("canvas");
@@ -37,15 +37,17 @@
   let last = 0;
 
   const P = { x: W / 2, y: H / 2, vx: 0, vy: 0, r: 11, cool: 0, inv: 0 };
-  const G = { t: 0, score: 0, lives: 3, mult: 1, kills: 0, over: false, paused: false, full: false, spawn: .35, power: 3.5, shake: 0 };
+  const G = { t: 0, score: 0, lives: 3, mult: 1, kills: 0, bombs: 0, over: false, paused: false, full: false, spawn: .35, power: 4.5, shake: 0 };
+  const POWER_R = 19;
   const keys = new Set();
   const mouse = { x: W / 2 + 80, y: H / 2, down: false };
   const bullets = [];
   const enemies = [];
   const pickups = [];
-  const effects = { rapid: 0, spread: 0, shield: false };
+  const effects = { rapid: 0, spread: 0, shield: false, chain: 0 };
   const parts = Array.from({ length: 360 }, () => ({ life: 0, x: 0, y: 0, vx: 0, vy: 0, c: "#fff" }));
   let partAt = 0;
+  let wave = null;
 
   const TYPES = [
     { r: 10, hp: 1, score: 100, c: "#ff3b6b", sides: 4, speed: 58 },
@@ -57,8 +59,10 @@
     { id: "rapid", label: "RAPID", glyph: "R", c: "#ffd34d", time: 9 },
     { id: "spread", label: "SPREAD", glyph: "W", c: "#ff7bd5", time: 9 },
     { id: "shield", label: "SHIELD", glyph: "S", c: "#6ef6ff", time: 0 },
+    { id: "bomb", label: "BOMB", glyph: "B", c: "#ff9f43", time: 0 },
+    { id: "chain", label: "CHAIN", glyph: "C", c: "#b48cff", time: 10 },
   ];
-  const GAME_KEYS = new Set(["w", "a", "s", "d", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " ", "f"]);
+  const GAME_KEYS = new Set(["w", "a", "s", "d", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "f"]);
   const rnd = (min, max) => min + Math.random() * (max - min);
   const dist2 = (ax, ay, bx, by) => (ax - bx) ** 2 + (ay - by) ** 2;
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -145,34 +149,65 @@
   }
 
   function spawnPower() {
-    if (pickups.length >= 3) return;
+    if (pickups.length >= 2) return;
     const def = POWERS[(Math.random() * POWERS.length) | 0];
     let x = 0;
     let y = 0;
     let placed = false;
     for (let attempt = 0; attempt < 24; attempt++) {
-      x = rnd(55, W - 55);
-      y = rnd(70, H - 55);
-      if (dist2(x, y, P.x, P.y) < 105 ** 2) continue;
-      if (pickups.some((p) => dist2(p.x, p.y, x, y) < 85 ** 2)) continue;
+      x = rnd(60, W - 60);
+      y = rnd(70, H - 60);
+      if (dist2(x, y, P.x, P.y) < 120 ** 2) continue;
+      if (pickups.some((p) => dist2(p.x, p.y, x, y) < 95 ** 2)) continue;
       placed = true;
       break;
     }
     if (!placed) return;
-    pickups.push({ ...def, x, y, life: 14, rot: rnd(0, Math.PI * 2) });
+    const angle = rnd(0, Math.PI * 2);
+    const speed = rnd(38, 70);
+    pickups.push({
+      ...def, x, y, r: POWER_R, life: 8, rot: rnd(0, Math.PI * 2),
+      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+    });
   }
 
   function applyPower(kind) {
     const def = POWERS.find((power) => power.id === kind);
     if (!def) return;
     if (def.id === "shield") effects.shield = true;
+    else if (def.id === "bomb") G.bombs = Math.min(3, G.bombs + 1);
     else effects[def.id] = Math.max(effects[def.id], def.time);
     G.score += 50;
     if (G.score > best) best = G.score;
     burst(P.x, P.y, def.c, 26);
   }
 
-  function kill(index) {
+  function chainBurst(e, depth) {
+    if (effects.chain <= 0 || depth >= 2 || bullets.length >= 260) return;
+    for (let i = 0; i < 3; i++) {
+      const angle = rnd(0, Math.PI * 2);
+      const speed = rnd(300, 460);
+      bullets.push({
+        x: e.x, y: e.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+        c: "#b48cff", shard: true, bounce: 2, depth: depth + 1,
+      });
+    }
+  }
+
+  function dropBomb() {
+    if (G.over || G.paused || G.bombs <= 0) return;
+    G.bombs--;
+    P.inv = Math.max(P.inv, .45);
+    G.shake = .55;
+    wave = { x: P.x, y: P.y, r: 0, life: .5, max: 220 };
+    burst(P.x, P.y, "#ff9f43", 52);
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const e = enemies[i];
+      if (dist2(e.x, e.y, P.x, P.y) < 220 ** 2) kill(i, 0);
+    }
+  }
+
+  function kill(index, depth = 0) {
     const e = enemies[index];
     remove(enemies, index);
     G.score += e.score * G.mult;
@@ -183,6 +218,7 @@
     if (e.kind === 2) {
       for (let i = 0; i < 3; i++) addEnemy(3, e.x + rnd(-12, 12), e.y + rnd(-12, 12));
     }
+    chainBurst(e, depth);
   }
 
   function damage() {
@@ -226,10 +262,11 @@
     G.lives = 3;
     G.mult = 1;
     G.kills = 0;
+    G.bombs = 0;
     G.over = false;
     G.paused = false;
     G.spawn = .35;
-    G.power = 3.5;
+    G.power = 4.5;
     G.shake = 0;
     bullets.length = 0;
     enemies.length = 0;
@@ -237,6 +274,8 @@
     effects.rapid = 0;
     effects.spread = 0;
     effects.shield = false;
+    effects.chain = 0;
+    wave = null;
     for (const p of parts) p.life = 0;
     P.x = W / 2;
     P.y = H / 2;
@@ -324,7 +363,7 @@
 
   function drawPickups() {
     for (const k of pickups) {
-      if (k.life < 3 && Math.floor(G.t * 10) % 2 === 0) continue;
+      if (k.life < 2.5 && Math.floor(G.t * 10) % 2 === 0) continue;
       const pulse = 1 + Math.sin(G.t * 3 + k.rot) * .12;
       ctx.save();
       ctx.translate(k.x, k.y);
@@ -333,20 +372,20 @@
       ctx.beginPath();
       for (let i = 0; i < 4; i++) {
         const angle = i * Math.PI / 2;
-        const x = Math.cos(angle) * 11;
-        const y = Math.sin(angle) * 11;
+        const x = Math.cos(angle) * k.r;
+        const y = Math.sin(angle) * k.r;
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       }
       ctx.closePath();
       ctx.fillStyle = k.c + "22";
       ctx.fill();
       ctx.strokeStyle = k.c;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.5;
       ctx.stroke();
       ctx.restore();
       ctx.save();
       ctx.fillStyle = k.c;
-      ctx.font = "700 10px monospace";
+      ctx.font = "700 13px monospace";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(k.glyph, k.x, k.y + 1);
@@ -380,6 +419,11 @@
     ctx.textAlign = "right";
     ctx.fillStyle = "#b48cff";
     ctx.fillText("x" + G.mult, W - 12, 20);
+    if (G.bombs > 0) {
+      ctx.fillStyle = "#ff9f43";
+      ctx.font = "600 10px monospace";
+      ctx.fillText("BOMB x" + G.bombs, W - 12, 34);
+    }
   }
 
   function drawOver() {
@@ -421,6 +465,21 @@
     }
     ctx.globalAlpha = 1;
 
+    if (wave) {
+      ctx.globalAlpha = Math.max(0, wave.life / .5);
+      ctx.strokeStyle = "#ff9f43";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(wave.x, wave.y, wave.r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = Math.max(0, wave.life / .8);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(wave.x, wave.y, wave.r * .72, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
     drawPickups();
 
     for (const e of enemies) {
@@ -440,6 +499,7 @@
 
     ctx.beginPath();
     for (const b of bullets) {
+      if (b.shard) continue;
       ctx.moveTo(b.x, b.y);
       ctx.lineTo(b.x - b.vx * .018, b.y - b.vy * .018);
     }
@@ -448,6 +508,19 @@
     ctx.stroke();
     ctx.strokeStyle = "#fff";
     ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    for (const b of bullets) {
+      if (!b.shard) continue;
+      ctx.moveTo(b.x, b.y);
+      ctx.lineTo(b.x - b.vx * .024, b.y - b.vy * .024);
+    }
+    ctx.strokeStyle = "#b48cff";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 1;
     ctx.stroke();
 
     ctx.strokeStyle = "rgba(200,255,255,.75)";
@@ -504,18 +577,33 @@
     if (P.x <= P.r || P.x >= W - P.r) P.vx = 0;
     if (P.y <= P.r || P.y >= H - P.r) P.vy = 0;
 
-    for (const key of ["rapid", "spread"]) effects[key] = Math.max(0, effects[key] - dt);
+    for (const key of ["rapid", "spread", "chain"]) effects[key] = Math.max(0, effects[key] - dt);
+    if (wave) {
+      wave.life -= dt;
+      wave.r = wave.max * clamp(1 - wave.life / .5, 0, 1);
+      if (wave.life <= 0) wave = null;
+    }
 
     G.power -= dt;
     if (G.power <= 0) {
       spawnPower();
-      G.power = rnd(9, 14);
+      G.power = rnd(14, 22);
     }
     for (let i = pickups.length - 1; i >= 0; i--) {
       const k = pickups[i];
       k.life -= dt;
       k.rot += dt * 1.7;
-      if (dist2(k.x, k.y, P.x, P.y) < (P.r + 14) ** 2) {
+      k.x += k.vx * dt;
+      k.y += k.vy * dt;
+      if (k.x < k.r || k.x > W - k.r) {
+        k.vx *= -1;
+        k.x = clamp(k.x, k.r, W - k.r);
+      }
+      if (k.y < k.r || k.y > H - k.r) {
+        k.vy *= -1;
+        k.y = clamp(k.y, k.r, H - k.r);
+      }
+      if (dist2(k.x, k.y, P.x, P.y) < (P.r + k.r + 2) ** 2) {
         applyPower(k.id);
         remove(pickups, i);
       } else if (k.life <= 0) {
@@ -562,6 +650,18 @@
       const b = bullets[i];
       b.x += b.vx * dt;
       b.y += b.vy * dt;
+      if (b.bounce > 0) {
+        if (b.x < 3 || b.x > W - 3) {
+          b.x = clamp(b.x, 3, W - 3);
+          b.vx *= -1;
+          b.bounce--;
+        }
+        if (b.y < 3 || b.y > H - 3) {
+          b.y = clamp(b.y, 3, H - 3);
+          b.vy *= -1;
+          b.bounce--;
+        }
+      }
       if (b.x < -20 || b.x > W + 20 || b.y < -20 || b.y > H + 20) {
         remove(bullets, i);
         continue;
@@ -571,7 +671,7 @@
         if (dist2(b.x, b.y, e.x, e.y) < (e.r + 3) ** 2) {
           remove(bullets, i);
           e.hp--;
-          if (e.hp <= 0) kill(j);
+          if (e.hp <= 0) kill(j, b.depth || 0);
           else burst(b.x, b.y, "#fff", 5);
           break;
         }
@@ -636,6 +736,12 @@
       return;
     }
     if (G.paused || G.over) return;
+    if (key === " ") {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!event.repeat) dropBomb();
+      return;
+    }
     if (key === "f") {
       event.preventDefault();
       event.stopPropagation();
@@ -695,7 +801,7 @@
   const observer = new ResizeObserver(fit);
   observer.observe(root.querySelector(".stage"));
   if (globalThis.__BL_TEST__) {
-    globalThis.__BL_TEST__.neonHell = { game: G, player: P, enemies, bullets, parts, pickups, effects, close, pause, resume, restart, damage, spawn, spawnPower, applyPower };
+    globalThis.__BL_TEST__.neonHell = { game: G, player: P, enemies, bullets, parts, pickups, effects, close, pause, resume, restart, damage, spawn, spawnPower, applyPower, dropBomb };
   }
 
   (document.body || document.documentElement).appendChild(host);

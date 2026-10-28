@@ -2,6 +2,26 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-28 — Neon Hell clears its chrome and adds bombs and chains
+
+**Changed**
+
+- The window header now carries only `RUNNING`, **F** and **×**. The title and `ARENA 01 // BULLET HELL` kicker are gone, and `ARENA 01` sits under the score block with the effect timers below it.
+- Pickups are now 19 px across and drift at 38–70 px/s, bouncing off the arena walls. They expire after eight seconds, only two can be on the field, and one appears every 14–22 seconds after the first at 4.5 seconds.
+- **B** adds a bomb charge, up to three. `Space` spends one on a 220 px blast that clears nearby ships, shakes the screen and draws an expanding ring; the count sits under the multiplier.
+- **C** grants ten seconds of chain rounds. Each kill throws three purple shards that ricochet twice and can kill two further generations of enemies before stopping. Bullets and shards render separately.
+- Restart clears bomb charges, chain time, the wave and every pickup. README, AGENTS, TODO and the detail view describe the pickup spacing, movement, bomb and chain rules. The screenshot was regenerated with the larger drifting pickup.
+
+**Verified**
+
+- `npm test`: 49 tests pass. `build.mjs --check`, `compose.mjs --check` and `verify.mjs` pass with 115 bookmarklets, eight categories, 80 screenshots and 35 explained tools.
+- Headless Chrome, built bookmarklet on the demo page: a pickup was `r: 19`, had eight seconds of life, moved 13.6 px in 250 ms and disappeared when its timer expired. The next spawn was 17.1 seconds away. A `Space` keydown with one bomb charge cleared a nearby enemy and left zero charges. With chain active, a bullet killed one enemy and left three `shard` bullets at depth 1; moving one shard into the left wall reversed its velocity from -300 to 300 and reduced `bounce` from 2 to 1. The shield still absorbed one hit, and restart cleared all effects.
+- Source is 25.9 KB, bookmark URL 45.1 KB, under the 64 KB ceiling.
+
+**Limit**
+
+- Power-ups are still random and temporary; there is no inventory beyond the bomb charges. The game has no touch controls or sound, and Firefox and Safari remain untested.
+
 ## 2026-10-28 — Neon Hell drifts into power-ups
 
 **Changed**
