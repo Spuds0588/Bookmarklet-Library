@@ -109,6 +109,7 @@ button {
 .featured,
 .catalog,
 .how,
+.faq,
 .footer {
   width: 100%;
   max-width: var(--max);

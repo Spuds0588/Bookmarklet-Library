@@ -13,13 +13,13 @@ What has been done, in order. Newest entries first.
   - An XLSX row whose first value starts in a later column keeps its position instead of sliding left. ODS keeps a numeric zero, leading blank column runs keep later cells aligned, trailing padding costs nothing, and a repeated row run over the 100,000-row limit is refused by name rather than silently truncated (the old 10,000-row cap is gone).
   - ODT nested lists continue their parent's numbering.
   - RTF matches `\pict` groups by braces, so a nested `\*\blipuid` group no longer leaks hex into the text; `\ucN` skips are honored; Big5, Shift-JIS, GBK, EUC-KR and UTF-8 runs decode as units; and table rows merge into one table instead of duplicating it.
-- The page's Questions section is a single stack with a readable measure, replacing the two-column pairs whose ragged bottoms cut the last answer under the row rule.
+- The page's Questions section is a single stack with a readable measure, replacing the two-column pairs whose ragged bottoms cut the last answer under the row rule. It also sits in the same centered, padded column as the catalog and how-it-works sections instead of running to the viewport edge.
 - README now says cells keep their paragraphs and OpenDocument lists continue numbering, and the test summary names the real-document cases.
 
 **Verified**
 
 - `npm test`: 49 tests pass (10 ZIP, 24 Office, 15 OpenDocument). `node scripts/compose.mjs --check`, `node scripts/build.mjs`, `node scripts/verify.mjs` and `node scripts/build.mjs --check` exit 0; the catalog reports 89 bookmarklets, 89 vote rows and 64 screenshots.
-- The FAQ was inspected in Chrome at 1440px: six questions in one column, every answer at a 68-character measure, and the last answer ending at the section rule with no overflow.
+- The FAQ was inspected in Chrome at 1440px: six questions in one column, every answer at a 68-character measure, and the last answer ending at the section rule with no overflow. The heading now starts at 151px, the same as the catalog and how-it-works headings; at 390px the section keeps its 18px inset.
 
 **Production**
 
