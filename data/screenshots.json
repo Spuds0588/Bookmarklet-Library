@@ -482,6 +482,11 @@
       "file": "screenshots/hide-notifications.png",
       "changed": true
     },
+    "pii-masker": {
+      "file": "screenshots/pii-masker.png",
+      "changed": true,
+      "steps": 4
+    },
     "pixelate-section": {
       "file": "screenshots/pixelate-section.png",
       "changed": true,

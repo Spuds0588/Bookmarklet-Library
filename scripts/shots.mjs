@@ -55,6 +55,13 @@ const STEPS = {
   "table-to-csv": [{ script: 'document.querySelector("table").scrollIntoView({ block: "center" })' }, { click: "table" }, { wait: 500 }],
   // Put the spotlight on the headline instead of the browser's default centre.
   "presenter-spotlight": [{ script: 'document.dispatchEvent(new MouseEvent("mousemove", { clientX: 600, clientY: 240, bubbles: true }))' }, { wait: 350 }],
+  // Fill a real term, apply it, then close the panel so the masked page is visible.
+  "pii-masker": [
+    { script: 'const r=document.getElementById("bl-pii-host").shadowRoot; r.querySelector("#pii-terms").value="Northwind"; r.querySelector("#pii-apply").click();' },
+    { wait: 300 },
+    { script: 'document.getElementById("bl-pii-host").shadowRoot.querySelector(".close").click();' },
+    { wait: 300 },
+  ],
   // The picker draws its overlay once the capture is ready, then keeps the
   // redaction toast up for a few seconds: drag a region before it fades.
   "pixelate-section": [{ wait: 2400 }, { drag: [280, 320, 780, 580] }, { wait: 250 }],
