@@ -2,6 +2,26 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-28 — QR codes from the page, as PNG or SVG
+
+**Changed**
+
+- Added **🔳 QR code** under Text. It opens a shadow-root panel prefilled with the page URL, regenerates as you type, encodes UTF-8 bytes with Q error correction (25%), and shows the module count, version and byte count.
+- **Download PNG** writes a roughly 1000 px image; **Download SVG** writes a vector with a four-module quiet zone. The **Copy** buttons put the PNG or SVG on the clipboard, and SVG falls back to the markup as text when image clipboard data is refused.
+- The panel closes with Esc, × or Close, traps Tab, and restores page focus. The text never leaves the page. The bundled qr.js 0.0.0 encoder is MIT, attributed at the top of the source.
+- README, AGENTS, TODO, the catalog card and the screenshot describe the tool. The capture uses `https://example.com/field-guide`.
+
+**Verified**
+
+- `npm test`: 53 tests pass. `build.mjs --check`, `compose.mjs --check` and `verify.mjs` pass with 116 bookmarklets, eight categories, 81 screenshots and 35 explained tools.
+- Chrome against the local catalog: the panel opened with the page URL and a 29×29 version 3 code for a 31-byte URL. Live updates handled UTF-8 (`café ☕` gave 21×21 and 9 bytes); 3,000 characters showed the too-long message and disabled all four actions; **Use page URL** restored the code.
+- The PNG was 999×999 and 46,678 bytes for the local URL; the SVG was 3,219 bytes with `viewBox="0 0 37 37"`. **Copy PNG** resolved as `image/png`; **Copy SVG** resolved as `image/svg+xml` in Chrome, and the text-markup fallback was exercised with a substituted clipboard.
+- The QR matrix for a URL and UTF-8 text decoded correctly with jsQR before the UI work. Esc closed the panel and returned focus to the page.
+
+**Limit**
+
+- Copy has only been clicked in Chrome. Firefox and Safari fall back to SVG markup but were not tested there, and there has been no physical scanner pass.
+
 ## 2026-10-28 — Neon Hell clears its chrome and adds bombs and chains
 
 **Changed**

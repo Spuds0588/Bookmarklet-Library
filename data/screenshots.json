@@ -93,6 +93,11 @@
       "changed": false,
       "reason": "clipboard"
     },
+    "qr-code": {
+      "file": "screenshots/qr-code.png",
+      "changed": true,
+      "steps": 2
+    },
     "scratchpad": {
       "file": "screenshots/scratchpad.png",
       "changed": true,

@@ -84,6 +84,12 @@ const STEPS = {
   // redaction toast up for a few seconds: drag a region before it fades.
   "pixelate-section": [{ wait: 2400 }, { drag: [280, 320, 780, 580] }, { wait: 250 }],
   "generate-password": [{ wait: 300 }],
+  // Give the QR panel a short, meaningful URL so the capture is not a code for
+  // the fixture server itself.
+  "qr-code": [
+    { script: 'const input=document.getElementById("bl-qr-host").shadowRoot.querySelector("textarea"); input.value="https://example.com/field-guide"; input.dispatchEvent(new Event("input",{bubbles:true}));' },
+    { wait: 300 },
+  ],
   // A console is only a console once something has been run in it.
   "js-runner": [
     { type: "document.querySelector('h1').textContent = 'JS Runner ran this line';", into: "#js-runner-container textarea" },

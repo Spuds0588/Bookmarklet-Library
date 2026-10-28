@@ -10,7 +10,7 @@
 
 ## Screenshots
 
-- [x] One capture per tool that shows its result (80 today) in `screenshots/`, taken by `scripts/shots.mjs` in Chrome against `scripts/fixtures/demo-page.html`.
+- [x] One capture per tool that shows its result (81 today) in `screenshots/`, taken by `scripts/shots.mjs` in Chrome against `scripts/fixtures/demo-page.html`.
 - [x] Tools that need using before they show anything are driven with real input first: a stroke on the draw surface, an element picked to blur, a query typed into the find bar, a snippet run in **JS runner**, a region redacted with **Pixelate a section**, an image pasted into the annotation editor, a click recorded by the action recorder. The camera and audio recorders are driven inside the window they open until they say they are recording.
 - [x] Tools whose work never reaches the page get no image and a reason instead (35 today): download, clipboard, records your screen, another site, reads aloud, reloads, needs a certain page, opens a browser prompt, works outside the page. A screenshot of an untouched page was worse than no screenshot.
 - [x] **Zip files** and **Unzip** are photographed with their panels populated: the capture run sets a sample folder tree on the ZIP builder's hidden folder picker and opens a sample archive in the ZIP browser, both through the open shadow root.
@@ -50,6 +50,12 @@
 - [ ] Doom has no touch controls. A phone or tablet needs a keyboard and mouse (or an external one); Dwasm's optional touch layer is not enabled here. It also needs WebAssembly and network access for the first load. A page with a strict `frame-src` CSP can block the window; **Open in tab** is the fallback.
 - [ ] The phase 2 document's runtime builder/registry idea was not adopted: these tools configure in their own panel or exchange JSON, because the catalog has no build-at-runtime step. Revisit only if a builder earns its keep.
 - [ ] The URL chat depends on the public PeerJS broker and CDN. If that service is unavailable, the hosted page says so; there is no fallback signalling server.
+
+## QR code (2026-10-28)
+
+- [x] **🔳 QR code** opens a shadow-root panel with the page URL, regenerates on input, and reports version, module count and UTF-8 byte count. It encodes Q error correction and offers Download PNG (about 1000 px), Download SVG, Copy PNG and Copy SVG. The PNG clipboard path was exercised in Chrome; the SVG image write succeeded there, and the text-markup fallback covers browsers that refuse SVG image data. Esc closes and restores focus.
+- [ ] Check both copy buttons in Firefox and Safari on a secure page. Chrome only so far; the fallback is reasoned about rather than clicked in those browsers.
+- [ ] Scan the downloaded PNG and SVG with a phone camera and a desktop scanner. The matrix was decoded locally with jsQR, but no physical scanner pass has been done.
 
 ## Nice to have, only if it earns its place
 
