@@ -174,7 +174,7 @@
             <p class="error" data-error role="alert" hidden></p>
             <div class="actions">
               <div class="download-row">
-                <button class="btn primary" type="button" data-png><span>Download PNG</span><small>1024 px raster</small></button>
+                <button class="btn primary" type="button" data-png><span>Download PNG</span><small>~1024 px raster</small></button>
                 <button class="btn copy" type="button" data-copy-png aria-label="Copy PNG to clipboard" title="Copy PNG">Copy</button>
               </div>
               <div class="download-row">
