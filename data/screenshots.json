@@ -427,6 +427,11 @@
       "file": "screenshots/social-link-preview.png",
       "changed": true
     },
+    "presenter-spotlight": {
+      "file": "screenshots/presenter-spotlight.png",
+      "changed": true,
+      "steps": 2
+    },
     "web-zoom-pip": {
       "file": "screenshots/web-zoom-pip.png",
       "changed": true,
