@@ -414,6 +414,10 @@
       "file": "screenshots/phone-preview.png",
       "changed": true
     },
+    "jitsi-instant-call": {
+      "changed": false,
+      "reason": "external"
+    },
     "video-pip": {
       "file": "screenshots/video-pip.png",
       "changed": true,

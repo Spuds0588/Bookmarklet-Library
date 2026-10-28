@@ -159,6 +159,8 @@ const REASONS = {
   "mailto-gmail": "external",
   "mailto-outlook": "external",
   "zoom-web-join": "external",
+  "jitsi-instant-call": "external",
+  "url-anchored-chat": "external",
   "enable-api-export": "other-page",
   "clear-site-data": "reload",
   "force-scroll": "no-effect",
