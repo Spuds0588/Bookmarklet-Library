@@ -161,6 +161,7 @@ const REASONS = {
   "zoom-web-join": "external",
   "jitsi-instant-call": "external",
   "url-anchored-chat": "external",
+  "voice-commander": "dialog",
   "enable-api-export": "other-page",
   "clear-site-data": "reload",
   "force-scroll": "no-effect",

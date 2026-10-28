@@ -392,6 +392,10 @@
       "file": "screenshots/instant-dark-mode.png",
       "changed": true
     },
+    "voice-commander": {
+      "changed": false,
+      "reason": "dialog"
+    },
     "zoom-web-join": {
       "changed": false,
       "reason": "external"
