@@ -18,6 +18,12 @@ What has been done, in order. Newest entries first.
 - Independent readers, on output the shipping files produced. The OpenDocument Engine Suite (`odt-engine`/`ods-engine`, a separate codebase) parses `report.docx → .odt` with the title, the page layout, two headings, three paragraphs, two list groups and the table, and reads `report.csv → .ods` back as `[["0012", "Northwind", 12, "Gate opens at 8, bring the deck"]]` — numbers typed as numbers, the leading-zero id kept as text — and `report.xlsx → .ods` as two named sheets with typed values. Python's `zipfile` and `ElementTree` see `mimetype` first and stored, the manifest listing every part, and `Pictures/image1.png` both in the package and referenced from `content.xml`. `pdftotext` reads the whole document, headings, lists and table out of the ODT-to-PDF output at letter size.
 - Chrome, through the capture harness: **ODT to HTML** with two files reports "Converted 2 files" and offers **Save all to folder** and **Download ZIP**; **ODS to CSV** turns one workbook into two outputs the same way; **Excel to ODS** with one file downloads `field-report.ods` directly.
 
+**Production**
+
+- `main` is live at <https://spuds0588.github.io/Bookmarklet-Library/> and serves the committed bytes: `index.html`, `data/catalog.json` (89 tools), `data/screenshots.json`, the generated bookmarklets and the new captures all hash the same as the checkout.
+- The live page in Chrome: 89 cards, 64 thumbnails, all fifteen new titles in place, the featured panel still **🔓 Unlock PDF**, and `#t/odt-to-pdf` opens with its own capture and install button.
+- The live bookmarklet code, fetched from Pages and run on the live page against live fixtures. **ODT to HTML** took three `.odt` files and clicked **Download ZIP** into `converted-2026-10-28.zip` (12,883 bytes, `PK\x03\x04`) holding exactly `field-report.html`, `site-report.html` and `handoff.html`. **Word to ODT** took a live `.docx` and downloaded `field-report.odt` directly. The two bulk buttons report as visible only while a batch is pending, and hidden after a single download. No console errors, every request 200.
+
 **Limits**
 
 - No desktop LibreOffice on this machine, so the desktop render check stays open in TODO; the checks are the engine suite, Python's `zipfile`/`ElementTree` and poppler.
