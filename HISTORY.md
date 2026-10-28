@@ -18,10 +18,11 @@ What has been done, in order. Newest entries first.
 - Headless Chrome, built bookmarklet on the demo page: the window opened at 960×600 with the canvas focused; `d` moved the player 41 px in 300 ms; holding the left button produced four bullets and killed a target for 100 points; Esc paused and released the page, and Esc or a click on the canvas resumed it and hid the page overflow again; F filled a 1200×750 viewport; the game-over path wrote a best of 1234 to storage; restart returned three lives and no enemies; Close removed `#nh-root`, restored overflow and focus, and a second run reopened cleanly.
 - Local catalog: the Games chip reads 2, filtering shows only Neon Hell and Doom, both cards use `screenshots/neon-hell.png` and `screenshots/doom.png`, and the detail view names the category and links `bookmarklets/games/neon-hell.js`.
 - Structured data: the ItemList carries 115 items and both games point at `bookmarklets/games/` rather than the old `view/` path.
+- Production after the push (`59ddfc5`): GitHub Pages served the eight-category catalog with Games at 2, the static Games block and the new `bookmarklets/games/` URLs. `bookmarklets/games/neon-hell.js` returned 200 with the same SHA-256 as the checkout, the old `bookmarklets/view/doom.js` returned 404, and both card screenshots loaded at 1200 px wide. Filtering the live page to Games showed only Neon Hell and Doom; the live detail view named the category and linked the new source path. Running the published install href on the live page opened the game, paused and resumed it by clicking the canvas, and closed back to the page.
 
 **Limit**
 
-- The game has no touch controls, sound or shared high-score table. It has only been played in Chrome; Firefox and Safari are untested. This entry records the local checks; production verification follows in the deploy step.
+- The game has no touch controls, sound or shared high-score table. It has only been played in Chrome; Firefox and Safari are untested.
 
 ## 2026-10-28 — Doom stops taking input until Play, and looks up
 
