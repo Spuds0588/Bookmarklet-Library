@@ -10,9 +10,9 @@
 
 ## Screenshots
 
-- [x] One capture per tool that shows its result (71 today) in `screenshots/`, taken by `scripts/shots.mjs` in Chrome against `scripts/fixtures/demo-page.html`.
+- [x] One capture per tool that shows its result (79 today) in `screenshots/`, taken by `scripts/shots.mjs` in Chrome against `scripts/fixtures/demo-page.html`.
 - [x] Tools that need using before they show anything are driven with real input first: a stroke on the draw surface, an element picked to blur, a query typed into the find bar, a snippet run in **JS runner**, a region redacted with **Pixelate a section**, an image pasted into the annotation editor, a click recorded by the action recorder. The camera and audio recorders are driven inside the window they open until they say they are recording.
-- [x] Tools whose work never reaches the page get no image and a reason instead (31 today): download, clipboard, records your screen, another site, reads aloud, reloads, needs a certain page, opens a browser prompt, works outside the page. A screenshot of an untouched page was worse than no screenshot.
+- [x] Tools whose work never reaches the page get no image and a reason instead (35 today): download, clipboard, records your screen, another site, reads aloud, reloads, needs a certain page, opens a browser prompt, works outside the page. A screenshot of an untouched page was worse than no screenshot.
 - [x] **Zip files** and **Unzip** are photographed with their panels populated: the capture run sets a sample folder tree on the ZIP builder's hidden folder picker and opens a sample archive in the ZIP browser, both through the open shadow root.
 - [x] The eleven Office converters are photographed with their panels populated and a batch selected. The captures show the bulk panel; a single output downloads directly and is described in the card.
 - [x] The fifteen OpenDocument converters are photographed the same way, against the `.odt` and `.ods` fixtures the demo server hands their pickers. The read cards show a converted batch of two documents; the ODS cards show one workbook, which is already several outputs when it has several sheets.
@@ -33,6 +33,21 @@
 - [ ] Open the generated ODT and ODS in desktop LibreOffice once. The current checks read the packages back with the project's own reader, a second reader in the test, and Python's `zipfile`, not a desktop suite.
 - [ ] Check **Save all to folder** on Firefox and Safari; both should fall back to **Download ZIP**, and that fallback has only been reasoned about, not clicked.
 - [x] Check a legacy `.doc` or `.xls` gives the intended rejection message in the panel: both now say to save as `.docx` or `.xlsx` and try again.
+
+## Phase 2 browser tools (2026-10-28)
+
+- [x] **📊 Table to CSV / Markdown** clicks a real table, expands spans and copies CSV or GFM. Browser check: the demo table produced 5 rows and 3 columns, both formats, and the panel's copy path was exercised.
+- [x] **🔦 Focus Spotlight presenter**, **📹 1-Click Jitsi Meeting**, **🔒 URL-Anchored Secret Chat**, **🎙️ Voice Macro Commander** and **🔗 Deep Fragment Citation Linker** are on the cards and live. Jitsi and chat are external/popups; voice was driven with a substituted `SpeechRecognition`; the citation was checked for a `#:~:text=` URL and local date.
+- [x] **🕶️ Demo PII & Sensitive Data Masker** masks terms, emails and regexes, optionally blurs matching elements, and restores the page. Browser check: 6 nodes masked, restore returned the original header and addresses, and an invalid regex stayed in the panel.
+- [x] **🏗️ Environment & Route Switcher** keeps path, query and hash, validates origins and stores three under `bl:envs`. Browser check: a valid origin produced the right URL; `ftp://` disabled the link; a click saved the mapping.
+- [x] **📋 Form Harvester** and **🧾 Form Stamper** exchange JSON, skip passwords, and fire native input/change/blur events. Browser check: 4 harvested fields, 4 filled, hidden field retained, password absent, events observed.
+- [x] **📮 Context Webhook Dispatcher** POSTed to a local CORS receiver and copied the payload when the request failed. Invalid schemes stay in the panel.
+- [x] **💥 Will it run Doom?** is 19 KB source and 33 KB encoded, well under the 64 KB bookmark limit. Browser check: overlay and HUD, movement, a hit (30→20 HP), enemy attack (100→88), a kill, death state, music toggle, and Escape removal with `AudioContext` closed.
+- [x] **URL chat is a real two-tab test.** Two pages on the same room elected a host, exchanged messages both ways, and no longer echoed a guest's message back to itself. The hosted page is `noindex`.
+- [ ] Test the URL chat with three guests, a host leaving mid-room, and Firefox/Safari. The current pass covered two tabs and the host handoff path only by code review.
+- [ ] Doom has no touch controls; a phone or tablet cannot play it. It also relies on `requestAnimationFrame`, which browsers throttle in background tabs.
+- [ ] The phase 2 document's runtime builder/registry idea was not adopted: these tools configure in their own panel or exchange JSON, because the catalog has no build-at-runtime step. Revisit only if a builder earns its keep.
+- [ ] The URL chat depends on the public PeerJS broker and CDN. If that service is unavailable, the hosted page says so; there is no fallback signalling server.
 
 ## Nice to have, only if it earns its place
 

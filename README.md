@@ -4,7 +4,7 @@
 
 A searchable catalog of small browser tools. Find one that does the job, drag it to your bookmarks bar, click it on any page. Nothing to install, no accounts, no extensions.
 
-102 bookmarklets across seven categories: capture, annotate, text, files, dev tools, view and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site.
+114 bookmarklets across seven categories: capture, annotate, text, files, dev tools, view and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site; the one hosted chat page loads PeerJS from a CDN.
 
 ## Use it
 
@@ -24,11 +24,11 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 | --- | --- |
 | Capture | Tab screenshot, OCR a screen region, record tab/camera/audio, Loom links |
 | Annotate | Screenshot markup (arrows, boxes, numbered steps), freehand draw |
-| Text | Advanced find, find and replace on inputs, page to Markdown, read aloud, extract emails, password generation |
+| Text | Advanced find, find and replace on inputs, page to Markdown, read aloud, extract emails, table to CSV/Markdown, text-fragment citations, password generation |
 | Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, ZIP create/extract, Word/HTML/RTF/TXT/Markdown and Excel/CSV conversion both ways, OpenDocument `.odt`/`.ods` conversion both ways, HTML snippet saver, Loom export |
-| Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder, layout and accessibility overlays |
-| View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, sticky-header removal, link highlighting, dark mode, force scroll |
-| Privacy | Redact page text, hide email addresses, blur elements, pixelate a region, hide notification toasts |
+| Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder, layout and accessibility overlays, environment switcher, form harvester/stamper, webhook dispatcher |
+| View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, sticky-header removal, link highlighting, dark mode, force scroll, presenter spotlight, Jitsi meeting, URL chat, voice commands, Doom |
+| Privacy | Redact page text, hide email addresses, blur elements, pixelate a region, hide notification toasts, PII masker |
 
 ## Community tools
 
@@ -83,6 +83,38 @@ The Word readers carry paragraphs, headings, bold/italic/underline/strike, hyper
 The OpenDocument side reads and writes `.odt` and `.ods` the way LibreOffice saves them: paragraphs, headings, emphasis, links, bullet and numbered lists, tables with spanned cells, page breaks and images. It reads the document's own styles, so a heading that inherits its bold from a parent style still comes across, and it takes the page size and margins for PDF. Nested lists continue their parent's numbering, and a numeric zero is a value, not an empty cell. Output is a standard package with a stored first `mimetype` entry, a manifest, content, styles and meta parts, and embedded pictures under `Pictures/`. OpenDocument formulas keep their last saved value, dates become ISO text in CSV, and formatting, colours, columns, text boxes, headers, footers, footnotes, comments, charts and tracked changes are not carried. Encrypted, ZIP64 and split packages are refused rather than half-read.
 
 The PDF writer uses the Helvetica family, Latin-1 text, the DOCX page size and margins, simple table grids and images as blocks without text wrap. It rasterizes images through the browser, so PNG, JPEG, GIF, BMP, WebP and SVG sources can be drawn. Unsupported characters are replaced and counted. Links, headers, footers and text wrap around images are not reproduced. Legacy `.doc` and `.xls` files are not read; save them as OOXML first. Nothing is uploaded.
+
+## Present, meet and chat
+
+**🔦 Focus Spotlight presenter** dims the page except a circle that follows the pointer. Right-click toggles the dimming, `[` and `]` resize the circle, and Esc exits.
+
+**📹 1-Click Jitsi Meeting** makes a random room on `meet.jit.si`, copies the join link and opens a 640×480 pop-up. It needs no account; if the browser blocks the pop-up, the link is offered in a prompt instead.
+
+**🔒 URL-Anchored Secret Chat** hashes the page's origin and path into a room name and opens the hosted [chat.html](chat.html) page. The page uses PeerJS and WebRTC, picks a host when the room is empty, and relays messages through that host. Anyone who knows the page URL can derive the room; the name is a rendezvous key, not a password. Messages are ephemeral and the hosted page is `noindex`. It needs a network connection to the public PeerJS broker and CDN; there is no server of ours.
+
+**🎙️ Voice Macro Commander** uses the browser's speech recognition for `scroll down`, `scroll up`, `top`, `bottom`, `submit`, `clear`, `refresh` and `stop`. It needs a microphone permission and a browser that provides `SpeechRecognition` (Chrome and Edge do; Firefox and Safari do not). The badge can be paused or closed.
+
+## Tables, citations and demos
+
+**📊 Table to CSV / Markdown** highlights tables as the pointer moves and opens a panel after one is clicked. It expands row and column spans, pads short rows, and copies RFC 4180 CSV or a GFM table. It does not read CSS grids.
+
+**🔗 Deep Fragment Citation Linker** turns the selected passage into a Markdown quote with a `#:~:text=` link, the page title and the local date. Selections are capped at 500 characters.
+
+**🕶️ Demo PII & Sensitive Data Masker** replaces terms, email addresses and optional regular expressions in the page's text, with an optional blur on the matching elements. **Restore page** puts the original text back. The edit is in memory only; a reload also discards it.
+
+## Forms, environments and webhooks
+
+**📋 Form Harvester** writes the current form's labels, names, types and values to `localStorage` under `bl:form` and to the clipboard. Password and file fields are skipped, hidden fields are kept, and the panel lists what it found.
+
+**🧾 Form Stamper** reads that JSON, or one pasted into the panel, lets you edit and deselect fields, then fills the matching fields. Matching tries the saved selector, ID, name, label, placeholder and finally position. It uses the native value setter and dispatches `input`, `change` and `blur`, so React and Vue forms notice the change. Passwords are never filled.
+
+**🏗️ Environment & Route Switcher** keeps the current path, query and hash while changing only the origin. Production, staging and local origins live in `localStorage` under `bl:envs`; each must be a valid http(s) origin before its **Go** link is enabled.
+
+**📮 Context Webhook Dispatcher** builds a small JSON body from the page URL, title, selected text and metadata, then POSTs it to a webhook. If the site's `connect-src` CSP or the endpoint's CORS policy blocks the request, it copies the same payload to the clipboard. The endpoint URL is stored under `bl:webhook`; nothing else is saved.
+
+## Doom
+
+**💥 Will it run Doom?** is a 19 KB raycaster, not a WAD player. It draws a 16×16 room at 320×200, renders walls and billboard imps, fires a hitscan pistol, and synthesizes the pistol, imp and E1M1 audio with Web Audio. `WASD` or the arrow keys move and turn, Space or a click fires, `M` toggles music, and Esc tears down the overlay, listeners, animation frame and audio context. It needs no network request, WAD, WASM or WebGL. There are three imps and no mobile controls.
 
 ## Tests
 
@@ -140,7 +172,7 @@ Tools that only make sense once you have used them are driven with real input fi
 
 Tools that open a window are driven there too: the camera and audio recorders are photographed while recording, not sitting at "ready".
 
-Tools whose work never reaches the page get no image at all. Instead the manifest records why, and the tile shows the tool's own description with the reason underneath: **Saves a file** (14 tools), **Copies to clipboard** (3), **Opens another site** (3), **Opens a browser prompt** (2), **Works outside the page** (5), **Records your screen** (1), plus reads aloud, reloads the page and needs a certain page. A screenshot of an untouched demo page would be worse than no screenshot, and a blank tile would say less than the sentence the tool already carries.
+Tools whose work never reaches the page get no image at all. Instead the manifest records why, and the tile shows the tool's own description with the reason underneath: **Saves a file** (14 tools), **Copies to clipboard** (4), **Opens another site** (5), **Opens a browser prompt** (3), **Works outside the page** (5), **Records your screen** (1), plus reads aloud, reloads the page and needs a certain page. A screenshot of an untouched demo page would be worse than no screenshot, and a blank tile would say less than the sentence the tool already carries.
 
 Picture-in-picture windows live on the display rather than in the page, so the video and audio players are captured with a display running. Xvfb is enough and needs no admin rights, since it can start in a container:
 

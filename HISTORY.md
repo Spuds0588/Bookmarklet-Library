@@ -2,6 +2,26 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-28 — Twelve browser tools for presenting, forms and demos
+
+**Changed**
+
+- Twelve new cards, each its own bookmarklet: **📊 Table to CSV / Markdown**, **🔗 Deep Fragment Citation Linker**, **🕶️ Demo PII & Sensitive Data Masker**, **🏗️ Environment & Route Switcher**, **📋 Form Harvester**, **🧾 Form Stamper**, **📮 Context Webhook Dispatcher**, **🔦 Focus Spotlight presenter**, **📹 1-Click Jitsi Meeting**, **🔒 URL-Anchored Secret Chat**, **🎙️ Voice Macro Commander** and **💥 Will it run Doom?**.
+- **URL chat** is the one hosted helper: `chat.html` hashes the page origin and path into a PeerJS room, elects one host, relays through it and removes the peer on unload. The room name is a rendezvous key, not a password, and the page is `noindex`. It loads PeerJS from unpkg; no bookmarklet gained a runtime dependency.
+- **PII masker** replaces terms, emails and optional regular expressions, can blur the matching elements, and restores the original text from the snapshot it kept. The form pair writes and reads `bl:form`, skips password and file fields, and the stamper uses the native value setter plus `input`, `change` and `blur`. The environment switcher stores valid origins under `bl:envs` and keeps the current path, query and hash; the webhook stores its endpoint under `bl:webhook` and copies the payload when CORS or CSP blocks the POST.
+- **Doom** is a self-contained 19 KB raycaster with Web Audio, no WAD, WASM, WebGL or network request. It stays under the 64 KB source and encoded budget, and Escape or `pagehide` removes the overlay, listeners, animation frame and `AudioContext`.
+- README, AGENTS, TODO, the visible page FAQ and the FAQPage schema describe the new tools, their local storage keys, the PeerJS exception and Doom's budget. The FAQ no longer claims there is no runtime dependency at all.
+
+**Verified**
+
+- `npm test`: 49 tests pass. `node scripts/build.mjs` writes 114 bookmarklets, `node scripts/verify.mjs` reports 114 bookmarklets, 79 screenshots and 35 tools explained without one, and both `build.mjs --check` and `compose.mjs --check` exit 0.
+- Browser checks on the demo page: the table picker copied 5 rows by 3 columns as CSV and GFM; the PII masker changed 6 nodes and restored the header and addresses; a valid origin produced the expected URL and `ftp://` disabled the link; the form pair harvested and refilled 4 fields, skipped the password, kept the hidden field and fired the native events; the webhook reached a local CORS receiver and fell back to the clipboard on failure; Doom moved, hit an imp for 20 damage, took 12 damage, killed one, reached the death state, toggled music, and tore down on Escape.
+- URL chat was exercised with two tabs in the same room: one host was elected, messages went both ways, and a guest's message was no longer echoed back to itself. Voice commands were driven with a substituted `SpeechRecognition`; the citation produced a `#:~:text=` URL and a local date.
+
+**Limit**
+
+- URL chat has not been tested with three guests, a host leaving mid-room, or Firefox and Safari. It depends on the public PeerJS broker and CDN. Doom has no touch controls.
+
 ## 2026-10-27 — Thirteen credited community bookmarklets
 
 **Changed**

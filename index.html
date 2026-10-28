@@ -72,7 +72,7 @@
           "name": "Do bookmarklets need an extension or an account?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "No. Every tool is one bookmark, and the whole catalog is static HTML, CSS and JavaScript. There is no sign-in, no tracking and no runtime dependency."
+            "text": "No. Every tool is one bookmark, and the whole catalog is static HTML, CSS and JavaScript. There is no sign-in and no tracking. The one hosted helper page, URL chat, loads PeerJS from a CDN because WebRTC needs a signalling broker."
           }
         },
         {
@@ -89,6 +89,22 @@
           "acceptedAnswer": {
             "@type": "Answer",
             "text": "No. Most are built here, and some are kept from other developers. Those cards name the original author and link to the source, and the full page also links the readable file in this repository. The author's name is kept, with an emoji added for the bookmarks bar."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do the meeting, chat and voice tools need an account?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Jitsi opens a room on the public meet.jit.si service, and URL chat uses PeerJS over WebRTC through a hosted page; there is no sign-in and no server of ours. The chat room name comes from the page URL, so anyone who can derive that URL can join. Voice commands need microphone permission and a browser with SpeechRecognition, which today means Chrome or Edge."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What happens to the page when I use the PII, form or webhook tools?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Nothing leaves the page unless you press Send in the webhook tool. The PII masker edits text in place and can restore it; the form harvester writes JSON to localStorage under bl:form, and the stamper fills fields from it; the environment switcher stores origins under bl:envs; the webhook stores the endpoint under bl:webhook. Password and file fields are skipped by the form pair, and a reload discards the mask."
           }
         },
         {
@@ -379,7 +395,7 @@
       </div>
       <div class="faq-item">
         <h3>Do bookmarklets need an extension or an account?</h3>
-        <p>No. Every tool is one bookmark, and the whole catalog is static HTML, CSS and JavaScript. There is no sign-in, no tracking and no runtime dependency.</p>
+        <p>No. Every tool is one bookmark, and the whole catalog is static HTML, CSS and JavaScript. There is no sign-in and no tracking. The one hosted helper page, URL chat, loads PeerJS from a CDN because WebRTC needs a signalling broker.</p>
       </div>
       <div class="faq-item">
         <h3>Are bookmarklets safe to use?</h3>
@@ -388,6 +404,14 @@
       <div class="faq-item">
         <h3>Are all of these tools yours?</h3>
         <p>No. Most are built here, and some are kept from other developers. Those cards name the original author and link to the source, and the full page also links the readable file in this repository. The author's name is kept, with an emoji added for the bookmarks bar.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Do the meeting, chat and voice tools need an account?</h3>
+        <p>No. Jitsi opens a room on the public meet.jit.si service, and URL chat uses PeerJS over WebRTC through a hosted page; there is no sign-in and no server of ours. The chat room name comes from the page URL, so anyone who can derive that URL can join. Voice commands need microphone permission and a browser with SpeechRecognition, which today means Chrome or Edge.</p>
+      </div>
+      <div class="faq-item">
+        <h3>What happens to the page when I use the PII, form or webhook tools?</h3>
+        <p>Nothing leaves the page unless you press Send in the webhook tool. The PII masker edits text in place and can restore it; the form harvester writes JSON to localStorage under bl:form, and the stamper fills fields from it; the environment switcher stores origins under bl:envs; the webhook stores the endpoint under bl:webhook. Password and file fields are skipped by the form pair, and a reload discards the mask.</p>
       </div>
       <div class="faq-item">
         <h3>Do the ZIP tools work in every browser?</h3>
