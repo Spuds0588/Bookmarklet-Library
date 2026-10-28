@@ -303,6 +303,11 @@ const HOW = {
     "It rewrites the page in place so the details you do not want to share stay out of a screenshot or screen share. Reload to restore the page.",
 };
 
+const HOW_TOOL = {
+  doom:
+    "It opens a full-screen panel and loads actual shareware Doom Episode 1: a WebAssembly engine and the shareware WAD, about 7 MB on the first visit. Click the game for sound; Open in tab is the fallback when a page blocks frames. Close or Esc removes the panel and restores the page's scroll.",
+};
+
 let detailReturnFocus = null;
 let detailOrigin = null;
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)");
@@ -390,7 +395,7 @@ function fillDetail(item) {
     <div><dt>Added</dt><dd>${esc(date)}</dd></div>
     <div><dt>Size</dt><dd>${Math.max(1, Math.round(item.bytes / 1024))} KB</dd></div>
     ${item.author ? `<div><dt>Credit</dt><dd><a href="${esc(item.credit)}" target="_blank" rel="noopener">${esc(item.author)}</a></dd></div>` : ""}`;
-  nodes.detailHow.textContent = HOW[item.category] ?? HOW.text;
+  nodes.detailHow.textContent = HOW_TOOL[item.slug] ?? HOW[item.category] ?? HOW.text;
   nodes.detailActions.innerHTML = `
     <button class="ghost-btn" type="button" data-copy="${esc(item.slug)}">
       <svg class="icon" aria-hidden="true"><use href="#i-copy"></use></svg> Copy code
