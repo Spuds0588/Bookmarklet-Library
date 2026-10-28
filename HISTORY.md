@@ -2,6 +2,45 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-27 — Thirteen credited community bookmarklets
+
+**Changed**
+
+- Thirteen cards now come from other developers: **The "Redactor" (Live Page Editor)**, **Reveal Hidden Passwords**, **Kill Sticky Headers**, **Training Video Speeder**, **Enable Right-Click & Text Selection**, **Extract All Emails from Page**, **Highlight All Links**, **The Layout Debugger (DOM Tinter)**, **Wireframe Outline Mode**, **Native Hex EyeDropper**, **Instant Dark Mode (Invert Colors)**, **Show Hidden Form Fields** and **Display Image Alt Text (A11y Check)**. Each keeps the original tool name after its emoji and carries `@author` and `@credit`.
+- The card shows **By …** linked to the original. The detail view adds a **Credit** row and an **Original source** button beside **Source file**, so the borrowed work and this repository's copy are both one click away. `build.mjs` refuses an author without a credit or a credit that is not an http(s) URL, and the generated `<noscript>` list plus `ItemList.sameAs` carry the original link too.
+- **Show Hidden Form Fields** is the being-frank gist; **Kill Sticky Headers** links Alisdair McDiarmid's page; the Thomas Orlita tools link his `awesome-bookmarklets` repo. Snippets with no named author are labelled **Community snippet** and link the reference they follow.
+- The list's local/session storage cleaner is not a separate card because **🧹 Clear cookies and cache** already clears both, plus cookies and cache. The README says so rather than dropping the item silently.
+- The demo fixture gains a password field and a hidden CSRF field so both reveal tools can be photographed; their captures scroll the form into view. Seven new visible results get captures; the six tools that change page state or open a browser dialog get reasons instead.
+- README, AGENTS, TODO, the page FAQ and the FAQPage schema now explain the credit fields and the community cards.
+
+**Verified**
+
+- `npm test`: 49 tests pass. `node scripts/build.mjs` writes 102 tools, `node scripts/verify.mjs` reports 102 tools, 71 screenshots and 31 explained without one, and both `build.mjs --check` and `compose.mjs --check` pass.
+- All ten distinct credit URLs return HTTP 200.
+- Browser on `http://127.0.0.1:4173`: 102 cards, 13 **By** labels, the detail **Credit** row and **Original source** href on **The "Redactor"**, 7 FAQ questions matching 7 FAQPage entries, and an `ItemList` with 102 items and 13 credit `sameAs` pairs.
+- Built bookmarklet code was fetched from the catalog and run on the demo page with assertions: password type `text`, hidden input `text` with a red border, video `playbackRate` 2, fixed toast `static`, context-menu handler cleared, links yellow, body outline red, body tint `rgba(0, 0, 0, 0.1)`, dark filter `invert(1)`, design mode `on`, alt label shown, email prompt unique, and the eyedropper prompt `#123456`. The only console errors were the demo fixture's missing media files (`demo.mp4`, `demo.mp3`, `/embed`), not the tools.
+
+**Limit**
+
+- A credit records one source. A tool with several upstream versions names the one this code follows; it does not claim every version.
+
+## 2026-10-27 — Local stars replace the shared vote tally
+
+**Changed**
+
+- The 👍/👎 pair is gone. Each card's top row and the detail bar now carry one star that toggles a personal preference in `localStorage` under `bl:stars`. Starred tools sort to the top of the active category or search, and the star keeps its state across reloads.
+- The GitHub reaction ballot is removed: `data/votes.json`, `scripts/votes.mjs` and `.github/workflows/votes.yml` are deleted, and `scripts/verify.mjs` no longer checks vote rows. The **Top rated** chip goes with them; starring is the only ordering control.
+- README, AGENTS, TODO and the footer now describe stars as local, with no account, shared count or server.
+
+**Verified**
+
+- `npm test`: 49 tests pass. `node scripts/build.mjs` wrote 89 bookmarklets, `node scripts/verify.mjs` reported 89 bookmarklets, 64 screenshots and 25 tools explained without one, and `node scripts/build.mjs --check` and `node scripts/compose.mjs --check` both pass.
+- Browser run at `http://127.0.0.1:4173`: 89 cards and 89 star buttons, no thumb controls and no **Top rated** chip. Starring **Advanced find** moved it to the first card and wrote `bl:stars`; a reload kept it first. In a "markdown" search, starring **Word to Markdown** moved it to the first of 10 results. In the **View** filter, starring **Zoom lens** moved it to the first of 12. The detail star switched between **Star** and **Starred** and reordered the grid underneath. No console errors, and the page no longer requests `data/votes.json`.
+
+**Limit**
+
+- Stars are per browser profile. Clearing site storage or using another browser starts with no stars; there is no shared count by design.
+
 ## 2026-10-27 — Converter corpus fixes, and one stack for the questions
 
 **Changed**

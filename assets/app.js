@@ -1,15 +1,14 @@
 const $ = (selector, root = document) => root.querySelector(selector);
 
-const STORAGE = { picks: "bl:picks", theme: "bl:theme" };
+const STORAGE = { picks: "bl:picks", theme: "bl:theme", stars: "bl:stars" };
 
 const state = {
   items: [],
   categories: [],
   query: "",
   category: "all",
-  topRated: false,
   picks: new Set(read(STORAGE.picks, [])),
-  votes: { tools: {} },
+  stars: new Set(read(STORAGE.stars, [])),
   shots: { tools: {} },
   detail: null,
 };
@@ -108,6 +107,10 @@ const REASON_COPY = {
     short: "Works outside the page",
     long: "Nothing on the demo page needed the change this tool makes, so there is nothing to show.",
   },
+  dialog: {
+    short: "Opens a browser prompt",
+    long: "It asks or picks in a browser dialog outside the page, so a page screenshot cannot show the result.",
+  },
   display: {
     short: "Records your screen",
     long: "It records your screen to a video file, and the page it runs on looks the same while it does. The recording lands in your downloads when you stop it, so there is nothing on the page to photograph.",
@@ -115,11 +118,6 @@ const REASON_COPY = {
 };
 const reasonFor = (shot) => REASON_COPY[shot?.reason] ?? REASON_COPY["no-effect"];
 const bookmarkIcon = '<svg class="icon" aria-hidden="true"><use href="#i-bookmark"></use></svg>';
-
-const score = (item) => {
-  const vote = state.votes.tools[item.slug];
-  return vote ? vote.up - vote.down : 0;
-};
 
 function visibleItems() {
   const tokens = state.query.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -131,7 +129,11 @@ function visibleItems() {
       .toLowerCase();
     return tokens.every((token) => haystack.includes(token));
   });
-  return state.topRated ? items.sort((a, b) => score(b) - score(a)) : items;
+  // Array.sort is stable, so starred tools rise to the top of whatever
+  // category or search is active without disturbing the order within each group.
+  return items.sort(
+    (a, b) => Number(state.stars.has(b.slug)) - Number(state.stars.has(a.slug)),
+  );
 }
 
 /* Rendering ------------------------------------------------------------- */
@@ -179,7 +181,6 @@ function renderFeatured() {
 }
 
 function renderChips() {
-  const rated = Object.keys(state.votes.tools).length;
   const chips = [
     `<button class="chip" type="button" data-cat="all" aria-pressed="${state.category === "all"}">All <span class="chip-count">${state.items.length}</span></button>`,
     ...state.categories.map(
@@ -188,23 +189,17 @@ function renderChips() {
         <span class="chip-emoji" aria-hidden="true">${esc(category.emoji)}</span> ${esc(category.label)} <span class="chip-count">${category.count}</span>
       </button>`,
     ),
-    `<span class="chip-sep" aria-hidden="true"></span>`,
-    `<button class="chip" type="button" data-rated="true" aria-pressed="${state.topRated}" title="Sort by GitHub votes">
-      <svg class="icon" aria-hidden="true" style="width:12px;height:12px"><use href="#i-thumb-up"></use></svg>
-      Top rated <span class="chip-count">${rated}</span>
-    </button>`,
   ];
   nodes.chips.innerHTML = chips.join("");
 }
 
-function voteButtons(item) {
-  const vote = state.votes.tools[item.slug];
-  if (!vote?.url) return "";
-  const link = (kind, count, label) => `
-    <a class="vote" href="${esc(vote.url)}" target="_blank" rel="noopener" aria-label="${esc(label)} ${esc(item.name)} on GitHub" title="Vote on GitHub — react ${kind} to this tool's comment">
-      <svg class="icon" aria-hidden="true"><use href="#i-thumb-${kind === "👍" ? "up" : "down"}"></use></svg>${count ? `<span class="vote-count">${count}</span>` : ""}
-    </a>`;
-  return `<div class="votes">${link("👍", vote.up, "Thumbs up for")}${link("👎", vote.down, "Thumbs down for")}</div>`;
+function starButton(item, withLabel = false) {
+  const starred = state.stars.has(item.slug);
+  const label = starred ? "Unstar" : "Star";
+  const icon = '<svg class="icon" aria-hidden="true"><use href="#i-star"></use></svg>';
+  return `<button class="${withLabel ? "ghost-btn star-labeled" : "star"}" type="button" data-star="${esc(item.slug)}" aria-pressed="${starred}" aria-label="${label} ${esc(item.name)}" title="${starred ? "Remove star" : "Star this tool"}">
+    ${icon}${withLabel ? `<span>${starred ? "Starred" : "Star"}</span>` : ""}
+  </button>`;
 }
 
 function card(item) {
@@ -214,9 +209,10 @@ function card(item) {
     <article class="card" data-card="${esc(item.slug)}">
       <div class="card-top">
         <span class="card-cat">${esc(badgeFor(item.category))}</span>
-        ${voteButtons(item)}
+        ${starButton(item)}
       </div>
       <h3 class="card-title">${esc(item.name)}</h3>
+      ${item.author ? `<p class="card-credit">By <a href="${esc(item.credit)}" target="_blank" rel="noopener" title="Original source: ${esc(item.author)}">${esc(item.author)}</a></p>` : ""}
       ${shot?.file ? `<p class="card-desc">${esc(item.description)}</p>` : ""}
       ${
         shot?.file
@@ -266,7 +262,6 @@ function renderGrid() {
 
   const status = [`${items.length} of ${state.items.length} tools`];
   if (state.category !== "all") status.push(labelFor(state.category));
-  if (state.topRated) status.push("top rated");
   if (state.query.trim()) status.push(`“${state.query.trim()}”`);
   nodes.status.textContent = status.join(" · ");
 
@@ -393,7 +388,8 @@ function fillDetail(item) {
   nodes.detailMeta.innerHTML = `
     <div><dt>Category</dt><dd>${esc(badgeFor(item.category))}</dd></div>
     <div><dt>Added</dt><dd>${esc(date)}</dd></div>
-    <div><dt>Size</dt><dd>${Math.max(1, Math.round(item.bytes / 1024))} KB</dd></div>`;
+    <div><dt>Size</dt><dd>${Math.max(1, Math.round(item.bytes / 1024))} KB</dd></div>
+    ${item.author ? `<div><dt>Credit</dt><dd><a href="${esc(item.credit)}" target="_blank" rel="noopener">${esc(item.author)}</a></dd></div>` : ""}`;
   nodes.detailHow.textContent = HOW[item.category] ?? HOW.text;
   nodes.detailActions.innerHTML = `
     <button class="ghost-btn" type="button" data-copy="${esc(item.slug)}">
@@ -402,7 +398,10 @@ function fillDetail(item) {
     <a class="ghost-btn" href="${esc(item.source)}" target="_blank" rel="noopener">
       <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg> Source file
     </a>
-    ${voteButtons(item)}`;
+    ${item.author ? `<a class="ghost-btn" href="${esc(item.credit)}" target="_blank" rel="noopener">
+      <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg> Original source
+    </a>` : ""}
+    ${starButton(item, true)}`;
 
   nodes.detailShot.innerHTML = shot?.file
     ? `<img src="${esc(shot.file)}" alt="Screenshot of ${esc(item.name)} running on a demo page">
@@ -482,6 +481,21 @@ function toast(message) {
   nodes.toast.classList.add("is-visible");
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => nodes.toast.classList.remove("is-visible"), 2600);
+}
+
+function toggleStar(slug) {
+  const item = state.items.find((entry) => entry.slug === slug);
+  if (!item) return;
+  const starred = state.stars.has(slug);
+  if (starred) state.stars.delete(slug);
+  else state.stars.add(slug);
+  write(STORAGE.stars, [...state.stars]);
+  renderGrid();
+  if (state.detail === slug) {
+    const button = nodes.detailActions.querySelector("[data-star]");
+    if (button) button.outerHTML = starButton(item, true);
+  }
+  toast(starred ? "Star removed." : "Starred. It moves to the top.");
 }
 
 async function copyText(text) {
@@ -586,11 +600,7 @@ function bindStaticEvents() {
   nodes.chips.addEventListener("click", (event) => {
     const chip = event.target.closest("button");
     if (!chip) return;
-    if (chip.dataset.rated) {
-      state.topRated = !state.topRated;
-    } else if (chip.dataset.cat) {
-      state.category = chip.dataset.cat;
-    }
+    if (chip.dataset.cat) state.category = chip.dataset.cat;
     renderChips();
     renderGrid();
   });
@@ -607,7 +617,6 @@ function bindStaticEvents() {
   $("#reset").addEventListener("click", () => {
     state.query = "";
     state.category = "all";
-    state.topRated = false;
     nodes.search.value = "";
     nodes.clearSearch.hidden = true;
     renderChips();
@@ -633,12 +642,12 @@ function bindStaticEvents() {
 
   document.addEventListener("click", (event) => {
     const copy = event.target.closest("[data-copy]");
-    const vote = event.target.closest(".vote");
+    const star = event.target.closest("[data-star]");
     const open = event.target.closest("[data-open]");
     const install = event.target.closest("a.install");
 
     if (copy) return onCopy(copy.dataset.copy);
-    if (vote) return toast("Opened GitHub — add 👍 or 👎 to the comment to count your vote.");
+    if (star) return toggleStar(star.dataset.star);
     if (open) {
       // Grow from the picture, whichever control was clicked to get here.
       const origin =
@@ -706,18 +715,14 @@ async function init() {
   bindStaticEvents();
 
   try {
-    const [catalog, votes, shots] = await Promise.all([
+    const [catalog, shots] = await Promise.all([
       fetch("data/catalog.json", { cache: "no-cache" }).then((response) => response.json()),
-      fetch("data/votes.json", { cache: "no-cache" })
-        .then((response) => (response.ok ? response.json() : null))
-        .catch(() => null),
       fetch("data/screenshots.json", { cache: "no-cache" })
         .then((response) => (response.ok ? response.json() : null))
         .catch(() => null),
     ]);
     state.items = catalog.items;
     state.categories = catalog.categories;
-    if (votes?.tools) state.votes = votes;
     if (shots?.tools) state.shots = shots;
     // ?q= is the search target the structured data advertises.
     const shared = new URLSearchParams(location.search).get("q")?.trim();

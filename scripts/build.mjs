@@ -59,6 +59,13 @@ function parseSource(slug, file, text) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(meta.added)) throw new Error(`${file}: @added must be YYYY-MM-DD`);
   if (!EMOJI.test(meta.name)) throw new Error(`${file}: @name must start with an emoji or symbol`);
 
+  const author = (meta.author ?? "").trim();
+  const credit = (meta.credit ?? "").trim();
+  if (Boolean(author) !== Boolean(credit)) {
+    throw new Error(`${file}: @author and @credit go together`);
+  }
+  if (credit && !/^https?:\/\//.test(credit)) throw new Error(`${file}: @credit must be an http(s) URL`);
+
   return {
     slug,
     name: meta.name,
@@ -67,6 +74,8 @@ function parseSource(slug, file, text) {
     tags: meta.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
     added: meta.added,
     featured: meta.featured === "true",
+    author,
+    credit,
     bytes: Buffer.byteLength(code),
     source: path.relative(root, file).split(path.sep).join("/"),
     // Percent-encoding keeps quotes, hashes and percent signs intact in an href.
@@ -126,7 +135,12 @@ function toolsBlock(items, categories) {
       const tools = items.filter((item) => item.category === category.id);
       if (!tools.length) return "";
       const rows = tools
-        .map((item) => `            <li><strong>${escapeHtml(item.name)}</strong> — ${escapeHtml(item.description)}</li>`)
+        .map((item) => {
+          const by = item.author
+            ? ` <span class="static-credit">By <a href="${escapeHtml(item.credit)}">${escapeHtml(item.author)}</a></span>`
+            : "";
+          return `            <li><strong>${escapeHtml(item.name)}</strong> — ${escapeHtml(item.description)}${by}</li>`;
+        })
         .join("\n");
       return `        <section class="static-group">
           <h3 class="section-label">${category.emoji} ${escapeHtml(category.label)} · ${tools.length}</h3>
@@ -154,7 +168,9 @@ ${rows}
         applicationCategory: "BrowserApplication",
         operatingSystem: "Chrome, Firefox, Safari, Edge",
         url: `${SITE}#t/${item.slug}`,
-        sameAs: `https://github.com/Spuds0588/Bookmarklet-Library/blob/main/${item.source}`,
+        sameAs: item.credit
+          ? [`https://github.com/Spuds0588/Bookmarklet-Library/blob/main/${item.source}`, item.credit]
+          : `https://github.com/Spuds0588/Bookmarklet-Library/blob/main/${item.source}`,
         offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
       },
     })),

@@ -33,25 +33,14 @@ for (const item of catalog.items) {
   }
   if (!item.description || item.description.length < 20) problems.push(`${item.slug}: description too short`);
   if (!item.tags.length) problems.push(`${item.slug}: no tags`);
+  if (Boolean(item.author) !== Boolean(item.credit)) {
+    problems.push(`${item.slug}: author and credit must be present together`);
+  }
+  if (item.credit && !/^https?:\/\//.test(item.credit)) problems.push(`${item.slug}: credit is not an http(s) URL`);
   if (seenNames.has(item.name)) problems.push(`${item.slug}: duplicate name "${item.name}"`);
   seenNames.add(item.name);
   if (item.bytes !== Buffer.byteLength(body)) problems.push(`${item.slug}: byte count mismatch`);
   if (!EMOJI.test(item.name)) problems.push(`${item.slug}: name has no leading emoji`);
-}
-
-let votes = null;
-try {
-  votes = JSON.parse(await readFile(path.join(root, "data", "votes.json"), "utf8"));
-} catch {
-  problems.push("data/votes.json is missing or is not JSON (run node scripts/votes.mjs --offline)");
-}
-
-if (votes) {
-  for (const [slug, vote] of Object.entries(votes.tools ?? {})) {
-    if (!slugs.has(slug)) problems.push(`votes: "${slug}" is not in the catalog`);
-    if (!Number.isInteger(vote.up) || vote.up < 0) problems.push(`votes: ${slug} up count is not a non-negative integer`);
-    if (!Number.isInteger(vote.down) || vote.down < 0) problems.push(`votes: ${slug} down count is not a non-negative integer`);
-  }
 }
 
 let shots = null;
@@ -61,7 +50,7 @@ try {
   problems.push("data/screenshots.json is missing or is not JSON (run node scripts/shots.mjs)");
 }
 
-const REASONS = ["download", "clipboard", "speech", "external", "other-page", "reload", "no-effect", "display"];
+const REASONS = ["download", "clipboard", "speech", "external", "other-page", "reload", "no-effect", "dialog", "display"];
 
 if (shots) {
   for (const item of catalog.items) {
@@ -118,7 +107,6 @@ if (problems.length) {
 const entries = Object.values(shots?.tools ?? {});
 console.log(
   `verified ${catalog.items.length} bookmarklets across ${catalog.categories.length} categories, ` +
-    `${Object.keys(votes?.tools ?? {}).length} vote rows, ` +
     `${entries.filter((entry) => entry.file).length} screenshots, ` +
     `${entries.filter((entry) => entry.reason).length} tools explained without one`,
 );

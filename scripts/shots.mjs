@@ -65,6 +65,9 @@ const STEPS = {
   // their real pickers rather than drawn on top of the UI.
   "zip-files": [{ zipSample: true }, { wait: 500 }],
   unzip: [{ unzipSample: true }, { wait: 700 }],
+  // Both results sit in the demo form, below the first viewport.
+  "reveal-passwords": [{ script: 'document.querySelector("form").scrollIntoView({ block: "center" })' }, { wait: 400 }],
+  "show-hidden-fields": [{ script: 'document.querySelector("form").scrollIntoView({ block: "center" })' }, { wait: 400 }],
 };
 
 /* Office converters are filled through their real hidden picker, then run so
@@ -157,6 +160,12 @@ const REASONS = {
   "force-scroll": "no-effect",
   "grab-text": "clipboard",
   "record-tab": "display",
+  "extract-emails": "dialog",
+  "hex-eyedropper": "dialog",
+  "redactor": "no-effect",
+  "video-speeder": "no-effect",
+  "enable-right-click": "no-effect",
+  "image-alt-text": "no-effect",
 };
 
 // A floating player is its own window rather than part of the page surface, so

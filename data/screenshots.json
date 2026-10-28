@@ -1,7 +1,7 @@
 {
   "width": 1200,
   "height": 750,
-  "generated": "2026-10-27",
+  "generated": "2026-10-28",
   "tools": {
     "record-audio": {
       "file": "screenshots/record-audio.png",
@@ -53,6 +53,10 @@
     "website-to-markdown": {
       "changed": false,
       "reason": "download"
+    },
+    "extract-emails": {
+      "changed": false,
+      "reason": "dialog"
     },
     "mailto-outlook": {
       "changed": false,
@@ -297,6 +301,15 @@
       "changed": false,
       "reason": "download"
     },
+    "show-hidden-fields": {
+      "file": "screenshots/show-hidden-fields.png",
+      "changed": true,
+      "steps": 2
+    },
+    "hex-eyedropper": {
+      "changed": false,
+      "reason": "dialog"
+    },
     "url-parameter-report": {
       "file": "screenshots/url-parameter-report.png",
       "changed": true,
@@ -307,9 +320,22 @@
       "changed": true,
       "popup": true
     },
+    "reveal-passwords": {
+      "file": "screenshots/reveal-passwords.png",
+      "changed": true,
+      "steps": 2
+    },
+    "wireframe-outline": {
+      "file": "screenshots/wireframe-outline.png",
+      "changed": true
+    },
     "console-monitor": {
       "file": "screenshots/console-monitor.png",
       "changed": true
+    },
+    "image-alt-text": {
+      "changed": false,
+      "reason": "no-effect"
     },
     "export-local-storage": {
       "file": "screenshots/export-local-storage.png",
@@ -333,6 +359,10 @@
       "changed": false,
       "reason": "other-page"
     },
+    "layout-debugger": {
+      "file": "screenshots/layout-debugger.png",
+      "changed": true
+    },
     "clear-site-data": {
       "changed": false,
       "reason": "reload"
@@ -341,12 +371,20 @@
       "file": "screenshots/iframe-tester.png",
       "changed": true
     },
+    "video-speeder": {
+      "changed": false,
+      "reason": "no-effect"
+    },
     "force-scroll": {
       "changed": false,
       "reason": "no-effect"
     },
     "toggle-theme": {
       "file": "screenshots/toggle-theme.png",
+      "changed": true
+    },
+    "instant-dark-mode": {
+      "file": "screenshots/instant-dark-mode.png",
       "changed": true
     },
     "zoom-web-join": {
@@ -363,6 +401,10 @@
       "changed": true,
       "popup": true
     },
+    "kill-sticky-headers": {
+      "file": "screenshots/kill-sticky-headers.png",
+      "changed": true
+    },
     "phone-preview": {
       "file": "screenshots/phone-preview.png",
       "changed": true
@@ -371,6 +413,10 @@
       "file": "screenshots/video-pip.png",
       "changed": true,
       "display": true
+    },
+    "enable-right-click": {
+      "changed": false,
+      "reason": "no-effect"
     },
     "social-link-preview": {
       "file": "screenshots/social-link-preview.png",
@@ -385,6 +431,10 @@
       "file": "screenshots/zoom-lens.png",
       "changed": true
     },
+    "highlight-links": {
+      "file": "screenshots/highlight-links.png",
+      "changed": true
+    },
     "replace-ads": {
       "file": "screenshots/replace-ads.png",
       "changed": true
@@ -392,6 +442,10 @@
     "hide-ads": {
       "file": "screenshots/hide-ads.png",
       "changed": true
+    },
+    "redactor": {
+      "changed": false,
+      "reason": "no-effect"
     },
     "blur-picker": {
       "file": "screenshots/blur-picker.png",

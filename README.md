@@ -4,7 +4,7 @@
 
 A searchable catalog of small browser tools. Find one that does the job, drag it to your bookmarks bar, click it on any page. Nothing to install, no accounts, no extensions.
 
-89 bookmarklets across seven categories: capture, annotate, text, files, dev tools, view and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site.
+102 bookmarklets across seven categories: capture, annotate, text, files, dev tools, view and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site.
 
 ## Use it
 
@@ -24,11 +24,33 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 | --- | --- |
 | Capture | Tab screenshot, OCR a screen region, record tab/camera/audio, Loom links |
 | Annotate | Screenshot markup (arrows, boxes, numbered steps), freehand draw |
-| Text | Advanced find, find and replace on inputs, page to Markdown, read aloud, password generation |
+| Text | Advanced find, find and replace on inputs, page to Markdown, read aloud, extract emails, password generation |
 | Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, ZIP create/extract, Word/HTML/RTF/TXT/Markdown and Excel/CSV conversion both ways, OpenDocument `.odt`/`.ods` conversion both ways, HTML snippet saver, Loom export |
-| Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder |
-| View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, force scroll |
-| Privacy | Hide email addresses, blur elements, pixelate a region, hide notification toasts |
+| Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder, layout and accessibility overlays |
+| View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, sticky-header removal, link highlighting, dark mode, force scroll |
+| Privacy | Redact page text, hide email addresses, blur elements, pixelate a region, hide notification toasts |
+
+## Community tools
+
+Thirteen cards are other developers' tools. Their names stay as the authors wrote them, with an emoji added for the bookmarks bar. Each card says **By …** and links that name to the original; the full page puts **Original source** beside **Source file**, so the borrowed work and this repository's readable copy are one click apart.
+
+| Tool | Author | Original |
+| --- | --- | --- |
+| The "Redactor" (Live Page Editor) | OpenReplay | [5 bookmarklets developers use](https://blog.openreplay.com/5-bookmarklets-developers/) |
+| Reveal Hidden Passwords | Hongkiat | [100 useful bookmarklets](https://www.hongkiat.com/blog/100-useful-bookmarklets-for-better-productivity-ultimate-list/) |
+| Kill Sticky Headers | Alisdair McDiarmid | [Kill sticky headers](https://alisdair.mcdiarmid.org/kill-sticky-headers/) |
+| Training Video Speeder | Community snippet | [HTMLMediaElement.playbackRate](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/playbackRate) |
+| Enable Right-Click & Text Selection | Hongkiat | [100 useful bookmarklets](https://www.hongkiat.com/blog/100-useful-bookmarklets-for-better-productivity-ultimate-list/) |
+| Extract All Emails from Page | Community snippet | [MDN regular expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions) |
+| Highlight All Links | Learn JavaScript | [Bookmarklet resources](https://bookmarklet.io/resources) |
+| The Layout Debugger (DOM Tinter) | OpenReplay | [5 bookmarklets developers use](https://blog.openreplay.com/5-bookmarklets-developers/) |
+| Wireframe Outline Mode | Addy Osmani | [Web development bookmarklets](https://css-tricks.com/web-development-bookmarklets/) |
+| Native Hex EyeDropper | Thomas Orlita | [awesome-bookmarklets](https://github.com/ThomasOrlita/awesome-bookmarklets) |
+| Instant Dark Mode (Invert Colors) | Thomas Orlita | [awesome-bookmarklets](https://github.com/ThomasOrlita/awesome-bookmarklets) |
+| Show Hidden Form Fields | being-frank | [Show hidden form fields](https://gist.github.com/being-frank/62ffe651b07ef27aa525) |
+| Display Image Alt Text (A11y Check) | Team A11Y Collective | [Accessibility bookmarklets](https://www.a11y-collective.com/blog/accessibility-bookmarklets/) |
+
+The list also included a local/session storage cleaner. It is not a separate card because **🧹 Clear cookies and cache** already clears both, plus cookies and cache. The community snippets that have no named author are credited to the reference their technique comes from rather than to this repository.
 
 ## ZIP tools
 
@@ -93,10 +115,10 @@ For a normal tool, create `bookmarklets/<category>/<slug>.js` with a metadata co
 
 ```sh
 node scripts/build.mjs     # writes data/catalog.json
-node scripts/verify.mjs    # parses every tool, checks hrefs, votes and screenshots
+node scripts/verify.mjs    # parses every tool, checks hrefs and screenshots
 ```
 
-The name must start with an emoji: it becomes the card title, the install button and the bookmark in someone's bar.
+The name must start with an emoji: it becomes the card title, the install button and the bookmark in someone's bar. If the tool comes from another developer, add `@author` and `@credit` together; the card and detail page link the credit, and the name stays as the original author wrote it.
 
 An Office or OpenDocument converter is generated instead. Create `bookmarklets/src/tools/<slug>.js` with the same metadata plus a `// @parts ...` line, run `node scripts/compose.mjs`, and edit the source rather than `bookmarklets/files/<slug>.js`. Shared readers and writers live in `bookmarklets/src/parts`, with the ODF ones in `odf.js`, `ods.js`, `odt-out.js`, `ods-out.js` and `odf-package.js`. `node scripts/compose.mjs --check` fails if a generated file is stale.
 
@@ -118,7 +140,7 @@ Tools that only make sense once you have used them are driven with real input fi
 
 Tools that open a window are driven there too: the camera and audio recorders are photographed while recording, not sitting at "ready".
 
-Tools whose work never reaches the page get no image at all. Instead the manifest records why, and the tile shows the tool's own description with the reason underneath: **Saves a file** (14 tools), **Copies to clipboard** (3), **Opens another site** (3), **Records your screen** (1), plus reads aloud, reloads the page, needs a certain page and works outside the page. A screenshot of an untouched demo page would be worse than no screenshot, and a blank tile would say less than the sentence the tool already carries.
+Tools whose work never reaches the page get no image at all. Instead the manifest records why, and the tile shows the tool's own description with the reason underneath: **Saves a file** (14 tools), **Copies to clipboard** (3), **Opens another site** (3), **Opens a browser prompt** (2), **Works outside the page** (5), **Records your screen** (1), plus reads aloud, reloads the page and needs a certain page. A screenshot of an untouched demo page would be worse than no screenshot, and a blank tile would say less than the sentence the tool already carries.
 
 Picture-in-picture windows live on the display rather than in the page, so the video and audio players are captured with a display running. Xvfb is enough and needs no admin rights, since it can start in a container:
 
@@ -139,22 +161,17 @@ python3 -m http.server 4173
 # open http://127.0.0.1:4173
 ```
 
-The page fetches `data/catalog.json` and `data/votes.json`, so serve the folder over HTTP rather than opening `index.html` from disk.
+The page fetches `data/catalog.json` and `data/screenshots.json`, so serve the folder over HTTP rather than opening `index.html` from disk.
 
-## Votes
+## Stars
 
-Thumbs up and down are real, shared counts with no server behind them. One comment per tool lives on the issue titled **Tool votes**; a 👍 or 👎 reaction on that comment is a vote. Clicking a thumb opens the comment on GitHub, where you add the reaction.
+A star is a personal shortcut, not a public rating. Star a tool and it sorts to the top of the catalog in this browser; the list stays in that order across reloads. Stars live in `localStorage` under `bl:stars`, so there is no account, no shared tally, no backend and nothing to moderate. Clearing this site's storage clears them.
 
-`.github/workflows/votes.yml` runs nightly (and on demand): it creates any missing comments, counts the reactions, and commits `data/votes.json`. The page reads that file. Reactions do not fire workflow events, so counts can be up to a day behind.
-
-```sh
-GITHUB_TOKEN=<token with issues:write> node scripts/votes.mjs   # seed and tally now
-node scripts/votes.mjs --offline                                # add rows for new tools, no network
-```
+The star changes the grid order only. It does not change which tools a search matches, the export picks or the featured tool.
 
 ## The published site
 
-The catalog is served from `main` by GitHub Pages at <https://spuds0588.github.io/Bookmarklet-Library/>. There is no build action: `data/catalog.json`, `data/votes.json` and `data/screenshots.json` are committed and the page fetches them.
+The catalog is served from `main` by GitHub Pages at <https://spuds0588.github.io/Bookmarklet-Library/>. There is no build action: `data/catalog.json` and `data/screenshots.json` are committed and the page fetches them.
 
 Search engines get real markup rather than the rendered grid. `node scripts/build.mjs` writes two generated blocks into `index.html` between `<!-- tools:start -->` and `<!-- tools:end -->`: a `<noscript>` list of every tool with its description, and an `ItemList` of `SoftwareApplication` entries. `scripts/build.mjs --check` fails if those blocks, or the catalog, have drifted from the tool files. The rest of the head — canonical URL, Open Graph and Twitter cards, `WebSite` and `FAQPage` structured data — is hand-written, as are `robots.txt` and `sitemap.xml`.
 
@@ -165,13 +182,12 @@ Search engines get real markup rather than the rendered grid. `node scripts/buil
 ```
 index.html                     the catalog page and the full-page detail view
 assets/style.css               theme (light and dark, same monochrome palette)
-assets/app.js                  search, filters, picks, detail view, bookmark export
+assets/app.js                  search, filters, stars, picks, detail view, bookmark export
 bookmarklets/<category>/*.js   one file per tool, code plus metadata
 bookmarklets/src/tools/*.js    source for the generated Office converters
 bookmarklets/src/parts/*.js    shared panel, ZIP, DOCX, PDF, RTF, Markdown, HTML and OpenDocument code
 scripts/compose.mjs            source parts + tool -> bookmarklets/files/<slug>.js
 data/catalog.json              generated catalog the page reads
-data/votes.json                generated vote tally the page reads
 data/screenshots.json          generated screenshot manifest the page reads
 screenshots/<slug>.png         one capture per tool
 scripts/fixtures/…             the demo page and media clips tools are captured against
@@ -181,15 +197,13 @@ tests/zip-tools.test.mjs       ZIP builder and reader tests
 tests/office-tools.test.mjs    Office conversion tests
 tests/odf-tools.test.mjs       OpenDocument conversion tests
 scripts/build.mjs              builds the catalog
-scripts/votes.mjs              seeds vote comments, counts reactions
 scripts/shots.mjs              runs tools in headless Chrome, captures screenshots
 scripts/verify.mjs             integrity checks
-.github/workflows/votes.yml    nightly vote tally
 robots.txt, sitemap.xml        what crawlers read
 ```
 
 ## Notes
 
-- Votes are GitHub reactions tallied by a workflow; there is no backend and no tracking.
+- Stars are stored in this browser and sort starred tools to the top; there is no account, no shared count and no tracking.
 - Bookmarklets run with the permissions of the page you click them on. Clipboard, camera and screen tools ask the browser first.
 - Raw browser bookmark exports are gitignored and are never part of this repository.
