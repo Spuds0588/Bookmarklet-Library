@@ -16,6 +16,7 @@ What has been done, in order. Newest entries first.
 - Headless Chrome, built bookmarklet on the demo page: 300 ms of `d` reached 248 px/s; after release the ship travelled another 49 px in 300 ms and 80 px over 900 ms, ending at 20 px/s. Rapid plus spread produced six bullets in 130 ms. A shield absorbed `damage()` without changing lives, then cleared itself. A spawned pickup sat 184 px from the player. Restart cleared all three effects, both timers and the pickups.
 - `npm test`: 49 tests pass. `build.mjs --check`, `compose.mjs --check` and `verify.mjs` pass with 115 bookmarklets, eight categories, 80 screenshots and 35 explained tools. `screenshots/neon-hell.png` was regenerated with a pickup on screen.
 - Source is 23.0 KB, bookmark URL 39.6 KB, under the 64 KB ceiling.
+- Production after the push (`60077bc`): the served source matched the checkout's SHA-256, the catalog reported 23,588 bytes and a 39.6 KB URL, and the screenshot hash matched. Running the install link from the live detail page opened the game; a 300 ms thrust reached 247.9 px/s and the ship glided another 70.4 px in the next 600 ms; rapid plus spread fired six bullets in 130 ms; and a fresh shield absorbed one hit with lives staying at three.
 
 **Limit**
 
