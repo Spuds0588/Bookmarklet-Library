@@ -32,6 +32,12 @@
       "changed": false,
       "reason": "download"
     },
+    "scan-qr": {
+      "file": "screenshots/scan-qr.png",
+      "changed": true,
+      "popup": true,
+      "steps": 5
+    },
     "draw-on-page": {
       "file": "screenshots/draw-on-page.png",
       "changed": true,

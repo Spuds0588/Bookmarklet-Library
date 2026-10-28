@@ -57,6 +57,16 @@
 - [ ] Check both copy buttons in Firefox and Safari on a secure page. Chrome only so far; the fallback is reasoned about rather than clicked in those browsers.
 - [ ] Scan the downloaded PNG and SVG with a phone camera and a desktop scanner. The matrix was decoded locally with jsQR, but no physical scanner pass has been done.
 
+## QR screen reader (2026-10-28)
+
+- [x] **🔎 Scan QR from screen** asks for a display stream before opening the hosted reader, freezes the frame, dims it and takes a drag selection. The crop is padded, capped at 1600 px and sent to the reader with `postMessage`; nothing is uploaded. The reader offers Open in this page, Open in a new tab and Copy, and only enables the open actions for http(s) results. Esc and Cancel clean up the overlay; a blocked reader is retried when the selection ends.
+- [x] The reader uses a bundled jsQR 1.4.0 (Apache-2.0) build, tries inverted and upscaled passes, and ships its license. Five Node tests decode URL, inverted and UTF-8 matrices and reject a blank image.
+- [x] Headless Chrome: the stubbed screen stream was selected and cropped, the popup decoded `https://example.com/field-guide` as a 31-character QR v3 code, the open actions enabled, and Copy, Open in a new tab and Open in this page each ran and showed their success note. The capture is committed and the manifest marks it as a popup.
+- [ ] The headless run fakes the display stream, so the real `getDisplayMedia` picker, a denied permission, a cancelled picker and a blocked reader window still need a Chrome, Edge, Firefox and Safari pass. The tool now asks for capture before it opens the reader to keep the click activation; confirm the reader still opens while the picker is up in each browser.
+- [ ] Open in this page sent its message and the bookmarklet acknowledged it, but the external sample URL was not followed to the end. Confirm the opener actually navigates, and that Open in a new tab lands on the URL, in a real browser.
+- [ ] Read a real phone-screen QR, a dark-mode inverted code and a long text code. The fixture is a 260 px generated SVG, not a photograph or a screen.
+- [ ] Force the no-`adoptedStyleSheets` overlay fallback and try a page with a strict `style-src`. The fallback is implemented but has not been exercised in a browser.
+
 ## Nice to have, only if it earns its place
 
 - [x] Shareable search: `?q=markdown` preselects the box, the target advertised in the `SearchAction` schema. Tool views deep-link as `#t/<slug>`.

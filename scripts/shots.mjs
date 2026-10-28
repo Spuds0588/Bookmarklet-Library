@@ -103,6 +103,10 @@ const STEPS = {
   // Both results sit in the demo form, below the first viewport.
   "reveal-passwords": [{ script: 'document.querySelector("form").scrollIntoView({ block: "center" })' }, { wait: 400 }],
   "show-hidden-fields": [{ script: 'document.querySelector("form").scrollIntoView({ block: "center" })' }, { wait: 400 }],
+  // A screen capture cannot be granted to a headless run. This tool's prep
+  // stubs one from a canvas holding a real QR code, then the drag exercises the
+  // same selection UI a person uses.
+  "scan-qr": [{ wait: 1200 }, { drag: [430, 205, 770, 545] }, { wait: 900 }],
 };
 
 /* Office converters are filled through their real hidden picker, then run so
@@ -157,6 +161,13 @@ const AFTER = {
   "record-camera": [{ clickText: "Start Recording" }, { wait: 1800 }],
   // The microphone has to be chosen before the record button even appears.
   "record-audio": [{ click: "#mic-list button" }, { wait: 700 }, { click: "#recBtn" }, { wait: 1800 }],
+  // Assert the popup decoded the sample and enabled the web actions before it
+  // is photographed. A screenshot of a waiting window would be a misleading
+  // capture of a reader that does not read.
+  "scan-qr": [
+    { wait: 900 },
+    { script: '(() => { const value = document.getElementById("value"); if (!value) throw new Error("reader result is missing"); if (value.textContent !== "https://example.com/field-guide") { const states = [...document.querySelectorAll(".state")].filter((node) => !node.hidden).map((node) => node.id + ": " + node.textContent.trim().replace(/\\s+/g, " ")).join(" / "); throw new Error("decoded " + JSON.stringify(value.textContent) + " visible " + states); } if (document.getElementById("open-tab").disabled) throw new Error("web actions are disabled"); return true; })()' },
+  ],
 };
 
 /* Live media before the tool runs, so a floating player shows a picture rather
@@ -171,6 +182,54 @@ const PREP = {
   // the capture shows the editable rows rather than the paste prompt.
   "form-stamper": [
     `localStorage.setItem("bl:form", JSON.stringify({version:1,title:"Northwind visit form",harvested:"2026-10-28T09:00:00.000Z",fields:[{index:0,label:"Region",type:"text",value:"West",selector:""},{index:1,label:"Contact",type:"text",value:"dana@northwind.example",selector:""},{index:3,label:"Notes",type:"textarea",value:"Follow up on the demo route",selector:""}]}))`,
+  ],
+  // Screen capture needs a picker and a real screen. The capture is faked from
+  // a canvas, but the image on it is a real QR SVG and the selection, crop and
+  // decode are the ones the tool runs. The reader page is served locally so
+  // the capture does not depend on the live site.
+  "scan-qr": [
+    `(async () => {
+      const image = new Image();
+      image.src = '/qr-sample.svg';
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = 900;
+      canvas.height = 600;
+      const context = canvas.getContext('2d');
+      context.fillStyle = '#f4f1ea';
+      context.fillRect(0, 0, 900, 600);
+      context.fillStyle = '#ffffff';
+      context.fillRect(160, 60, 580, 480);
+      context.strokeStyle = '#d9d4c8';
+      context.strokeRect(160.5, 60.5, 580, 480);
+      context.fillStyle = '#17181a';
+      context.font = '600 24px system-ui';
+      context.fillText('Northwind field report', 200, 115);
+      context.fillStyle = '#6d6d6d';
+      context.font = '14px system-ui';
+      context.fillText('Scan for the current rate sheet', 200, 142);
+      context.drawImage(image, 320, 170, 260, 260);
+      // Keep the fake screen in the document and change one corner pixel a few
+      // times a second: a canvas stream with no new frames can leave the video
+      // waiting for metadata forever in a headless run.
+      canvas.style.cssText = 'position:fixed;left:-9999px;top:0;width:900px;height:600px;';
+      document.body.appendChild(canvas);
+      const stream = canvas.captureStream(30);
+      let tick = 0;
+      setInterval(() => {
+        context.fillStyle = tick++ % 2 ? '#f4f1ea' : '#f5f2eb';
+        context.fillRect(0, 0, 2, 2);
+      }, 100);
+      const media = navigator.mediaDevices || (navigator.mediaDevices = {});
+      media.getDisplayMedia = async () => {
+        if (!navigator.userActivation || !navigator.userActivation.isActive) {
+          throw new DOMException('The reader lost the click activation.', 'NotAllowedError');
+        }
+        return stream;
+      };
+      globalThis.__BL_QR_READER_BASE__ = 'http://127.0.0.1:4321/qr-reader/';
+      return true;
+    })()`,
   ],
 };
 
@@ -783,6 +842,7 @@ const MEDIA = new Map([
   ["/demo.mp4", ["demo.mp4", "video/mp4"]],
   ["/demo.mp3", ["demo.mp3", "audio/mpeg"]],
   ["/sample.zip", ["sample.zip", "application/zip"]],
+  ["/qr-sample.svg", ["qr-sample.svg", "image/svg+xml"]],
   ["/report.docx", ["office/report.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]],
   ["/report.xlsx", ["office/report.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]],
   ["/report.html", ["office/report.html", "text/html"]],
@@ -803,10 +863,42 @@ const DOOM_TYPES = {
   ".cfg": "text/plain; charset=utf-8",
 };
 
+const PAGE_TYPES = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
+  ".svg": "image/svg+xml",
+};
+
 async function serveFixture() {
   const server = createServer(async (request, response) => {
     try {
       const { pathname } = new URL(request.url, "http://127.0.0.1");
+      // The QR reader opens from the tool, so the same page and its bundled
+      // decoder are served beside the fixture during a capture.
+      if (pathname === "/qr-reader") {
+        response.writeHead(302, { location: "/qr-reader/" });
+        response.end();
+        return;
+      }
+      if (pathname.startsWith("/qr-reader/")) {
+        const name = pathname.slice("/qr-reader/".length);
+        const readerDir = path.join(root, "qr-reader");
+        const file = path.normalize(path.join(readerDir, name || "index.html"));
+        if (file !== readerDir && !file.startsWith(readerDir + path.sep)) {
+          response.writeHead(404);
+          response.end("not found");
+          return;
+        }
+        const body = await readFile(file);
+        response.writeHead(200, {
+          "content-type": PAGE_TYPES[path.extname(file)] ?? "application/octet-stream",
+          "content-length": body.length,
+          "cache-control": "no-store",
+        });
+        response.end(body);
+        return;
+      }
       // The Doom capture needs its hosted page and the engine assets beside it.
       // Everything else on this test server is the one demo fixture.
       if (pathname.startsWith("/doom/")) {

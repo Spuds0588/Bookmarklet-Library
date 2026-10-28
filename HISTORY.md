@@ -2,6 +2,30 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-28 — Scan a QR code from the screen
+
+**Changed**
+
+- Added **🔎 Scan QR from screen** under Capture. It asks for a display stream, freezes the chosen screen or window, dims it and asks for a drag selection. The crop is padded, capped at 1600 px, encoded as PNG and sent to a hosted reader window with `postMessage`; nothing is uploaded.
+- The reader is [qr-reader/](qr-reader/index.html): a noindex page with a bundled jsQR 1.4.0 build (Apache-2.0), its license beside it, and no network request. It tries the image as sent, then twice and three times larger, and enables **Open in this page** and **Open in a new tab** only for http(s) results. **Copy to clipboard** works for any text. The reader passes the open-in-this-page URL back to the bookmarklet, which checks the source, origin and scheme before navigating.
+- The bookmarklet asks for `getDisplayMedia` before it opens the reader. Opening the window first consumed the click activation in the harness, so the capture request has to come first. If the reader is still blocked, it is opened again when the selection ends. The overlay uses a constructable stylesheet first, then a `<style>` fallback; Esc and Cancel remove it and restore the page's overflow and focus.
+- README, AGENTS, TODO and the catalog card describe the tool. The committed capture uses a stubbed display stream built from a real QR SVG; the selection, crop, reader handoff and decode are the real paths.
+
+**Verified**
+
+- `npm test`: 58 tests pass, including five new jsQR tests that decode URL, inverted and UTF-8 matrices and reject a blank image.
+- `compose --check`, `build --check` and `verify` pass with 117 bookmarklets, eight categories, 82 screenshots and 35 tools explained without one.
+- Headless Chrome: the reader received the crop, decoded `https://example.com/field-guide` as a 31-character QR v3 code, and enabled both open actions. **Copy to clipboard** reported success; **Open in a new tab** and **Open in this page** each ran and showed their success note. The harness asserts the activation is still live when `getDisplayMedia` is called.
+- Source is 16.3 KB and the bookmark URL is 27.2 KB, under the 64 KB ceiling. The screenshot is 24 KB.
+
+**Limit**
+
+- The headless run fakes the display stream, so the real picker, a denied permission and a blocked reader window still need a browser pass. Firefox and Safari were not tested. The fixture is a generated SVG, not a phone screen. Open in this page sent its message and the bookmarklet acknowledged it, but the external sample URL was not followed to the end.
+
+**Production**
+
+- Pending the push.
+
 ## 2026-10-28 — QR codes from the page, as PNG or SVG
 
 **Changed**

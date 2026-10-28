@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Read a QR code — Bookmarklet Library</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f4f4f4;
+    --panel: #ffffff;
+    --fg: #0b0b0b;
+    --muted: #6d6d6d;
+    --line: #e2e2e2;
+    --line-strong: #0b0b0b;
+    --tint: #f4f4f4;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0b0b;
+      --panel: #111111;
+      --fg: #f5f5f5;
+      --muted: #9c9c9c;
+      --line: #2a2a2a;
+      --line-strong: #f5f5f5;
+      --tint: #171717;
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { min-height: 100%; }
+  body {
+    margin: 0;
+    padding: 28px;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    width: min(100%, 620px);
+    margin: auto 0;
+    border: 1px solid var(--line-strong);
+    background: var(--panel);
+  }
+  .head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 22px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .kicker {
+    margin: 0;
+    color: var(--muted);
+    font: 600 10px/1.2 var(--mono);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+  h1 {
+    margin: 6px 0 0;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    line-height: 1.2;
+  }
+  .close {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--fg);
+    font: 20px/1 var(--sans);
+    cursor: pointer;
+  }
+  .close:hover { border-color: var(--line-strong); }
+  button:focus-visible, a:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+  .body { padding: 24px 22px 26px; }
+  .state[hidden] { display: none; }
+  .waiting {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 18px;
+    border: 1px dashed var(--line);
+    background: var(--tint);
+  }
+  .scan-icon { width: 44px; height: 44px; flex: none; color: var(--fg); }
+  .live {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 6px;
+    color: var(--muted);
+    font: 600 10px/1.2 var(--mono);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .live::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { opacity: .25; } }
+  @media (prefers-reduced-motion: reduce) {
+    .live::before { animation: none; }
+  }
+  .lead { margin: 0 0 6px; font-size: 17px; font-weight: 600; }
+  .copy { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+  .result-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .badge {
+    padding: 4px 6px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font: 600 10px/1 var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .value {
+    margin: 0;
+    padding: 14px;
+    max-height: 190px;
+    overflow: auto;
+    border: 1px solid var(--line);
+    background: var(--tint);
+    font: 13px/1.55 var(--mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .meta {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font: 11px/1.4 var(--mono);
+    overflow-wrap: anywhere;
+  }
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 18px;
+  }
+  .action {
+    min-height: 44px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    border: 1px solid var(--line-strong);
+    background: var(--panel);
+    color: var(--fg);
+    font: 600 14px/1.2 var(--sans);
+    text-align: left;
+    cursor: pointer;
+  }
+  .action.primary { background: var(--fg); color: var(--panel); }
+  .action .hint {
+    flex: none;
+    color: currentColor;
+    font: 600 9px/1 var(--mono);
+    letter-spacing: .1em;
+    opacity: .62;
+    text-transform: uppercase;
+  }
+  .action:disabled { opacity: .38; cursor: not-allowed; }
+  .action:not(:disabled):hover { transform: translateY(-1px); }
+  @media (prefers-reduced-motion: reduce) {
+    .action:not(:disabled):hover { transform: none; }
+  }
+  .note {
+    min-height: 20px;
+    margin: 12px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .note[hidden] { display: none; }
+  .more {
+    margin-top: 18px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font: 600 11px/1.4 var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .more:hover { color: var(--fg); }
+  .foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 22px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font: 10px/1.5 var(--mono);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .foot a { color: inherit; text-underline-offset: 3px; }
+  .foot a:hover { color: var(--fg); }
+  @media (max-width: 520px) {
+    body { padding: 12px; }
+    .head, .body { padding-left: 16px; padding-right: 16px; }
+    .foot { padding-left: 16px; padding-right: 16px; }
+  }
+</style>
+</head>
+<body>
+<main class="card">
+  <header class="head">
+    <div>
+      <p class="kicker">Screen capture · local decode</p>
+      <h1>Read a QR code</h1>
+    </div>
+    <button class="close" type="button" data-close aria-label="Close this window">×</button>
+  </header>
+
+  <div class="body">
+    <section class="state" id="waiting" aria-live="polite">
+      <div class="waiting">
+        <svg class="scan-icon" viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M6 18V8h10M32 8h10v10M42 30v10H32M16 40H6V30" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M18 18h5v5h-5zM25 25h5v5h-5z" fill="currentColor"/>
+        </svg>
+        <div>
+          <p class="live">Waiting for the selection</p>
+          <p class="lead">Drag a box around the code</p>
+          <p class="copy">Keep this window open. When the selection arrives, the code is read here and the actions appear.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="state" id="result" hidden>
+      <div class="result-top">
+        <p class="kicker">Decoded</p>
+        <span class="badge" id="version">QR</span>
+      </div>
+      <pre class="value" id="value" tabindex="0"></pre>
+      <p class="meta" id="meta"></p>
+      <div class="actions">
+        <button class="action primary" type="button" id="open-here">
+          <span>Open in this page</span><span class="hint">Same tab</span>
+        </button>
+        <button class="action" type="button" id="open-tab">
+          <span>Open in a new tab</span><span class="hint">New tab</span>
+        </button>
+        <button class="action" type="button" id="copy">
+          <span>Copy to clipboard</span><span class="hint">Copy</span>
+        </button>
+      </div>
+      <p class="note" id="note" aria-live="polite" hidden></p>
+      <button class="more" type="button" id="again">Close reader</button>
+    </section>
+
+    <section class="state" id="error" hidden aria-live="polite">
+      <p class="kicker">Reader</p>
+      <p class="lead" id="error-title">Capture cancelled</p>
+      <p class="copy" id="error-copy">The QR code was not captured.</p>
+      <div class="actions">
+        <button class="action primary" type="button" id="error-close">Close and try again</button>
+      </div>
+    </section>
+  </div>
+
+  <footer class="foot">
+    <span>Nothing is uploaded</span>
+    <a href="LICENSE-jsqr.txt" target="_blank" rel="noopener">Decoder: jsQR · Apache-2.0</a>
+  </footer>
+</main>
+
+<script src="jsqr.js"></script>
+<script src="reader.js"></script>
+</body>
+</html>

@@ -107,6 +107,8 @@ The PDF writer uses the Helvetica family, Latin-1 text, the DOCX page size and m
 
 **🔳 QR code** opens a small panel with the current page URL and regenerates the code as you edit the text. It encodes UTF-8 bytes with Q error correction (25%) and reports the version, module count and byte count under the field. **Download PNG** saves a roughly 1000 px raster, **Download SVG** saves a vector with a four-module quiet zone, and the **Copy** buttons put the PNG or SVG on the clipboard. If a browser refuses SVG image data, Copy SVG falls back to the SVG markup as text. Everything happens in the page; nothing is uploaded. Esc or Close dismisses the panel and returns focus to the page.
 
+**🔎 Scan QR from screen** asks for screen capture, freezes the chosen screen or window and asks you to drag a box around the code. The crop is decoded locally in [a hosted reader window](qr-reader/index.html) with a bundled jsQR build; the image is passed to that window with `postMessage` and nothing is uploaded. The result offers **Open in this page** (the page that launched the reader), **Open in a new tab** and **Copy to clipboard**. Only an http(s) result gets the open actions; any other text can still be copied. **Cancel** or Esc ends the selection, and Esc or **×** closes the reader. The bookmarklet asks for `getDisplayMedia`, so it needs a browser and a page that allow screen capture; a page can still block the pop-up or the capture. The decoder is jsQR 1.4.0 under Apache-2.0, with the license in [qr-reader/](qr-reader/).
+
 ## Forms, environments and webhooks
 
 **📋 Form Harvester** writes the current form's labels, names, types and values to `localStorage` under `bl:form` and to the clipboard. Password and file fields are skipped, hidden fields are kept, and the panel lists what it found.
@@ -140,6 +142,8 @@ npm test
 `tests/odf-tools.test.mjs` covers the OpenDocument converters: an `.odt` written by LibreOffice (headings, inherited run styles, links, lists, a table with a spanned header) read into the model; the same document out to HTML, Markdown, RTF, TXT and PDF; an `.ods` with typed cells, dates and booleans out to CSV, TSV and XLSX; CSV, XLSX and hand-built models back into `.odt` and `.ods`, including flat-list grouping, covered cells and embedded pictures; the package layout OpenDocument requires; the wrong-format, encrypted, ZIP64 and truncated rejection paths; and two real files from LibreOffice and OpenOffice — a character-style sample and a 56 KB manual with 21 tables and 40 lists — parsed as they are.
 
 `tests/qr-tools.test.mjs` loads the QR tool's test export and checks a known URL's version, finder and timing patterns, the SVG quiet zone, UTF-8 byte counting, filenames and the too-long rejection.
+
+`tests/qr-reader.test.mjs` loads the bundled jsQR 1.4.0 build and decodes the encoder's own matrices: a URL, an inverted light-on-dark code, UTF-8 text, and a blank image that must not report a result. It also checks the Apache-2.0 header and the shipped license.
 
 `tests/office-tools.test.mjs` builds and reads DOCX, XLSX, PDF and RTF output in Node: Word paragraphs, headings, lists, tables and images; HTML/Markdown/RTF/TXT to Word; CSV quoting; Excel sheet export; ordered-list restarts; table images; and PDF text in a paragraph that also carries an image. It also covers the cases real documents raise: a row that starts in a later column, a table row inside a content control, a cell with several paragraphs, a big Chinese RTF run, two RTF table rows, and an RTF picture with nested blip groups. Node has no canvas, so the PDF tests assert the skipped-image path; the image path is checked in Chrome.
 
@@ -234,13 +238,16 @@ bookmarklets/src/parts/*.js    shared panel, ZIP, DOCX, PDF, RTF, Markdown, HTML
 scripts/compose.mjs            source parts + tool -> bookmarklets/files/<slug>.js
 data/catalog.json              generated catalog the page reads
 data/screenshots.json          generated screenshot manifest the page reads
+qr-reader/                     hosted result window and bundled jsQR decoder for the screen QR tool
 screenshots/<slug>.png         one capture per tool
 scripts/fixtures/…             the demo page and media clips tools are captured against
 scripts/fixtures/make-odf.mjs  writes report.odt and report.ods by hand, never through the code under test
 scripts/fixtures/office/…      sample DOCX, XLSX, ODT, ODS, RTF, TXT, MD and CSV inputs, three of them real files from other apps (see its REAL-FILES.md)
-tests/zip-tools.test.mjs       ZIP builder and reader teststests/office-tools.test.mjs       Office conversion tests
-tests/odf-tools.test.mjs          OpenDocument conversion tests
-tests/qr-tools.test.mjs           QR encoder, SVG and filename tests
+tests/zip-tools.test.mjs       ZIP builder and reader tests
+tests/office-tools.test.mjs    Office conversion tests
+tests/odf-tools.test.mjs       OpenDocument conversion tests
+tests/qr-tools.test.mjs        QR encoder, SVG and filename tests
+tests/qr-reader.test.mjs       bundled jsQR decoder tests
 scripts/build.mjs              builds the catalog
 scripts/shots.mjs              runs tools in headless Chrome, captures screenshots
 scripts/verify.mjs             integrity checks
