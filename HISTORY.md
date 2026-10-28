@@ -18,6 +18,12 @@ What has been done, in order. Newest entries first.
 - Browser checks on the demo page: the table picker copied 5 rows by 3 columns as CSV and GFM; the PII masker changed 6 nodes and restored the header and addresses; a valid origin produced the expected URL and `ftp://` disabled the link; the form pair harvested and refilled 4 fields, skipped the password, kept the hidden field and fired the native events; the webhook reached a local CORS receiver and fell back to the clipboard on failure; Doom moved, hit an imp for 20 damage, took 12 damage, killed one, reached the death state, toggled music, and tore down on Escape.
 - URL chat was exercised with two tabs in the same room: one host was elected, messages went both ways, and a guest's message was no longer echoed back to itself. Voice commands were driven with a substituted `SpeechRecognition`; the citation produced a `#:~:text=` URL and a local date.
 
+**Production**
+
+- `main` is live at <https://spuds0588.github.io/Bookmarklet-Library/>. Pages serves 114 tools, 79 captures and 35 explained tools, and the page carries 114 cards, 114 stars and nine FAQ questions matching the FAQPage schema.
+- The served page, catalog, screenshot manifest, app, stylesheet, chat page and all twelve new bookmarklets hash the same as the commit. The live page in Chrome shows the twelve new cards and logs no console errors or failed requests.
+- The live catalog's PII bookmarklet ran on the production demo page: it masked 6 text nodes, all four `mailto` labels became `[email]`, and **Restore page** put the four addresses back, and the panel then closed cleanly. The demo page's missing `demo.mp4`, `demo.mp3` and `/embed` are fixture 404s, not tool errors.
+
 **Limit**
 
 - URL chat has not been tested with three guests, a host leaving mid-room, or Firefox and Safari. It depends on the public PeerJS broker and CDN. Doom has no touch controls.
