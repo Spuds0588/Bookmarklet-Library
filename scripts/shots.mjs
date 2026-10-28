@@ -140,6 +140,11 @@ const AFTER = {
 const PREP = {
   "video-pip": ["document.querySelector('video').play()"],
   "audio-pip": ["document.querySelector('audio').play()"],
+  // The stamper reads the harvester's saved payload; seed a realistic one so
+  // the capture shows the editable rows rather than the paste prompt.
+  "form-stamper": [
+    `localStorage.setItem("bl:form", JSON.stringify({version:1,title:"Northwind visit form",harvested:"2026-10-28T09:00:00.000Z",fields:[{index:0,label:"Region",type:"text",value:"West",selector:""},{index:1,label:"Contact",type:"text",value:"dana@northwind.example",selector:""},{index:3,label:"Notes",type:"textarea",value:"Follow up on the demo route",selector:""}]}))`,
+  ],
 };
 
 /* Tools that leave the page alone. The key becomes copy on the page, so it has

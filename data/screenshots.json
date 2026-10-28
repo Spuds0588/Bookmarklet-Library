@@ -328,6 +328,10 @@
       "changed": true,
       "popup": true
     },
+    "form-harvester": {
+      "file": "screenshots/form-harvester.png",
+      "changed": true
+    },
     "system-info": {
       "file": "screenshots/system-info.png",
       "changed": true,
@@ -379,6 +383,10 @@
     "clear-site-data": {
       "changed": false,
       "reason": "reload"
+    },
+    "form-stamper": {
+      "file": "screenshots/form-stamper.png",
+      "changed": true
     },
     "iframe-tester": {
       "file": "screenshots/iframe-tester.png",
