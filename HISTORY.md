@@ -20,6 +20,13 @@ What has been done, in order. Newest entries first.
 - Browser on `http://127.0.0.1:4173`: 102 cards, 13 **By** labels, the detail **Credit** row and **Original source** href on **The "Redactor"**, 7 FAQ questions matching 7 FAQPage entries, and an `ItemList` with 102 items and 13 credit `sameAs` pairs.
 - Built bookmarklet code was fetched from the catalog and run on the demo page with assertions: password type `text`, hidden input `text` with a red border, video `playbackRate` 2, fixed toast `static`, context-menu handler cleared, links yellow, body outline red, body tint `rgba(0, 0, 0, 0.1)`, dark filter `invert(1)`, design mode `on`, alt label shown, email prompt unique, and the eyedropper prompt `#123456`. The only console errors were the demo fixture's missing media files (`demo.mp4`, `demo.mp3`, `/embed`), not the tools.
 
+**Production**
+
+- `main` is live at <https://spuds0588.github.io/Bookmarklet-Library/>. Pages serves the new catalog: 102 tools, 13 credited cards, 71 captures and 31 explained tools.
+- All 25 changed served files hash the same on Pages as in the commit: the page, app, styles, both manifests, the thirteen bookmarklets and the seven new captures.
+- The live page in Chrome: 102 cards, 13 **By** labels, 102 stars, no thumbs, 7 FAQ questions and an `ItemList` of 102 with 13 credit `sameAs` pairs. **The "Redactor"** opens with its **Credit** row and both **Source file** and **Original source** links, and the page logs no console errors or failed requests.
+- This deployment also carries the local-star change documented below: no vote file, no tally workflow and no thumbs.
+
 **Limit**
 
 - A credit records one source. A tool with several upstream versions names the one this code follows; it does not claim every version.
