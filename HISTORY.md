@@ -21,6 +21,12 @@ What has been done, in order. Newest entries first.
 - `npm test`: 49 tests pass (10 ZIP, 24 Office, 15 OpenDocument). `node scripts/compose.mjs --check`, `node scripts/build.mjs`, `node scripts/verify.mjs` and `node scripts/build.mjs --check` exit 0; the catalog reports 89 bookmarklets, 89 vote rows and 64 screenshots.
 - The FAQ was inspected in Chrome at 1440px: six questions in one column, every answer at a 68-character measure, and the last answer ending at the section rule with no overflow.
 
+**Production**
+
+- `main` is live at <https://spuds0588.github.io/Bookmarklet-Library/>. All 28 served files this pass changed — the 26 generated converters, `data/catalog.json` and `assets/style.css` — hash the same on Pages as in the commit.
+- The live page in Chrome: 89 cards, six questions in one column, the last answer inside the section rule, the featured panel still **🔓 Unlock PDF**, and no console errors or failed requests.
+- The production bookmarklets, fetched from Pages and run in Node against the new cases: **Word to HTML** reads a table row inside a content control, **RTF to Word** decodes a Big5 run and merges two table rows into one table, **CSV to ODS → ODS to CSV** keeps a numeric zero and a leading blank column run, and **Excel to CSV** keeps a row that starts in column B.
+
 ## 2026-10-27 — OpenDocument converters: ODT and ODS, both ways
 
 **Changed**
