@@ -17,6 +17,7 @@ What has been done, in order. Newest entries first.
 - `npm test`: 49 tests pass. `build.mjs --check`, `compose.mjs --check` and `verify.mjs` pass with 115 bookmarklets, eight categories, 80 screenshots and 35 explained tools.
 - Headless Chrome, built bookmarklet on the demo page: a pickup was `r: 19`, had eight seconds of life, moved 13.6 px in 250 ms and disappeared when its timer expired. The next spawn was 17.1 seconds away. A `Space` keydown with one bomb charge cleared a nearby enemy and left zero charges. With chain active, a bullet killed one enemy and left three `shard` bullets at depth 1; moving one shard into the left wall reversed its velocity from -300 to 300 and reduced `bounce` from 2 to 1. The shield still absorbed one hit, and restart cleared all effects.
 - Source is 25.9 KB, bookmark URL 45.1 KB, under the 64 KB ceiling.
+- Production after the push (`ce4fa29`): the served source matched the checkout's SHA-256, the catalog reported 26,471 bytes and a 45.1 KB URL, and the screenshot hash matched. The live install opened with no brand block; a `Space` keydown consumed the one bomb charge and cleared the adjacent enemy; the chevron pickup reported `r: 19`, eight seconds of life, wall-relative drift and the next spawn 17.7 seconds out; the chain test left three depth-1 shards with two bounces each.
 
 **Limit**
 
