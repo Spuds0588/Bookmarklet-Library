@@ -36,6 +36,7 @@
     .stage{position:relative;flex:1;min-height:0;aspect-ratio:16/10;background:#000}
     .wrap.full .stage{aspect-ratio:auto}
     iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;z-index:2}
+    .controls{flex:none;padding:8px 14px;border-top:1px solid #2b2b2b;background:#0c0c0c;color:#8b8b8b;font-size:10px;line-height:1.6;letter-spacing:.02em;text-align:center}
     .loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;padding:24px;text-align:center;background:#000;color:#aaa;z-index:1}
     .loading[hidden]{display:none}
     .spinner{width:36px;height:36px;border:3px solid #2b2b2b;border-top-color:#d8b25a;border-radius:50%;animation:spin .8s linear infinite}
@@ -52,6 +53,7 @@
       .close{width:30px;height:30px}
       .wide{display:none}
       .narrow{display:inline}
+      .controls{padding:7px 8px;font-size:9.5px}
     }
   </style>
   <div class="overlay">
@@ -73,8 +75,9 @@
           <p>Loading actual Doom…</p>
           <small>The first load pulls about 7 MB of engine and game data. If this window stays black, this page blocks frames; use Open in tab.</small>
         </div>
-        <iframe title="Doom" allow="autoplay; fullscreen; gamepad"></iframe>
+        <iframe title="Doom" allow="autoplay; fullscreen; gamepad; pointer-lock"></iframe>
       </div>
+      <div class="controls">WASD moves · ←/→ turns · mouse looks · Ctrl / click fires · Space opens · Shift runs · Tab map · Esc pauses · Close exits</div>
     </section>
   </div>`;
 
@@ -106,19 +109,12 @@
     clearTimeout(slow);
     releasePointer();
     page.style.overflow = previousOverflow;
-    document.removeEventListener("keydown", onKey, true);
     window.removeEventListener("pagehide", close);
     host.remove();
     if (window.__blDoomClose === close) window.__blDoomClose = null;
     if (previousFocus?.isConnected) {
       try { previousFocus.focus({ preventScroll: true }); } catch { }
     }
-  };
-  const onKey = (event) => {
-    if (event.key !== "Escape") return;
-    event.preventDefault();
-    if (full) setFull(false);
-    else close();
   };
   const slow = setTimeout(() => {
     const note = loading.querySelector("p");
@@ -132,7 +128,6 @@
   frame.src = base;
   expand.addEventListener("click", () => setFull(!full));
   root.querySelector(".close").addEventListener("click", close);
-  document.addEventListener("keydown", onKey, true);
   window.addEventListener("pagehide", close, { once: true });
   window.__blDoomClose = close;
   (document.body || document.documentElement).appendChild(host);

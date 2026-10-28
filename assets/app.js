@@ -305,7 +305,7 @@ const HOW = {
 
 const HOW_TOOL = {
   doom:
-    "It opens a centered window and loads actual shareware Doom Episode 1: a WebAssembly engine and the shareware WAD, about 7 MB on the first visit. Expand fills the browser, and Open in tab is the fallback when a page blocks frames. Nothing takes focus until you click the game; Esc releases the mouse. Closing the window removes it and restores the page's scroll and focus.",
+    "It opens a centered window and loads actual shareware Doom Episode 1: a WebAssembly engine and the shareware WAD, about 7 MB on the first visit. The game starts frozen behind a Click to play gate, so loading or hovering never takes the mouse or keyboard. Play asks for pointer lock; until the canvas holds it, mouse movement and wheel input are dropped. Esc pauses and releases the mouse without opening the engine menu, and F1–F10 stay suppressed. Free-look is on, so the mouse tilts the view as well as turning it; aiming still uses Doom's autoaim. The footer lists the controls; Close exits, and Expand or Open in tab are in the header.",
 };
 
 let detailReturnFocus = null;

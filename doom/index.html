@@ -34,7 +34,7 @@
     background: #000;
     text-align: center;
   }
-  #loading.hidden, #error[hidden] { display: none; }
+  #loading.hidden, #error[hidden], #gate[hidden] { display: none; }
   .box { display: flex; flex-direction: column; align-items: center; gap: 14px; max-width: 42ch; }
   .spinner {
     width: 34px;
@@ -51,8 +51,57 @@
     letter-spacing: .12em;
   }
   #status { margin: 0; color: #999; font-size: 11px; min-height: 16px; }
-  #error { color: #f0b8b8; line-height: 1.6; }
+  #error { z-index: 5; color: #f0b8b8; line-height: 1.6; }
   #error a { color: #e8c15a; }
+  #gate {
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, .82);
+    text-align: center;
+  }
+  .gate-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    max-width: 58ch;
+  }
+  .gate-kicker {
+    color: #b08a3e;
+    font-size: 9px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  #gate h1 {
+    margin: 0;
+    color: #e8c15a;
+    font: 600 34px/1 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    letter-spacing: .18em;
+  }
+  #gate-copy { margin: 0; color: #ccc; font-size: 13px; line-height: 1.6; }
+  #play {
+    border: 1px solid #d8b25a;
+    background: #d8b25a;
+    color: #111;
+    padding: 11px 18px;
+    font: 600 12px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  #play:hover { background: #f0ce77; }
+  #play:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .gate-keys {
+    margin: 2px 0 0;
+    max-width: 58ch;
+    color: #8a8a8a;
+    font-size: 10px;
+    line-height: 1.7;
+  }
   #hint {
     position: fixed;
     left: 50%;
@@ -81,8 +130,11 @@
     opacity: .55;
   }
   #home:hover { opacity: 1; }
-  @media (max-width: 520px) {
+  @media (max-width: 520px), (max-height: 480px) {
     #hint { bottom: 8px; max-width: calc(100vw - 24px); text-align: center; }
+    #gate h1 { font-size: 27px; }
+    .gate-box { gap: 11px; }
+    .gate-keys { font-size: 9.5px; }
   }
 </style>
 </head>
@@ -96,8 +148,17 @@
     <p id="status">Loading shareware Episode 1…</p>
   </div>
 </div>
+<div id="gate" hidden>
+  <div class="gate-box">
+    <span class="gate-kicker">Shareware Episode 1 · E1M1</span>
+    <h1>DOOM</h1>
+    <p id="gate-copy">Click to play. The game stays frozen and the mouse stays free until you do.</p>
+    <button id="play" type="button">Click to play</button>
+    <p class="gate-keys">WASD moves · ←/→ turns · Mouse looks · Click / Ctrl fires · Space opens · Shift runs · Tab map · Esc pauses</p>
+  </div>
+</div>
 <div id="error" role="alert" hidden></div>
-<div id="hint">Click the game to play and enable sound · Esc releases the mouse</div>
+<div id="hint">Esc pauses and releases the mouse</div>
 <noscript>This page needs JavaScript and WebAssembly to run Doom.</noscript>
 <script>
 (() => {
@@ -105,10 +166,24 @@
   const loading = document.getElementById("loading");
   const status = document.getElementById("status");
   const error = document.getElementById("error");
+  const gate = document.getElementById("gate");
+  const gateCopy = document.getElementById("gate-copy");
+  const playButton = document.getElementById("play");
   const hint = document.getElementById("hint");
   const home = document.getElementById("home");
   let failed = false;
+  let ready = false;
+  let playing = false;
   let hintTimer = 0;
+  let nativeLock = null;
+  let hadLock = false;
+  // PrBoom's menus, saves, options and gamma screens all live behind these.
+  // Level 1 needs none of them, and an accidental F-key should not derail it.
+  const SHELL_KEYS = new Set(["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "Pause"]);
+
+  // The hosted page is normally inside the bookmarklet's window. Hiding the
+  // library link there keeps every click inside the game and its header.
+  if (window.self !== window.top) home.hidden = true;
 
   const showHint = (text, duration = 7000) => {
     hint.textContent = text;
@@ -117,29 +192,140 @@
     if (duration > 0) hintTimer = setTimeout(() => hint.classList.remove("show"), duration);
   };
 
-  // Esc is the browser's own way out of pointer lock. Calling it here makes the
-  // release explicit, and closing the panel asks for the same release first.
-  const releasePointer = () => {
-    if (document.pointerLockElement) document.exitPointerLock();
+  const post = (message) => {
+    if (window.parent === window) return;
+    try { window.parent.postMessage({ source: "bl-doom", ...message }, "*"); } catch { }
   };
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") releasePointer();
-  });
+
+  // The engine may ask for the pointer at startup. Until the player has
+  // deliberately pressed Play, that request is dropped, so hovering or
+  // loading the window never captures the mouse.
+  nativeLock = canvas.requestPointerLock?.bind(canvas);
+  if (nativeLock) {
+    canvas.requestPointerLock = () => {
+      if (!playing) return Promise.resolve();
+      try { return nativeLock(); } catch (problem) { return Promise.reject(problem); }
+    };
+  }
+
+  const requestLock = () => {
+    if (!playing || !nativeLock || document.pointerLockElement) return;
+    try {
+      const pending = nativeLock();
+      if (pending?.catch) pending.catch(() => { });
+    } catch { }
+  };
+
+  const setFrozen = (frozen) => {
+    if (frozen) {
+      Module.pauseMainLoop?.();
+      const audio = Module.SDL2?.audioContext;
+      try { audio?.suspend?.(); } catch { }
+    } else {
+      const audio = Module.SDL2?.audioContext;
+      try { audio?.resume?.().catch?.(() => { }); } catch { }
+      Module.resumeMainLoop?.();
+    }
+  };
+
+  const showGate = (paused) => {
+    gate.hidden = false;
+    gateCopy.textContent = paused
+      ? "Paused. The game is frozen and the mouse is free."
+      : "Click to play. The game stays frozen and the mouse stays free until you do.";
+    playButton.textContent = paused ? "Resume" : "Click to play";
+  };
+
+  const pause = () => {
+    if (!ready || !playing) return;
+    playing = false;
+    setFrozen(true);
+    if (document.pointerLockElement) document.exitPointerLock();
+    hint.classList.remove("show");
+    showGate(true);
+    post({ type: "state", playing: false });
+  };
+
+  const play = () => {
+    if (!ready || failed) return;
+    gate.hidden = true;
+    playing = true;
+    setFrozen(false);
+    canvas.focus();
+    post({ type: "state", playing: true });
+    requestLock();
+  };
+
+  // Esc belongs to pause, never to the engine's menu. Stopping the event in
+  // the capture phase keeps PrBoom from opening its menu and swallowing the
+  // key that the player expected to release the mouse.
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (playing) pause();
+      return;
+    }
+    if (playing) {
+      if (SHELL_KEYS.has(event.key)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+      return;
+    }
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      play();
+      return;
+    }
+    if (event.key === "Tab") return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, true);
+
+  // SDL sees wheel and absolute mouse events even when the pointer is free.
+  // Until Play and a real capture, drop them before the engine can turn or
+  // switch weapons; the game page never scrolls, so nothing is lost.
+  window.addEventListener("wheel", (event) => {
+    if (playing && document.pointerLockElement === canvas) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, { capture: true, passive: false });
+  window.addEventListener("mousemove", (event) => {
+    if (playing && document.pointerLockElement === canvas) return;
+    event.stopImmediatePropagation();
+  }, true);
+
   document.addEventListener("pointerlockchange", () => {
-    if (document.pointerLockElement === canvas) showHint("Mouse captured · Esc releases it", 3000);
-    else showHint("Mouse released · click the game to play again", 3500);
+    if (document.pointerLockElement === canvas) {
+      hadLock = true;
+      showHint("Mouse captured · Esc pauses", 3000);
+    } else if (hadLock) {
+      hadLock = false;
+      if (playing) pause();
+    }
   });
-  window.addEventListener("message", (event) => {
-    if (event.data?.source === "bl-doom" && event.data.type === "release") releasePointer();
+  document.addEventListener("pointerlockerror", () => {
+    if (playing) showHint("Mouse capture was blocked · use ←/→ to turn, Esc to pause", 5000);
   });
 
-  // The hosted page is normally inside the bookmarklet's overlay. Hiding the
-  // library link there keeps every click inside the game and its header.
-  if (window.self !== window.top) home.hidden = true;
+  window.addEventListener("blur", () => { if (playing) pause(); });
+  document.addEventListener("visibilitychange", () => { if (document.hidden && playing) pause(); });
+  window.addEventListener("message", (event) => {
+    if (event.source !== window.parent || event.data?.source !== "bl-doom") return;
+    if (event.data.type === "release") {
+      if (document.pointerLockElement) document.exitPointerLock();
+      if (playing) pause();
+    }
+  });
+  playButton.addEventListener("click", play);
+  canvas.addEventListener("click", () => { if (playing) requestLock(); });
 
   const fail = (message) => {
     if (failed) return;
     failed = true;
+    gate.hidden = true;
     loading.classList.add("hidden");
     error.hidden = false;
     error.innerHTML = "";
@@ -154,7 +340,7 @@
 
   window.Module = {
     canvas,
-    arguments: ["-iwad", "doom1.wad", "-warp", "1", "1", "-skill", "3"],
+    arguments: ["-config", "/prboomX.cfg", "-iwad", "doom1.wad", "-warp", "1", "1", "-skill", "3"],
     locateFile: (path) => path,
     preRun: [],
     print: (text) => console.log(text),
@@ -163,17 +349,28 @@
       if (text) status.textContent = text;
     },
     onRuntimeInitialized() {
+      ready = true;
       loading.classList.add("hidden");
-      showHint("Click the game to play and enable sound · Esc releases the mouse");
+      showGate(false);
+      // onRuntimeInitialized can run just before the main loop begins. Pause
+      // now and once more after the loop has had a chance to start, unless
+      // the player already pressed Play.
+      setFrozen(true);
+      setTimeout(() => { if (!playing) setFrozen(true); }, 120);
     },
   };
 
   (async () => {
     try {
-      const response = await fetch("doom1.wad");
-      if (!response.ok) throw new Error(`Could not load the shareware WAD (HTTP ${response.status}).`);
-      const wad = new Uint8Array(await response.arrayBuffer());
-      Module.preRun.push(() => FS.writeFile("/doom1.wad", wad));
+      const [wadResponse, configResponse] = await Promise.all([fetch("doom1.wad"), fetch("prboomX.cfg")]);
+      if (!wadResponse.ok) throw new Error(`Could not load the shareware WAD (HTTP ${wadResponse.status}).`);
+      if (!configResponse.ok) throw new Error(`Could not load the game settings (HTTP ${configResponse.status}).`);
+      const wad = new Uint8Array(await wadResponse.arrayBuffer());
+      const config = new Uint8Array(await configResponse.arrayBuffer());
+      Module.preRun.push(() => {
+        FS.writeFile("/doom1.wad", wad);
+        FS.writeFile("/prboomX.cfg", config);
+      });
       status.textContent = "Starting the engine…";
       const script = document.createElement("script");
       script.src = "index.js";

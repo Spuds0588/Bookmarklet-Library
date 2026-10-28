@@ -433,7 +433,7 @@
     "doom": {
       "file": "screenshots/doom.png",
       "changed": true,
-      "steps": 1
+      "steps": 3
     },
     "kill-sticky-headers": {
       "file": "screenshots/kill-sticky-headers.png",

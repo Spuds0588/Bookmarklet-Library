@@ -62,9 +62,15 @@ const STEPS = {
     { script: 'document.getElementById("bl-pii-host").shadowRoot.querySelector(".close").click();' },
     { wait: 300 },
   ],
-  // The real engine loads its WAD and WASM after the overlay opens. Six seconds
-  // covers a cold local load; the frame is live by then, not a loading screen.
-  doom: [{ wait: 6500 }],
+  // The real engine loads its WAD and WASM after the overlay opens, then waits
+  // behind its click-to-play gate. Resume it before the capture, or the card
+  // would show the gate rather than the game.
+  doom: [
+    { wait: 7000 },
+    { script: 'const f=document.getElementById("bl-doom-host").shadowRoot.querySelector("iframe"); const b=f.contentDocument?.getElementById("play"); if (b) b.click();' },
+    // Let the mouse-captured hint fade so it does not sit over the status bar.
+    { wait: 3800 },
+  ],
   // The picker draws its overlay once the capture is ready, then keeps the
   // redaction toast up for a few seconds: drag a region before it fades.
   "pixelate-section": [{ wait: 2400 }, { drag: [280, 320, 780, 580] }, { wait: 250 }],
@@ -779,6 +785,7 @@ const DOOM_TYPES = {
   ".wasm": "application/wasm",
   ".wad": "application/octet-stream",
   ".data": "application/octet-stream",
+  ".cfg": "text/plain; charset=utf-8",
 };
 
 async function serveFixture() {

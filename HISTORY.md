@@ -2,6 +2,48 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-28 — Doom stops taking input until Play, and looks up
+
+**Changed**
+
+- The game only turns, looks or fires while the canvas actually holds pointer lock. Absolute mouse movement and wheel events are dropped before SDL when the pointer is free, and gameplay keys are stopped while the gate is up. Hovering the window or moving the mouse across it no longer spins the player or queues a weapon switch for later.
+- Esc has one job. The loader no longer listens for it at all, and the hosted page captures it before PrBoom: it pauses, releases pointer lock and suspends audio, then does nothing while paused. It cannot both stop mouse capture and close the window. Enter, Space or **Resume** start the level again.
+- Free-look is on. `doom/prboomX.cfg` is Dwasm's default config with `movement_mouselook 1` appended; the page fetches it and passes `-config /prboomX.cfg`, so the packaged binaries and `index.data` are untouched. Moving the mouse up or down tilts the view; aiming still uses Doom's autoaim.
+- The controls footer under the window now lists the keys players actually have: `WASD moves · ←/→ turns · mouse looks · Ctrl / click fires · Space opens · Shift runs · Tab map · Esc pauses · Close exits`. The gate shows the same list. The iframe now asks for `pointer-lock` explicitly.
+- README, AGENTS, TODO, the detail copy, both FAQ copies and `doom/README.md` describe the input freeze, the config override and vertical look.
+
+**Verified**
+
+- `npm test`: 49 tests pass. `build.mjs --check`, `compose.mjs --check` and `verify.mjs` pass with 114 bookmarklets, 79 screenshots and 35 explained tools. The Doom capture was regenerated from the new footer.
+- Local direct page: the gate is up with audio suspended; a `w`, a wheel event and a mousemove all fail to reach a spy listener added after the page's handlers. Space hides the gate, focuses the canvas and starts audio; Esc suspends audio and shows **Paused**; Esc while paused does nothing.
+- Separate headless Chrome, direct page: Play granted pointer lock, the config file at `/prboomX.cfg` contained `movement_mouselook 1`, and moving the mouse upward changed the rendered view from the corridor to the ceiling. The temporary before/after captures were deleted; the committed card capture stays at the starting view.
+- Separate headless Chrome, modal: opening left focus on `BODY`; Play granted pointer lock to the iframe canvas; Esc released the lock, paused and left the window open; a second Esc did nothing; **Close** removed the window and restored `overflow`.
+
+**Limit**
+
+- The Freebuff preview browser refuses pointer lock (`SecurityError: The root document of this element is not valid for pointer lock`), so mouse capture cannot be clicked through there. A plain headless Chrome did grant it for the look test. Touch controls remain absent, and a strict `frame-src` CSP still needs **Open in tab**.
+
+## 2026-10-28 — Doom waits for Play, and Esc means pause
+
+**Changed**
+
+- The game now loads frozen behind a **Click to play** gate with its audio context suspended. Nothing is focused, moved or captured until that button is pressed; Play resumes the engine, focuses the canvas, enables sound and asks for pointer lock. The host page still does not move focus when the window opens.
+- Esc is captured before the engine sees it and only pauses: it releases pointer lock, freezes the main loop, suspends audio and shows **Paused**. Pressing Esc again while paused does nothing. Enter or Space resumes. The loader no longer closes or shrinks on Esc; the header **×** closes. Window blur, tab hide and pointer-lock loss also pause, so the game cannot keep taking input when it is not focused.
+- PrBoom's menus are no longer reachable: F1–F10 and Pause are captured along with Esc, so save, load, options, help and quit screens never open. Keyboard events are stopped before the engine while paused, so a stray key cannot queue movement for the resume.
+- The loader has a plain-text controls footer under the stage: **WASD / arrows move · Mouse turns · Click / Ctrl fires · Space opens · Shift runs · Tab map · Esc pauses · Close exits**. The gate repeats the same list for the Open-in-tab page. The capture was regenerated with the game running and the footer visible.
+- README, AGENTS, TODO, the detail note and both FAQ copies now describe the gate, the controls footer and the single-purpose Esc.
+
+**Verified**
+
+- `npm test`: 49 tests pass. `build.mjs --check`, `compose.mjs --check` and `verify.mjs` pass with 114 bookmarklets, 79 screenshots and 35 explained tools. `node scripts/shots.mjs doom --force` captured the real game in the window with the footer and no hint over the HUD.
+- Local direct page: the gate is visible and the audio context is suspended; Enter or **Click to play** hides the gate, starts the loop and focuses the canvas. Esc shows **Paused**, suspends audio and increments the pause call; Enter resumes. A blur pauses. A paused `w` keydown does not reach a spy listener added after the page's own, and an F1 keydown while playing is also stopped. A denied pointer-lock request emits `pointerlockerror` but no longer pauses the game.
+- Local modal: 960×685 with the footer, focus stays on the page link, Esc pauses the game without closing the host, host-level Esc no longer closes or shrinks, and **Close** removes the window and restores focus and `overflow`.
+- Headless capture: pointer lock was granted after Play (the temporary "Mouse captured" hint appeared in the earlier capture), and the final capture is live gameplay with the footer rather than the gate.
+
+**Limit**
+
+- The Freebuff preview surface refuses pointer lock (`SecurityError: The root document of this element is not valid for pointer lock`), so releasing an actual pointer lock with Esc was not exercised there. The same page did grant lock in the headless Chrome capture. Touch controls remain absent, the first load is about 7 MB, and a strict `frame-src` CSP still needs **Open in tab**.
+
 ## 2026-10-28 — Doom becomes a window, not a takeover
 
 **Changed**
