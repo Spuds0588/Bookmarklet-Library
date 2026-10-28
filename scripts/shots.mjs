@@ -62,6 +62,8 @@ const STEPS = {
     { script: 'document.getElementById("bl-pii-host").shadowRoot.querySelector(".close").click();' },
     { wait: 300 },
   ],
+  // Give the raycaster a few frames so the capture shows the room, not a blank canvas.
+  doom: [{ wait: 750 }],
   // The picker draws its overlay once the capture is ready, then keeps the
   // redaction toast up for a few seconds: drag a region before it fades.
   "pixelate-section": [{ wait: 2400 }, { drag: [280, 320, 780, 580] }, { wait: 250 }],

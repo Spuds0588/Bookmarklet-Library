@@ -430,6 +430,11 @@
       "changed": true,
       "popup": true
     },
+    "doom": {
+      "file": "screenshots/doom.png",
+      "changed": true,
+      "steps": 1
+    },
     "kill-sticky-headers": {
       "file": "screenshots/kill-sticky-headers.png",
       "changed": true
