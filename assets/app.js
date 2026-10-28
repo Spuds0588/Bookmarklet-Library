@@ -305,7 +305,7 @@ const HOW = {
 
 const HOW_TOOL = {
   doom:
-    "It opens a full-screen panel and loads actual shareware Doom Episode 1: a WebAssembly engine and the shareware WAD, about 7 MB on the first visit. Click the game for sound; Open in tab is the fallback when a page blocks frames. Closing the panel removes it and restores the page's scroll.",
+    "It opens a centered window and loads actual shareware Doom Episode 1: a WebAssembly engine and the shareware WAD, about 7 MB on the first visit. Expand fills the browser, and Open in tab is the fallback when a page blocks frames. Nothing takes focus until you click the game; Esc releases the mouse. Closing the window removes it and restores the page's scroll and focus.",
 };
 
 let detailReturnFocus = null;
