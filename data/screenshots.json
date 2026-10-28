@@ -306,6 +306,10 @@
       "changed": true,
       "steps": 3
     },
+    "environment-switcher": {
+      "file": "screenshots/environment-switcher.png",
+      "changed": true
+    },
     "field-label-audit": {
       "changed": false,
       "reason": "download"
