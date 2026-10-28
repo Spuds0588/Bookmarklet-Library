@@ -2,6 +2,25 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-28 — Neon Hell drifts into power-ups
+
+**Changed**
+
+- Player movement now uses low-drag thrust: releasing a direction keeps the ship sliding for about a second instead of stopping like a cursor. The speed cap stays at 300 px/s, and hitting a wall now clears only the velocity into that wall, so the next input leaves immediately.
+- Random pickups join the loop. The first lands around 3.5 seconds, later ones every 9–14 seconds, at up to three on the field for 14 seconds each. **R** gives rapid fire for 9 seconds, **W** gives a three-way spread for 9 seconds, and **S** gives a shield that absorbs one hit. Collecting one adds 50 points and bursts its colour.
+- Active effects sit under the score with their timers; the shield also draws a cyan ring around the ship. Restart clears the pickups, effects and power-up clock. The screenshot now waits for the first pickup and shows it in the arena.
+- README, AGENTS, TODO and the detail view describe the drift and the three pickups.
+
+**Verified**
+
+- Headless Chrome, built bookmarklet on the demo page: 300 ms of `d` reached 248 px/s; after release the ship travelled another 49 px in 300 ms and 80 px over 900 ms, ending at 20 px/s. Rapid plus spread produced six bullets in 130 ms. A shield absorbed `damage()` without changing lives, then cleared itself. A spawned pickup sat 184 px from the player. Restart cleared all three effects, both timers and the pickups.
+- `npm test`: 49 tests pass. `build.mjs --check`, `compose.mjs --check` and `verify.mjs` pass with 115 bookmarklets, eight categories, 80 screenshots and 35 explained tools. `screenshots/neon-hell.png` was regenerated with a pickup on screen.
+- Source is 23.0 KB, bookmark URL 39.6 KB, under the 64 KB ceiling.
+
+**Limit**
+
+- Pickups are random, so a run may go a while without the one you want; there is no inventory or carry-over. Touch controls, sound and a shared leaderboard are still absent, and the game remains Chrome-tested only.
+
 ## 2026-10-28 — Neon Hell opens the Games category
 
 **Changed**

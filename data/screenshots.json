@@ -430,16 +430,6 @@
       "changed": true,
       "popup": true
     },
-    "neon-hell": {
-      "file": "screenshots/neon-hell.png",
-      "changed": true,
-      "steps": 3
-    },
-    "doom": {
-      "file": "screenshots/doom.png",
-      "changed": true,
-      "steps": 3
-    },
     "kill-sticky-headers": {
       "file": "screenshots/kill-sticky-headers.png",
       "changed": true
@@ -494,6 +484,16 @@
     "hide-ads": {
       "file": "screenshots/hide-ads.png",
       "changed": true
+    },
+    "neon-hell": {
+      "file": "screenshots/neon-hell.png",
+      "changed": true,
+      "steps": 3
+    },
+    "doom": {
+      "file": "screenshots/doom.png",
+      "changed": true,
+      "steps": 3
     },
     "redactor": {
       "changed": false,

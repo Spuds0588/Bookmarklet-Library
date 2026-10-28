@@ -37,11 +37,13 @@
   let last = 0;
 
   const P = { x: W / 2, y: H / 2, vx: 0, vy: 0, r: 11, cool: 0, inv: 0 };
-  const G = { t: 0, score: 0, lives: 3, mult: 1, kills: 0, over: false, paused: false, full: false, spawn: .35, shake: 0 };
+  const G = { t: 0, score: 0, lives: 3, mult: 1, kills: 0, over: false, paused: false, full: false, spawn: .35, power: 3.5, shake: 0 };
   const keys = new Set();
   const mouse = { x: W / 2 + 80, y: H / 2, down: false };
   const bullets = [];
   const enemies = [];
+  const pickups = [];
+  const effects = { rapid: 0, spread: 0, shield: false };
   const parts = Array.from({ length: 360 }, () => ({ life: 0, x: 0, y: 0, vx: 0, vy: 0, c: "#fff" }));
   let partAt = 0;
 
@@ -50,6 +52,11 @@
     { r: 8, hp: 1, score: 120, c: "#21e6ff", sides: 3, speed: 128 },
     { r: 16, hp: 3, score: 350, c: "#b06bff", sides: 8, speed: 32 },
     { r: 5, hp: 1, score: 40, c: "#ff7bd5", sides: 4, speed: 105 },
+  ];
+  const POWERS = [
+    { id: "rapid", label: "RAPID", glyph: "R", c: "#ffd34d", time: 9 },
+    { id: "spread", label: "SPREAD", glyph: "W", c: "#ff7bd5", time: 9 },
+    { id: "shield", label: "SHIELD", glyph: "S", c: "#6ef6ff", time: 0 },
   ];
   const GAME_KEYS = new Set(["w", "a", "s", "d", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " ", "f"]);
   const rnd = (min, max) => min + Math.random() * (max - min);
@@ -137,6 +144,34 @@
     addEnemy(kind, x, y);
   }
 
+  function spawnPower() {
+    if (pickups.length >= 3) return;
+    const def = POWERS[(Math.random() * POWERS.length) | 0];
+    let x = 0;
+    let y = 0;
+    let placed = false;
+    for (let attempt = 0; attempt < 24; attempt++) {
+      x = rnd(55, W - 55);
+      y = rnd(70, H - 55);
+      if (dist2(x, y, P.x, P.y) < 105 ** 2) continue;
+      if (pickups.some((p) => dist2(p.x, p.y, x, y) < 85 ** 2)) continue;
+      placed = true;
+      break;
+    }
+    if (!placed) return;
+    pickups.push({ ...def, x, y, life: 14, rot: rnd(0, Math.PI * 2) });
+  }
+
+  function applyPower(kind) {
+    const def = POWERS.find((power) => power.id === kind);
+    if (!def) return;
+    if (def.id === "shield") effects.shield = true;
+    else effects[def.id] = Math.max(effects[def.id], def.time);
+    G.score += 50;
+    if (G.score > best) best = G.score;
+    burst(P.x, P.y, def.c, 26);
+  }
+
   function kill(index) {
     const e = enemies[index];
     remove(enemies, index);
@@ -152,6 +187,13 @@
 
   function damage() {
     if (P.inv > 0 || G.over) return;
+    if (effects.shield) {
+      effects.shield = false;
+      P.inv = .9;
+      G.shake = .22;
+      burst(P.x, P.y, "#6ef6ff", 28);
+      return;
+    }
     G.lives--;
     G.mult = 1;
     G.kills = 0;
@@ -187,9 +229,14 @@
     G.over = false;
     G.paused = false;
     G.spawn = .35;
+    G.power = 3.5;
     G.shake = 0;
     bullets.length = 0;
     enemies.length = 0;
+    pickups.length = 0;
+    effects.rapid = 0;
+    effects.spread = 0;
+    effects.shield = false;
     for (const p of parts) p.life = 0;
     P.x = W / 2;
     P.y = H / 2;
@@ -275,6 +322,38 @@
     ctx.stroke();
   }
 
+  function drawPickups() {
+    for (const k of pickups) {
+      if (k.life < 3 && Math.floor(G.t * 10) % 2 === 0) continue;
+      const pulse = 1 + Math.sin(G.t * 3 + k.rot) * .12;
+      ctx.save();
+      ctx.translate(k.x, k.y);
+      ctx.rotate(k.rot);
+      ctx.scale(pulse, pulse);
+      ctx.beginPath();
+      for (let i = 0; i < 4; i++) {
+        const angle = i * Math.PI / 2;
+        const x = Math.cos(angle) * 11;
+        const y = Math.sin(angle) * 11;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = k.c + "22";
+      ctx.fill();
+      ctx.strokeStyle = k.c;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+      ctx.save();
+      ctx.fillStyle = k.c;
+      ctx.font = "700 10px monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(k.glyph, k.x, k.y + 1);
+      ctx.restore();
+    }
+  }
+
   function drawHud() {
     ctx.textAlign = "left";
     ctx.fillStyle = "#bdf7ff";
@@ -283,6 +362,15 @@
     ctx.fillStyle = "#5d8290";
     ctx.font = "9px monospace";
     ctx.fillText("SITE BEST " + fmt(best), 12, 34);
+    let effectLine = 48;
+    for (const power of POWERS) {
+      const left = effects[power.id];
+      if (!left) continue;
+      ctx.fillStyle = power.c;
+      ctx.font = "600 9px monospace";
+      ctx.fillText(power.label + (power.time ? " " + Math.ceil(left) + "s" : ""), 12, effectLine);
+      effectLine += 12;
+    }
     ctx.fillStyle = "#ff6b81";
     ctx.font = "600 12px monospace";
     ctx.fillText("◆".repeat(Math.max(0, G.lives)), 12, H - 12);
@@ -330,12 +418,21 @@
     }
     ctx.globalAlpha = 1;
 
+    drawPickups();
+
     for (const e of enemies) {
       drawPoly(e.x, e.y, e.r, e.sides, e.rot, e.c);
     }
 
     if (!G.over && (P.inv <= 0 || (G.t * 20 | 0) % 2)) {
       drawPoly(P.x, P.y, P.r + 2, 3, Math.atan2(mouse.y - P.y, mouse.x - P.x), "#00e5ff");
+    }
+    if (effects.shield && !G.over) {
+      ctx.beginPath();
+      ctx.arc(P.x, P.y, P.r + 7, 0, Math.PI * 2);
+      ctx.strokeStyle = "#6ef6ff";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
     }
 
     ctx.beginPath();
@@ -390,19 +487,47 @@
     const move = input();
     P.vx += move.moveX * 1250 * dt;
     P.vy += move.moveY * 1250 * dt;
-    const drag = Math.exp(-7 * dt);
+    // Low drag keeps the ship sliding after the keys are released. The cap
+    // leaves enough speed to cross the arena, not enough to lose control.
+    const drag = Math.exp(-2.8 * dt);
     P.vx *= drag;
     P.vy *= drag;
     const speed = Math.hypot(P.vx, P.vy);
     if (speed > 300) { P.vx = P.vx / speed * 300; P.vy = P.vy / speed * 300; }
     P.x = clamp(P.x + P.vx * dt, P.r, W - P.r);
     P.y = clamp(P.y + P.vy * dt, P.r, H - P.r);
+    // Do not keep pushing into a wall once the hull is there; the next input
+    // should move away immediately instead of spending the stored velocity.
+    if (P.x <= P.r || P.x >= W - P.r) P.vx = 0;
+    if (P.y <= P.r || P.y >= H - P.r) P.vy = 0;
+
+    for (const key of ["rapid", "spread"]) effects[key] = Math.max(0, effects[key] - dt);
+
+    G.power -= dt;
+    if (G.power <= 0) {
+      spawnPower();
+      G.power = rnd(9, 14);
+    }
+    for (let i = pickups.length - 1; i >= 0; i--) {
+      const k = pickups[i];
+      k.life -= dt;
+      k.rot += dt * 1.7;
+      if (dist2(k.x, k.y, P.x, P.y) < (P.r + 14) ** 2) {
+        applyPower(k.id);
+        remove(pickups, i);
+      } else if (k.life <= 0) {
+        remove(pickups, i);
+      }
+    }
 
     P.cool -= dt;
     if (move.firing && P.cool <= 0) {
-      P.cool = .1;
+      P.cool = effects.rapid > 0 ? .055 : .1;
       const angle = Math.atan2(move.aimY - P.y, move.aimX - P.x);
-      bullets.push({ x: P.x + Math.cos(angle) * 15, y: P.y + Math.sin(angle) * 15, vx: Math.cos(angle) * 620, vy: Math.sin(angle) * 620 });
+      const offsets = effects.spread > 0 ? [-.15, 0, .15] : [0];
+      for (const offset of offsets) {
+        bullets.push({ x: P.x + Math.cos(angle + offset) * 15, y: P.y + Math.sin(angle + offset) * 15, vx: Math.cos(angle + offset) * 620, vy: Math.sin(angle + offset) * 620 });
+      }
     }
 
     G.spawn -= dt;
@@ -567,7 +692,7 @@
   const observer = new ResizeObserver(fit);
   observer.observe(root.querySelector(".stage"));
   if (globalThis.__BL_TEST__) {
-    globalThis.__BL_TEST__.neonHell = { game: G, player: P, enemies, bullets, parts, close, pause, resume, restart, damage, spawn };
+    globalThis.__BL_TEST__.neonHell = { game: G, player: P, enemies, bullets, parts, pickups, effects, close, pause, resume, restart, damage, spawn, spawnPower, applyPower };
   }
 
   (document.body || document.documentElement).appendChild(host);

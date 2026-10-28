@@ -74,7 +74,9 @@ const STEPS = {
   // Let a couple of enemies arrive, then aim right and hold fire so the capture
   // shows the arena in motion rather than an empty opening frame.
   "neon-hell": [
-    { wait: 2200 },
+    // The first power-up lands around 3.5 seconds, so leave time for it and the
+    // enemy wave to be on screen before the shot is taken.
+    { wait: 4700 },
     { script: 'const r=document.getElementById("nh-root").shadowRoot; const c=r.querySelector("canvas"); const b=c.getBoundingClientRect(); c.dispatchEvent(new PointerEvent("pointermove",{bubbles:true,clientX:b.left+720,clientY:b.top+300})); c.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,button:0,clientX:b.left+720,clientY:b.top+300}));' },
     { wait: 1400 },
   ],
