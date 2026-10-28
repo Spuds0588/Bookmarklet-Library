@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Play the shareware version of Doom, Episode 1, in the browser. Part of the Bookmarklet Library.">
+<meta name="robots" content="noindex">
+<title>Doom — Bookmarklet Library</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  body {
+    font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: #ddd;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    object-fit: contain;
+    outline: none;
+    image-rendering: pixelated;
+  }
+  #loading, #error {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: #000;
+    text-align: center;
+  }
+  #loading.hidden, #error[hidden] { display: none; }
+  .box { display: flex; flex-direction: column; align-items: center; gap: 14px; max-width: 42ch; }
+  .spinner {
+    width: 34px;
+    height: 34px;
+    border: 3px solid #2b2b2b;
+    border-top-color: #d8b25a;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading strong {
+    color: #e8c15a;
+    font: 600 22px/1.2 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    letter-spacing: .12em;
+  }
+  #status { margin: 0; color: #999; font-size: 11px; min-height: 16px; }
+  #error { color: #f0b8b8; line-height: 1.6; }
+  #error a { color: #e8c15a; }
+  #hint {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    z-index: 3;
+    transform: translateX(-50%);
+    padding: 7px 11px;
+    border: 1px solid #333;
+    background: rgba(0, 0, 0, .8);
+    color: #bbb;
+    font-size: 10px;
+    letter-spacing: .03em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .5s;
+  }
+  #hint.show { opacity: 1; }
+  #home {
+    position: fixed;
+    left: 10px;
+    top: 10px;
+    z-index: 3;
+    color: #b9a36a;
+    font-size: 10px;
+    text-decoration: none;
+    opacity: .55;
+  }
+  #home:hover { opacity: 1; }
+  @media (max-width: 520px) {
+    #hint { bottom: 8px; max-width: calc(100vw - 24px); text-align: center; }
+  }
+</style>
+</head>
+<body>
+<canvas id="canvas" tabindex="-1" aria-label="Doom game screen"></canvas>
+<a id="home" href="../">← Library</a>
+<div id="loading" role="status" aria-live="polite">
+  <div class="box">
+    <div class="spinner" aria-hidden="true"></div>
+    <strong>DOOM</strong>
+    <p id="status">Loading shareware Episode 1…</p>
+  </div>
+</div>
+<div id="error" role="alert" hidden></div>
+<div id="hint">Click the game for sound · Esc releases the mouse</div>
+<noscript>This page needs JavaScript and WebAssembly to run Doom.</noscript>
+<script>
+(() => {
+  const canvas = document.getElementById("canvas");
+  const loading = document.getElementById("loading");
+  const status = document.getElementById("status");
+  const error = document.getElementById("error");
+  const hint = document.getElementById("hint");
+  const home = document.getElementById("home");
+  let failed = false;
+
+  // The hosted page is normally inside the bookmarklet's overlay. Hiding the
+  // library link there keeps every click inside the game and its header.
+  if (window.self !== window.top) home.hidden = true;
+
+  const fail = (message) => {
+    if (failed) return;
+    failed = true;
+    loading.classList.add("hidden");
+    error.hidden = false;
+    error.innerHTML = "";
+    const text = document.createElement("p");
+    text.textContent = message + " ";
+    const link = document.createElement("a");
+    link.href = "../";
+    link.textContent = "Back to the library";
+    text.append(link);
+    error.append(text);
+  };
+
+  window.Module = {
+    canvas,
+    arguments: ["-iwad", "doom1.wad", "-warp", "1", "1", "-skill", "3"],
+    locateFile: (path) => path,
+    preRun: [],
+    print: (text) => console.log(text),
+    printErr: (text) => console.error(text),
+    setStatus: (text) => {
+      if (text) status.textContent = text;
+    },
+    onRuntimeInitialized() {
+      loading.classList.add("hidden");
+      canvas.focus();
+      hint.classList.add("show");
+      setTimeout(() => hint.classList.remove("show"), 7000);
+    },
+  };
+
+  (async () => {
+    try {
+      const response = await fetch("doom1.wad");
+      if (!response.ok) throw new Error(`Could not load the shareware WAD (HTTP ${response.status}).`);
+      const wad = new Uint8Array(await response.arrayBuffer());
+      Module.preRun.push(() => FS.writeFile("/doom1.wad", wad));
+      status.textContent = "Starting the engine…";
+      const script = document.createElement("script");
+      script.src = "index.js";
+      script.onerror = () => fail("Could not load the Doom engine. Check your connection and try again.");
+      document.body.appendChild(script);
+    } catch (problem) {
+      fail(problem.message || "Could not start Doom.");
+    }
+  })();
+})();
+</script>
+</body>
+</html>

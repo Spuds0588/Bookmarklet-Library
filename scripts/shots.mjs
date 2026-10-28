@@ -62,8 +62,9 @@ const STEPS = {
     { script: 'document.getElementById("bl-pii-host").shadowRoot.querySelector(".close").click();' },
     { wait: 300 },
   ],
-  // Give the raycaster a few frames so the capture shows the room, not a blank canvas.
-  doom: [{ wait: 750 }],
+  // The real engine loads its WAD and WASM after the overlay opens. Six seconds
+  // covers a cold local load; the frame is live by then, not a loading screen.
+  doom: [{ wait: 6500 }],
   // The picker draws its overlay once the capture is ready, then keeps the
   // redaction toast up for a few seconds: drag a region before it fades.
   "pixelate-section": [{ wait: 2400 }, { drag: [280, 320, 780, 580] }, { wait: 250 }],
@@ -140,6 +141,9 @@ const AFTER = {
 /* Live media before the tool runs, so a floating player shows a picture rather
  * than a poster: the point is to hand it something already playing. */
 const PREP = {
+  // The hosted page is deployed with the site. Local captures point the loader
+  // at the fixture server so screenshots do not depend on the live site.
+  doom: ['globalThis.__BL_DOOM_BASE__ = "http://127.0.0.1:4321/doom/"'],
   "video-pip": ["document.querySelector('video').play()"],
   "audio-pip": ["document.querySelector('audio').play()"],
   // The stamper reads the harvester's saved payload; seed a realistic one so
@@ -769,10 +773,38 @@ const MEDIA = new Map([
   ["/report.ods", ["office/report.ods", "application/vnd.oasis.opendocument.spreadsheet"]],
 ]);
 
+const DOOM_TYPES = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".wasm": "application/wasm",
+  ".wad": "application/octet-stream",
+  ".data": "application/octet-stream",
+};
+
 async function serveFixture() {
   const server = createServer(async (request, response) => {
     try {
       const { pathname } = new URL(request.url, "http://127.0.0.1");
+      // The Doom capture needs its hosted page and the engine assets beside it.
+      // Everything else on this test server is the one demo fixture.
+      if (pathname.startsWith("/doom/")) {
+        const name = pathname.slice("/doom/".length);
+        const doomDir = path.join(root, "doom");
+        const file = path.normalize(path.join(doomDir, name || "index.html"));
+        if (file !== doomDir && !file.startsWith(doomDir + path.sep)) {
+          response.writeHead(404);
+          response.end("not found");
+          return;
+        }
+        const body = await readFile(file);
+        response.writeHead(200, {
+          "content-type": DOOM_TYPES[path.extname(file)] ?? "application/octet-stream",
+          "content-length": body.length,
+          "cache-control": "no-store",
+        });
+        response.end(body);
+        return;
+      }
       const media = MEDIA.get(pathname);
       if (media) {
         const body = await readFile(path.join(root, "scripts", "fixtures", media[0]));

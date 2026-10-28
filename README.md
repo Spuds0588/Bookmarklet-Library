@@ -4,7 +4,7 @@
 
 A searchable catalog of small browser tools. Find one that does the job, drag it to your bookmarks bar, click it on any page. Nothing to install, no accounts, no extensions.
 
-114 bookmarklets across seven categories: capture, annotate, text, files, dev tools, view and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site; the one hosted chat page loads PeerJS from a CDN.
+114 bookmarklets across seven categories: capture, annotate, text, files, dev tools, view and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site. Two tools use a hosted helper page: the URL chat loads PeerJS from a CDN, and Doom loads its own WebAssembly engine and shareware WAD from this site.
 
 ## Use it
 
@@ -114,7 +114,7 @@ The PDF writer uses the Helvetica family, Latin-1 text, the DOCX page size and m
 
 ## Doom
 
-**💥 Will it run Doom?** is a 19 KB raycaster, not a WAD player. It draws a 16×16 room at 320×200, renders walls and billboard imps, fires a hitscan pistol, and synthesizes the pistol, imp and E1M1 audio with Web Audio. `WASD` or the arrow keys move and turn, Space or a click fires, `M` toggles music, and Esc tears down the overlay, listeners, animation frame and audio context. It needs no network request, WAD, WASM or WebGL. There are three imps and no mobile controls.
+**💥 Will it run Doom?** opens a full-screen panel with actual shareware **DOOM** Episode 1, not a lookalike. The bookmarklet is a small loader; [doom/](doom/index.html) hosts the unmodified Dwasm 2.2.0 WebAssembly engine and the shareware `DOOM1.WAD`. It starts on E1M1 at Hurt Me Plenty. `WASD` and the arrow keys move, the mouse turns and fires, Space uses, Esc opens the menu and Tab shows the automap. Click the game once for sound. The first load is about 7 MB; later visits use the browser cache. **Open in tab** is there because a strict `frame-src` CSP can block the iframe. Closing, Esc or `pagehide` removes the overlay and restores the page's scroll. The engine and WAD provenance, licenses and hashes are in [doom/README.md](doom/README.md).
 
 ## Tests
 

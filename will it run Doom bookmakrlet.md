@@ -1,5 +1,7 @@
 # Master Engineering & Testing Specification: "Will it run Doom?"
 
+> **Superseded 2026-10-28.** This document records the original raycaster design. The shipped tool now opens actual shareware DOOM Episode 1 from the hosted [doom/](doom/index.html) page, using Dwasm and `DOOM1.WAD`. The size and no-network assumptions below no longer apply; see [doom/README.md](doom/README.md) for the current build and licenses.
+
 **Document Version:** 1.0.0  
 **Status:** Approved for Implementation  
 **Target Delivery:** Self-Contained Zero-Dependency JavaScript Bookmarklet  
