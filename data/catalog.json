@@ -1,6 +1,6 @@
 {
   "updated": "2026-10-28",
-  "total": 105,
+  "total": 106,
   "categories": [
     {
       "id": "capture",
@@ -42,7 +42,7 @@
       "emoji": "👀",
       "label": "View",
       "blurb": "Preview, magnify, declutter, picture-in-picture",
-      "count": 19
+      "count": 20
     },
     {
       "id": "privacy",
@@ -1861,6 +1861,28 @@
       "bytes": 68,
       "source": "bookmarklets/view/video-pip.js",
       "href": "javascript:document.getElementsByTagName('video')%5B0%5D.requestPictureInPicture()%3B"
+    },
+    {
+      "slug": "url-anchored-chat",
+      "name": "🔒 URL-Anchored Secret Chat",
+      "category": "view",
+      "description": "Open an ephemeral PeerJS chat shared by everyone on this exact page URL.",
+      "tags": [
+        "chat",
+        "peerjs",
+        "webrtc",
+        "url",
+        "secret",
+        "room",
+        "p2p"
+      ],
+      "added": "2026-10-28",
+      "featured": false,
+      "author": "",
+      "credit": "",
+      "bytes": 1639,
+      "source": "bookmarklets/view/url-anchored-chat.js",
+      "href": "javascript:(async%20()%20%3D%3E%20%7B%0A%20%20const%20source%20%3D%20location.origin%20%2B%20location.pathname%3B%0A%20%20const%20pageTitle%20%3D%20(document.title%20%7C%7C%20location.pathname).slice(0%2C%20160)%3B%0A%20%20const%20pageUrl%20%3D%20location.href.slice(0%2C%202000)%3B%0A%20%20const%20popup%20%3D%20window.open(%22about%3Ablank%22%2C%20%22bl-url-chat%22%2C%20%22popup%3Dyes%2Cwidth%3D430%2Cheight%3D640%2Cmenubar%3Dno%2Cstatus%3Dno%2Ctoolbar%3Dno%22)%3B%0A%0A%20%20let%20room%20%3D%20%22%22%3B%0A%20%20try%20%7B%0A%20%20%20%20if%20(!crypto%3F.subtle)%20throw%20new%20Error(%22no%20subtle%20crypto%22)%3B%0A%20%20%20%20const%20digest%20%3D%20await%20crypto.subtle.digest(%22SHA-256%22%2C%20new%20TextEncoder().encode(source))%3B%0A%20%20%20%20room%20%3D%20Array.from(new%20Uint8Array(digest)%2C%20(byte)%20%3D%3E%20byte.toString(16).padStart(2%2C%20%220%22)).join(%22%22)%3B%0A%20%20%7D%20catch%20%7B%0A%20%20%20%20%2F%2F%20Non-secure%20pages%20do%20not%20expose%20SubtleCrypto.%20This%20fallback%20keeps%20the%0A%20%20%20%20%2F%2F%20room%20deterministic%20for%20everyone%20on%20the%20same%20origin%20and%20path%3B%20it%20is%20a%0A%20%20%20%20%2F%2F%20rendezvous%20key%2C%20not%20a%20secret.%0A%20%20%20%20const%20fnv%20%3D%20(text)%20%3D%3E%20%7B%0A%20%20%20%20%20%20let%20hash%20%3D%202166136261%3B%0A%20%20%20%20%20%20for%20(let%20index%20%3D%200%3B%20index%20%3C%20text.length%3B%20index%2B%2B)%20%7B%0A%20%20%20%20%20%20%20%20hash%20%5E%3D%20text.charCodeAt(index)%3B%0A%20%20%20%20%20%20%20%20hash%20%3D%20Math.imul(hash%2C%2016777619)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20return%20(hash%20%3E%3E%3E%200).toString(16).padStart(8%2C%20%220%22)%3B%0A%20%20%20%20%7D%3B%0A%20%20%20%20room%20%3D%20Array.from(%7B%20length%3A%204%20%7D%2C%20(_%2C%20index)%20%3D%3E%20fnv(%60%24%7Bsource%7D%23%24%7Bindex%7D%60)).join(%22%22)%3B%0A%20%20%7D%0A%0A%20%20const%20target%20%3D%20new%20URL(%22https%3A%2F%2Fspuds0588.github.io%2FBookmarklet-Library%2Fchat.html%22)%3B%0A%20%20target.searchParams.set(%22room%22%2C%20room)%3B%0A%20%20target.searchParams.set(%22title%22%2C%20pageTitle)%3B%0A%20%20target.searchParams.set(%22url%22%2C%20pageUrl)%3B%0A%20%20try%20%7B%20navigator.clipboard%3F.writeText(target.href)%3F.catch(()%20%3D%3E%20%7B%7D)%3B%20%7D%20catch%20%7B%7D%0A%0A%20%20if%20(popup%20%26%26%20!popup.closed)%20%7B%0A%20%20%20%20popup.location.replace(target.href)%3B%0A%20%20%20%20popup.focus%3F.()%3B%0A%20%20%7D%20else%20%7B%0A%20%20%20%20prompt(%22Pop-up%20blocked.%20Copy%20this%20chat%20link%3A%22%2C%20target.href)%3B%0A%20%20%7D%0A%7D)()%3B"
     },
     {
       "slug": "enable-right-click",

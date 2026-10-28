@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>URL chat — Bookmarklet Library</title>
+<style>
+  :root { color-scheme: light dark; --bg:#fff; --fg:#111; --muted:#6b6b6b; --line:#d6d6d6; --soft:#f4f4f4; --accent:#111; --accent-fg:#fff; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#111; --fg:#f5f5f5; --muted:#aaa; --line:#3a3a3a; --soft:#1b1b1b; --accent:#f5f5f5; --accent-fg:#111; } }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:flex; flex-direction:column; background:var(--bg); color:var(--fg); font:14px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
+  header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:16px 18px 13px; border-bottom:1px solid var(--line); }
+  .kicker { margin:0 0 4px; color:var(--muted); font:10px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+  h1 { margin:0; font-size:19px; line-height:1.2; font-weight:600; }
+  .sub { margin:7px 0 0; color:var(--muted); font:11px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:340px; }
+  .close { width:32px; height:32px; flex:none; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:20px; line-height:1; cursor:pointer; }
+  .close:hover { border-color:var(--fg); }
+  .bar { display:flex; align-items:center; gap:8px; padding:9px 18px; border-bottom:1px solid var(--line); color:var(--muted); font:10px/1.3 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; letter-spacing:.04em; }
+  .dot { width:7px; height:7px; flex:none; border-radius:50%; background:var(--muted); }
+  .dot[data-state=online] { background:#1a8f4c; }
+  .dot[data-state=waiting] { background:#b8860b; }
+  .dot[data-state=error] { background:#b3261e; }
+  main { flex:1; display:flex; flex-direction:column; min-height:0; }
+  #messages { flex:1; overflow:auto; padding:16px 18px; display:flex; flex-direction:column; gap:9px; }
+  .msg { max-width:86%; padding:8px 10px; border:1px solid var(--line); background:var(--soft); align-self:flex-start; overflow-wrap:anywhere; white-space:pre-wrap; }
+  .msg.mine { align-self:flex-end; background:var(--accent); border-color:var(--accent); color:var(--accent-fg); }
+  .msg.system { max-width:100%; align-self:center; border:0; background:transparent; color:var(--muted); padding:2px 0; font:10px/1.3 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; text-align:center; }
+  .empty { margin:auto; color:var(--muted); text-align:center; max-width:260px; font-size:12px; line-height:1.5; }
+  footer { border-top:1px solid var(--line); padding:12px 18px 16px; display:flex; flex-direction:column; gap:9px; }
+  .compose { display:flex; gap:8px; }
+  textarea { flex:1; min-height:38px; max-height:120px; resize:vertical; padding:8px 9px; border:1px solid var(--line); background:var(--bg); color:var(--fg); font:13px/1.4 ui-sans-serif,system-ui,sans-serif; }
+  textarea:focus { outline:2px solid var(--fg); outline-offset:1px; }
+  button.action { border:1px solid var(--accent); background:var(--accent); color:var(--accent-fg); padding:8px 12px; font:600 12px/1.2 ui-sans-serif,system-ui,sans-serif; cursor:pointer; white-space:nowrap; }
+  button.action:disabled { opacity:.45; cursor:not-allowed; }
+  button.quiet { border:1px solid var(--line); background:transparent; color:var(--fg); padding:6px 9px; font:11px/1.2 ui-sans-serif,system-ui,sans-serif; cursor:pointer; }
+  button.quiet:hover { border-color:var(--fg); }
+  .foot { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .note { margin:0; color:var(--muted); font-size:10px; line-height:1.4; }
+  @media (max-width:560px) { header,main #messages,footer { padding-left:14px; padding-right:14px; } .sub { max-width:220px; } }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <p class="kicker">Peer-to-peer · no account</p>
+    <h1 id="title">URL chat</h1>
+    <p class="sub" id="page"></p>
+  </div>
+  <button class="close" type="button" id="close" aria-label="Close chat">×</button>
+</header>
+<div class="bar"><span class="dot" id="dot" data-state="waiting"></span><span id="status">Connecting…</span><span style="margin-left:auto"><button class="quiet" type="button" id="copy">Copy link</button></span></div>
+<main>
+  <div id="messages" aria-live="polite"><p class="empty" id="empty">Waiting for someone on this page URL to open the same room.<br>Messages disappear when the window closes.</p></div>
+  <footer>
+    <div class="compose">
+      <textarea id="input" rows="1" placeholder="Write a message…" aria-label="Message"></textarea>
+      <button class="action" type="button" id="send" disabled>Send</button>
+    </div>
+    <div class="foot"><p class="note">Ephemeral PeerJS room. Anyone with this page URL can join.</p><p class="note" id="who"></p></div>
+  </footer>
+</main>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(() => {
+  const params = new URLSearchParams(location.search);
+  const room = (params.get("room") || "").toLowerCase();
+  const pageTitle = (params.get("title") || "this page").slice(0, 160);
+  const pageUrl = (params.get("url") || "").slice(0, 2000);
+  const $ = (id) => document.getElementById(id);
+  const messages = $("messages");
+  const input = $("input");
+  const sendButton = $("send");
+  const status = $("status");
+  const dot = $("dot");
+  const empty = $("empty");
+
+  $("title").textContent = "Chat · " + pageTitle;
+  $("page").textContent = pageUrl || "Shared page";
+  if (!/^[a-f0-9]{16,64}$/.test(room)) {
+    dot.dataset.state = "error";
+    status.textContent = "This link has no valid room. Open the bookmarklet on the page you want to discuss.";
+    input.disabled = true;
+    sendButton.disabled = true;
+    return;
+  }
+  if (!window.Peer) {
+    dot.dataset.state = "error";
+    status.textContent = "PeerJS did not load. Check your connection, then reload this window.";
+    input.disabled = true;
+    sendButton.disabled = true;
+    return;
+  }
+
+  const hostId = "blchat-" + room.slice(0, 32);
+  let peer = null;
+  let host = false;
+  let guestConn = null;
+  let connections = new Set();
+  let retries = 0;
+  let destroyed = false;
+  let started = false;
+
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const setStatus = (text, state = "waiting") => {
+    status.textContent = text;
+    dot.dataset.state = state;
+  };
+  const append = (message) => {
+    empty?.remove();
+    const node = document.createElement("div");
+    node.className = "msg" + (message.type === "system" ? " system" : message.mine ? " mine" : "");
+    node.textContent = message.text;
+    messages.appendChild(node);
+    messages.scrollTop = messages.scrollHeight;
+  };
+  const appendMessage = (data) => {
+    if (!data || data.type !== "msg" || typeof data.text !== "string") return;
+    append({ text: data.text.slice(0, 2000), mine: data.mine });
+  };
+  const broadcast = (data, except = null) => {
+    for (const connection of connections) {
+      if (connection !== except && connection.open) {
+        try { connection.send(data); } catch {}
+      }
+    }
+  };
+  const publish = (data) => {
+    if (host) broadcast(data);
+    else if (guestConn?.open) {
+      try { guestConn.send(data); } catch {}
+    }
+  };
+  const onData = (connection, data) => {
+    if (!data || typeof data !== "object") return;
+    if (data.type === "msg") {
+      const message = { type: "msg", text: String(data.text || "").slice(0, 2000), id: String(data.id || "") };
+      append(message);
+      broadcast(message, connection);
+    }
+  };
+  const onGuestData = (data) => {
+    if (!data || typeof data !== "object") return;
+    if (data.type === "msg") appendMessage(data);
+    if (data.type === "system") append({ type: "system", text: String(data.text || "").slice(0, 240) });
+  };
+  const attachGuest = (connection) => {
+    guestConn = connection;
+    connection.on("data", onGuestData);
+    connection.on("open", () => {
+      retries = 0;
+      setStatus("Connected to the room", "online");
+      sendButton.disabled = false;
+      append({ type: "system", text: "You joined the room." });
+    });
+    connection.on("close", () => {
+      guestConn = null;
+      sendButton.disabled = true;
+      setStatus("Host left. Looking for the room again…", "waiting");
+      if (!destroyed) setTimeout(() => (host ? null : becomeGuest()), 800);
+    });
+    connection.on("error", () => setStatus("Connection error. Trying again…", "error"));
+  };
+  const restartGuest = (delay = 900) => {
+    if (destroyed) return;
+    setTimeout(() => {
+      if (destroyed || host || guestConn?.open) return;
+      try { peer?.destroy(); } catch {}
+      peer = null;
+      createGuest();
+    }, delay);
+  };
+  const watchGuest = () => {
+    setTimeout(() => {
+      if (destroyed || host || guestConn?.open) return;
+      retries++;
+      if (retries >= 2) becomeHost();
+      else restartGuest(0);
+    }, 4500);
+  };
+  const createGuest = () => {
+    if (destroyed) return;
+    setStatus("Looking for the room host…", "waiting");
+    peer = new Peer(undefined, { debug: 0 });
+    peer.on("open", () => {
+      if (destroyed) return;
+      const connection = peer.connect(hostId, { reliable: true });
+      attachGuest(connection);
+      watchGuest();
+    });
+    peer.on("error", (error) => {
+      if (error?.type === "peer-unavailable") {
+        retries++;
+        if (retries >= 2) becomeHost();
+        else restartGuest();
+      } else if (!destroyed) {
+        setStatus("Connection error. Trying again…", "error");
+        restartGuest(1800);
+      }
+    });
+    peer.on("disconnected", () => { if (!destroyed) peer.reconnect(); });
+  };
+  const becomeGuest = () => {
+    if (destroyed) return;
+    try { peer?.destroy(); } catch {}
+    peer = null;
+    host = false;
+    connections.clear();
+    guestConn = null;
+    retries = 0;
+    sendButton.disabled = true;
+    createGuest();
+  };
+  const becomeHost = () => {
+    if (destroyed) return;
+    try { peer?.destroy(); } catch {}
+    peer = null;
+    host = false;
+    connections.clear();
+    guestConn = null;
+    setStatus("You are hosting. Waiting for others…", "waiting");
+    peer = new Peer(hostId, { debug: 0 });
+    peer.on("open", () => {
+      if (destroyed) return;
+      host = true;
+      setStatus("You are hosting. Waiting for others…", "online");
+      sendButton.disabled = false;
+    });
+    peer.on("connection", (connection) => {
+      connections.add(connection);
+      connection.on("open", () => {
+        setStatus("Someone joined", "online");
+        broadcast({ type: "system", text: "Someone joined the room." });
+      });
+      connection.on("data", (data) => onData(connection, data));
+      connection.on("close", () => {
+        connections.delete(connection);
+        setStatus(connections.size ? "Someone left" : "You are hosting. Waiting for others…", "online");
+        broadcast({ type: "system", text: "Someone left the room." });
+      });
+      connection.on("error", () => connections.delete(connection));
+      if (connection.open) connection.send({ type: "system", text: "Connected." });
+    });
+    peer.on("error", (error) => {
+      if (error?.type === "unavailable-id") {
+        setTimeout(becomeGuest, 200);
+      } else if (!destroyed) {
+        setStatus("Hosting failed. Trying again…", "error");
+        setTimeout(becomeHost, 1600);
+      }
+    });
+    peer.on("disconnected", () => { if (!destroyed) peer.reconnect(); });
+  };
+
+  const send = () => {
+    const text = input.value.replace(/\s+$/g, "");
+    if (!text) return;
+    const message = { type: "msg", id: uid(), text: text.slice(0, 2000) };
+    append({ ...message, mine: true });
+    publish(message);
+    input.value = "";
+    input.focus();
+  };
+  $("send").addEventListener("click", send);
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      send();
+    }
+  });
+  $("copy").addEventListener("click", async () => {
+    const button = $("copy");
+    try {
+      await navigator.clipboard.writeText(location.href);
+      button.textContent = "Copied";
+      setTimeout(() => (button.textContent = "Copy link"), 1400);
+    } catch {
+      button.textContent = "Copy failed";
+    }
+  });
+  $("close").addEventListener("click", () => window.close());
+  window.addEventListener("beforeunload", () => {
+    destroyed = true;
+    try { peer?.destroy(); } catch {}
+  });
+
+  // Try the guest path first: if a host is already there this connects
+  // immediately, and a room with no host promotes itself after two misses.
+  createGuest();
+})();
+</script>
+</body>
+</html>

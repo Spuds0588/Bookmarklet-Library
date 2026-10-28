@@ -423,6 +423,10 @@
       "changed": true,
       "display": true
     },
+    "url-anchored-chat": {
+      "changed": false,
+      "reason": "external"
+    },
     "enable-right-click": {
       "changed": false,
       "reason": "no-effect"
