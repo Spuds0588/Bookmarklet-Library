@@ -24,7 +24,10 @@ What has been done, in order. Newest entries first.
 
 **Production**
 
-- Pending the push.
+- After the first push (`5070e08`), GitHub Pages served 117 tools with the new card. `bookmarklets/capture/scan-qr.js` matched the checkout's SHA-256 (`ff67fac9…`), as did `qr-reader/index.html` (`f6cab34e…`), `qr-reader/reader.js` (`9849a6f9…`), `qr-reader/jsqr.js` (`463be807…`) and `screenshots/scan-qr.png` (`bff1adf3…`). The catalog reported 16,291 bytes and a 27,880-byte URL.
+- The served reader page was `text/html`; `reader.js` and `jsqr.js` were `application/javascript`; the PNG was `image/png`. The page loaded with no console errors. Opened directly, it showed **Open this from the bookmarklet**. On that live origin, the served `jsQR` decoded the served sample SVG as a 31-character version 3 code, `https://example.com/field-guide`.
+- The card and detail view showed **🔎 Scan QR from screen**, the screenshot and the tags. A second push (`8ae1de1`) replaced the capture category's generic "saved to Downloads" copy with the reader's own explanation; the served `assets/app.js` matched the checkout (`fffcf8eb…`).
+- The live install was not run against a real screen picker; that remains the browser pass in TODO.
 
 ## 2026-10-28 — QR codes from the page, as PNG or SVG
 
