@@ -337,6 +337,10 @@
       "changed": true,
       "popup": true
     },
+    "webhook-dispatch": {
+      "file": "screenshots/webhook-dispatch.png",
+      "changed": true
+    },
     "reveal-passwords": {
       "file": "screenshots/reveal-passwords.png",
       "changed": true,
