@@ -46,6 +46,11 @@
       "changed": false,
       "reason": "external"
     },
+    "table-to-csv": {
+      "file": "screenshots/table-to-csv.png",
+      "changed": true,
+      "steps": 3
+    },
     "markdown-reader": {
       "file": "screenshots/markdown-reader.png",
       "changed": true

@@ -51,6 +51,8 @@ const STEPS = {
   "advanced-find": [{ type: "demo", into: "#searchInput" }, { wait: 400 }],
   markup: [{ paste: true }, { wait: 600 }],
   "record-actions": [{ click: 'a[href="#faq"]' }, { wait: 400 }],
+  // The table picker opens a panel only after a real table is clicked.
+  "table-to-csv": [{ script: 'document.querySelector("table").scrollIntoView({ block: "center" })' }, { click: "table" }, { wait: 500 }],
   // The picker draws its overlay once the capture is ready, then keeps the
   // redaction toast up for a few seconds: drag a region before it fades.
   "pixelate-section": [{ wait: 2400 }, { drag: [280, 320, 780, 580] }, { wait: 250 }],
