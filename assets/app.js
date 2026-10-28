@@ -306,6 +306,8 @@ const HOW = {
 };
 
 const HOW_TOOL = {
+  "scan-qr":
+    "It asks for a screen or window, freezes the frame, dims it and waits for a box around the QR code. The crop is decoded in a small reader window beside the page, not on a server. The reader can open the link in the page it came from, open it in a new tab or copy the text; only http(s) codes get the open actions. Esc cancels the selection and closes the reader. The reader and its bundled jsQR decoder are hosted with this catalog; the image stays in the browser.",
   "neon-hell":
     "A neon bullet-hell arena in a 960×600 window. WASD or the arrow keys thrust with low-drag inertia, so the ship keeps drifting after you release a key or swing into a turn; the mouse aims, and holding the left button fires 10 shots a second. Chasers home in, drifters ricochet off the walls, and each purple grunt takes three hits before it bursts into micro-chasers. The clock raises the enemy cap and shortens the spawn gap continuously. Pickups drift, expire after eight seconds and arrive every 14–22 seconds: R gives rapid fire, W a three-way spread, S a one-hit shield, B a bomb charge and C ten seconds of chain rounds. Space spends a bomb on a 220 px blast; chain kills throw three ricochet shards. Timers sit under the score and bomb charges under the multiplier. Esc pauses and hands the page back, F fills the screen, and the best score is stored for the origin you are on. Close removes the window; the game is one self-contained file.",
   doom:
