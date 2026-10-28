@@ -119,6 +119,36 @@
       "changed": false,
       "reason": "download"
     },
+    "odt-to-html": {
+      "file": "screenshots/odt-to-html.png",
+      "changed": true,
+      "steps": 3
+    },
+    "odt-to-markdown": {
+      "file": "screenshots/odt-to-markdown.png",
+      "changed": true,
+      "steps": 3
+    },
+    "odt-to-pdf": {
+      "file": "screenshots/odt-to-pdf.png",
+      "changed": true,
+      "steps": 3
+    },
+    "odt-to-rtf": {
+      "file": "screenshots/odt-to-rtf.png",
+      "changed": true,
+      "steps": 3
+    },
+    "odt-to-txt": {
+      "file": "screenshots/odt-to-txt.png",
+      "changed": true,
+      "steps": 3
+    },
+    "odt-to-word": {
+      "file": "screenshots/odt-to-word.png",
+      "changed": true,
+      "steps": 3
+    },
     "save-clipboard-as-md": {
       "changed": false,
       "reason": "download"
@@ -153,8 +183,28 @@
       "changed": true,
       "steps": 3
     },
+    "csv-to-ods": {
+      "file": "screenshots/csv-to-ods.png",
+      "changed": true,
+      "steps": 3
+    },
     "excel-to-csv": {
       "file": "screenshots/excel-to-csv.png",
+      "changed": true,
+      "steps": 3
+    },
+    "excel-to-ods": {
+      "file": "screenshots/excel-to-ods.png",
+      "changed": true,
+      "steps": 3
+    },
+    "ods-to-csv": {
+      "file": "screenshots/ods-to-csv.png",
+      "changed": true,
+      "steps": 3
+    },
+    "ods-to-excel": {
+      "file": "screenshots/ods-to-excel.png",
       "changed": true,
       "steps": 3
     },
@@ -162,8 +212,18 @@
       "changed": false,
       "reason": "download"
     },
+    "html-to-odt": {
+      "file": "screenshots/html-to-odt.png",
+      "changed": true,
+      "steps": 3
+    },
     "html-to-word": {
       "file": "screenshots/html-to-word.png",
+      "changed": true,
+      "steps": 3
+    },
+    "markdown-to-odt": {
+      "file": "screenshots/markdown-to-odt.png",
       "changed": true,
       "steps": 3
     },
@@ -172,13 +232,28 @@
       "changed": true,
       "steps": 3
     },
+    "rtf-to-odt": {
+      "file": "screenshots/rtf-to-odt.png",
+      "changed": true,
+      "steps": 3
+    },
     "rtf-to-word": {
       "file": "screenshots/rtf-to-word.png",
       "changed": true,
       "steps": 3
     },
+    "txt-to-odt": {
+      "file": "screenshots/txt-to-odt.png",
+      "changed": true,
+      "steps": 3
+    },
     "txt-to-word": {
       "file": "screenshots/txt-to-word.png",
+      "changed": true,
+      "steps": 3
+    },
+    "word-to-odt": {
+      "file": "screenshots/word-to-odt.png",
       "changed": true,
       "steps": 3
     },

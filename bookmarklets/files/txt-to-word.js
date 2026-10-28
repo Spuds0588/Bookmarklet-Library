@@ -654,10 +654,13 @@ BL.unzip = async (file, options = {}) => {
   const total = BL.u16(tail, eocd + 10);
   const centralSize = BL.u32(tail, eocd + 12);
   const centralOffset = BL.u32(tail, eocd + 16);
-  if (disk !== 0 || centralDisk !== 0 || onDisk !== total) throw new Error("Split ZIP archives are not supported.");
-  if (total === 65535 || centralSize === 4294967295 || centralOffset === 4294967295) {
+  // 0xffff and 0xffffffff are ZIP64 placeholders, so they are read before the
+  // split archive test: a ZIP64 file that only sets the entry counts is still
+  // not a split archive.
+  if ([disk, centralDisk, onDisk, total].includes(65535) || centralSize === 4294967295 || centralOffset === 4294967295) {
     throw new Error("ZIP64 Office files are not supported. Save a standard .docx or .xlsx.");
   }
+  if (disk !== 0 || centralDisk !== 0 || onDisk !== total) throw new Error("Split ZIP archives are not supported.");
   if (!total) throw new Error("This Office file is empty.");
   if (total > maxEntries) throw new Error("This Office file contains too many parts.");
   if (centralOffset + centralSize > file.size) throw new Error("The ZIP directory is outside the file.");
@@ -1181,7 +1184,8 @@ BL.runText = (runs, model = null) => (runs || []).map((run) => {
   return run.text || "";
 }).join("");
 
-BL.docxToText = (model) => {
+/* The text renderer works on the shared model, so the ODF tools use it too. */
+BL.modelToText = (model) => {
   const lines = [];
   for (const block of model.blocks || []) {
     if (block.type === "pagebreak") { lines.push(""); continue; }
@@ -1215,7 +1219,7 @@ BL.docxToMarkdown = (model) => BL.markdownFromModel(model);
 
 BL.docxToPdf = async (model, options = {}) => BL.pdfFromModel(model, options);
 
-BL.docxNote = (model, options = {}) => {
+BL.modelNote = (model, options = {}) => {
   const notes = [];
   if (model.skippedImages) notes.push(`${model.skippedImages} unsupported image${model.skippedImages === 1 ? "" : "s"} skipped`);
   if (options.pdf?.replaced) notes.push(`${options.pdf.replaced} character${options.pdf.replaced === 1 ? "" : "s"} replaced (PDF uses Latin-1)`);

@@ -2,6 +2,28 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-10-27 — OpenDocument converters: ODT and ODS, both ways
+
+**Changed**
+
+- Fifteen new Files cards convert to and from OpenDocument: `.odt` out to Word, HTML, TXT, RTF, PDF and Markdown, and OpenDocument text in from Word, HTML, RTF, TXT and Markdown; `.ods` out to CSV/TSV and Excel, and OpenDocument sheets in from Excel and CSV/TSV. They are generated from `bookmarklets/src/tools` like the Office converters, over new shared parts: `odf.js` (ODT reader), `ods.js` (ODS reader), `odt-out.js`, `ods-out.js` and `odf-package.js`.
+- The readers resolve styles the way an office suite writes them, so a run that inherits its bold from a parent style still comes across; spans become covered cells on the way back; the page size and margins feed the PDF writer; the writer keeps the stored first `mimetype` entry OpenDocument requires, plus the manifest, content, styles and meta parts, and embeds pictures under `Pictures/`.
+- The catalog is now 89 tools, 89 vote rows and 64 captures. The fifteen new cards are photographed in Chrome with their panels populated: two documents converted, or one workbook whose sheets already count as several outputs.
+- `scripts/fixtures/make-odf.mjs` writes `report.odt` and `report.ods` with plain XML and Node's own zlib, so no fixture is produced by the reader it tests.
+- README, AGENTS, TODO and the page FAQ now cover OpenDocument: the formats, the fidelity, the limits (encrypted, ZIP64 and split packages refused; formulas keep their last saved value; dates become ISO text) and the fixture rule.
+
+**Verified**
+
+- `npm test`: 40 tests pass (10 ZIP, 18 Office, 12 OpenDocument), and `compose.mjs --check`, `build.mjs`, `verify.mjs` and `build.mjs --check` all exit 0.
+- Independent readers, on output the shipping files produced. The OpenDocument Engine Suite (`odt-engine`/`ods-engine`, a separate codebase) parses `report.docx → .odt` with the title, the page layout, two headings, three paragraphs, two list groups and the table, and reads `report.csv → .ods` back as `[["0012", "Northwind", 12, "Gate opens at 8, bring the deck"]]` — numbers typed as numbers, the leading-zero id kept as text — and `report.xlsx → .ods` as two named sheets with typed values. Python's `zipfile` and `ElementTree` see `mimetype` first and stored, the manifest listing every part, and `Pictures/image1.png` both in the package and referenced from `content.xml`. `pdftotext` reads the whole document, headings, lists and table out of the ODT-to-PDF output at letter size.
+- Chrome, through the capture harness: **ODT to HTML** with two files reports "Converted 2 files" and offers **Save all to folder** and **Download ZIP**; **ODS to CSV** turns one workbook into two outputs the same way; **Excel to ODS** with one file downloads `field-report.ods` directly.
+
+**Limits**
+
+- No desktop LibreOffice on this machine, so the desktop render check stays open in TODO; the checks are the engine suite, Python's `zipfile`/`ElementTree` and poppler.
+- OpenDocument formulas keep their last saved value and dates become ISO text. Charts, columns, text boxes, headers, footers and tracked changes are not carried, the same real limits as the rest of the conversion set.
+- The largest new card, **ODT to PDF**, is 96,785 bytes of code and a 159,666-character install URL, longer than any Office card before it.
+
 ## 2026-10-26 — Office converters: legacy hints, list starts and SVG PDFs
 
 **Changed**

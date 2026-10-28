@@ -24,7 +24,7 @@ startTool({
         name: `${BL.baseName(file.name)}.pdf`,
         blob: pdf.blob,
       }],
-      note: BL.docxNote(model, { pdf }),
+      note: BL.modelNote(model, { pdf }),
     };
   },
 });

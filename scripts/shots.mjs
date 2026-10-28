@@ -81,6 +81,21 @@ const OFFICE_SAMPLES = {
   "markdown-to-word": ["/report.md", "text/markdown", "field-report.md", "site-report.md"],
   "excel-to-csv": ["/report.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "field-report.xlsx"],
   "csv-to-excel": ["/report.csv", "text/csv", "field-report.csv", "site-report.csv"],
+  "word-to-odt": ["/report.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "field-report.docx", "site-report.docx"],
+  "html-to-odt": ["/report.html", "text/html", "field-report.html", "site-report.html"],
+  "rtf-to-odt": ["/report.rtf", "application/rtf", "field-report.rtf", "site-report.rtf"],
+  "txt-to-odt": ["/report.txt", "text/plain", "field-report.txt", "site-report.txt"],
+  "markdown-to-odt": ["/report.md", "text/markdown", "field-report.md", "site-report.md"],
+  "csv-to-ods": ["/report.csv", "text/csv", "field-report.csv", "site-report.csv"],
+  "excel-to-ods": ["/report.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "field-report.xlsx"],
+  "odt-to-html": ["/report.odt", "application/vnd.oasis.opendocument.text", "field-report.odt", "site-report.odt"],
+  "odt-to-txt": ["/report.odt", "application/vnd.oasis.opendocument.text", "field-report.odt", "site-report.odt"],
+  "odt-to-rtf": ["/report.odt", "application/vnd.oasis.opendocument.text", "field-report.odt", "site-report.odt"],
+  "odt-to-pdf": ["/report.odt", "application/vnd.oasis.opendocument.text", "field-report.odt", "site-report.odt"],
+  "odt-to-markdown": ["/report.odt", "application/vnd.oasis.opendocument.text", "field-report.odt", "site-report.odt"],
+  "odt-to-word": ["/report.odt", "application/vnd.oasis.opendocument.text", "field-report.odt", "site-report.odt"],
+  "ods-to-csv": ["/report.ods", "application/vnd.oasis.opendocument.spreadsheet", "field-report.ods"],
+  "ods-to-excel": ["/report.ods", "application/vnd.oasis.opendocument.spreadsheet", "field-report.ods"],
 };
 for (const [slug, sample] of Object.entries(OFFICE_SAMPLES)) {
   const [url, type, ...names] = sample;
@@ -719,6 +734,8 @@ const MEDIA = new Map([
   ["/report.md", ["office/report.md", "text/markdown"]],
   ["/report.txt", ["office/report.txt", "text/plain"]],
   ["/report.csv", ["office/report.csv", "text/csv"]],
+  ["/report.odt", ["office/report.odt", "application/vnd.oasis.opendocument.text"]],
+  ["/report.ods", ["office/report.ods", "application/vnd.oasis.opendocument.spreadsheet"]],
 ]);
 
 async function serveFixture() {

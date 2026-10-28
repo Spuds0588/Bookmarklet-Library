@@ -37,7 +37,7 @@ test("Word to HTML keeps headings, links, tables and an embedded image", async (
 test("Word to TXT flattens paragraphs, lists and tables without images", async () => {
   const BL = load("word-to-txt");
   const model = await BL.parseDocx(file("report.docx", WORD, DOCX_TYPE));
-  const text = BL.docxToText(model);
+  const text = BL.modelToText(model);
   assert.match(text, /^Weekly field report/m);
   assert.match(text, /• Retry the demo route early/);
   assert.match(text, /Site\tVisits\tOwner/);
@@ -182,7 +182,7 @@ test("CSV to Excel detects tab and semicolon delimiters", async () => {
 
 test("Word to TXT keeps text that shares a paragraph with an image", async () => {
   const BL = load("word-to-txt");
-  const text = BL.docxToText({
+  const text = BL.modelToText({
     blocks: [
       { type: "paragraph", runs: [{ text: "Before " }, { image: 0 }, { text: " after" }] },
       { type: "paragraph", runs: [{ image: 1 }] },

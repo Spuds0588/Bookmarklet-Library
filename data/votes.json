@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-27T08:56:54.222Z",
+  "updated": "2026-10-28T00:11:47.181Z",
   "issue": 1,
   "issueUrl": "https://github.com/Spuds0588/Bookmarklet-Library/issues/1",
   "tools": {
@@ -133,6 +133,36 @@
       "down": 0,
       "url": "https://github.com/Spuds0588/Bookmarklet-Library/issues/1#issuecomment-6247395245"
     },
+    "odt-to-html": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "odt-to-markdown": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "odt-to-pdf": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "odt-to-rtf": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "odt-to-txt": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "odt-to-word": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
     "save-clipboard-as-md": {
       "up": 0,
       "down": 0,
@@ -168,35 +198,80 @@
       "down": 0,
       "url": "https://github.com/Spuds0588/Bookmarklet-Library/issues/1#issuecomment-6437682787"
     },
+    "csv-to-ods": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
     "excel-to-csv": {
       "up": 0,
       "down": 0,
       "url": "https://github.com/Spuds0588/Bookmarklet-Library/issues/1#issuecomment-6437682990"
+    },
+    "excel-to-ods": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "ods-to-csv": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
+    "ods-to-excel": {
+      "up": 0,
+      "down": 0,
+      "url": ""
     },
     "save-clipboard-as-csv": {
       "up": 0,
       "down": 0,
       "url": "https://github.com/Spuds0588/Bookmarklet-Library/issues/1#issuecomment-6247395397"
     },
+    "html-to-odt": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
     "html-to-word": {
       "up": 0,
       "down": 0,
       "url": "https://github.com/Spuds0588/Bookmarklet-Library/issues/1#issuecomment-6437683155"
+    },
+    "markdown-to-odt": {
+      "up": 0,
+      "down": 0,
+      "url": ""
     },
     "markdown-to-word": {
       "up": 0,
       "down": 0,
       "url": "https://github.com/Spuds0588/Bookmarklet-Library/issues/1#issuecomment-6437683324"
     },
+    "rtf-to-odt": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
     "rtf-to-word": {
       "up": 0,
       "down": 0,
       "url": "https://github.com/Spuds0588/Bookmarklet-Library/issues/1#issuecomment-6437683510"
     },
+    "txt-to-odt": {
+      "up": 0,
+      "down": 0,
+      "url": ""
+    },
     "txt-to-word": {
       "up": 0,
       "down": 0,
       "url": "https://github.com/Spuds0588/Bookmarklet-Library/issues/1#issuecomment-6437683688"
+    },
+    "word-to-odt": {
+      "up": 0,
+      "down": 0,
+      "url": ""
     },
     "lock-pdf": {
       "up": 0,

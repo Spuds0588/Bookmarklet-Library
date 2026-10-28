@@ -654,10 +654,13 @@ BL.unzip = async (file, options = {}) => {
   const total = BL.u16(tail, eocd + 10);
   const centralSize = BL.u32(tail, eocd + 12);
   const centralOffset = BL.u32(tail, eocd + 16);
-  if (disk !== 0 || centralDisk !== 0 || onDisk !== total) throw new Error("Split ZIP archives are not supported.");
-  if (total === 65535 || centralSize === 4294967295 || centralOffset === 4294967295) {
+  // 0xffff and 0xffffffff are ZIP64 placeholders, so they are read before the
+  // split archive test: a ZIP64 file that only sets the entry counts is still
+  // not a split archive.
+  if ([disk, centralDisk, onDisk, total].includes(65535) || centralSize === 4294967295 || centralOffset === 4294967295) {
     throw new Error("ZIP64 Office files are not supported. Save a standard .docx or .xlsx.");
   }
+  if (disk !== 0 || centralDisk !== 0 || onDisk !== total) throw new Error("Split ZIP archives are not supported.");
   if (!total) throw new Error("This Office file is empty.");
   if (total > maxEntries) throw new Error("This Office file contains too many parts.");
   if (centralOffset + centralSize > file.size) throw new Error("The ZIP directory is outside the file.");

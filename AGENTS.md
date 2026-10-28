@@ -12,7 +12,7 @@ A static, zero-dependency catalog of bookmarklets. GitHub Pages serves <https://
 bookmarklets/<category>/<slug>.js   one bookmarklet per file: metadata comment + raw code
 bookmarklets/files/<slug>.js        generated Office converters — never edit by hand
 bookmarklets/src/tools/<slug>.js    Office converter source: metadata + @parts + startTool
-bookmarklets/src/parts/*.js         shared panel, ZIP, XML, DOCX, PDF, RTF, Markdown, HTML and sheets
+bookmarklets/src/parts/*.js         shared panel, ZIP, XML, DOCX, PDF, RTF, Markdown, HTML, sheets and OpenDocument code
 data/catalog.json                   generated — never edit by hand
 data/votes.json                     generated — 👍/👎 tally, never edit by hand
 data/screenshots.json               generated — screenshot manifest, never edit by hand
@@ -25,9 +25,12 @@ scripts/compose.mjs                 source parts + tool -> bookmarklets/files/<s
 scripts/shots.mjs                   runs every tool on the demo page, captures screenshots/
 scripts/fixtures/demo-page.html     the page tools are photographed against
 scripts/fixtures/sample.zip         the archive the Unzip capture opens
-scripts/fixtures/office/…           sample DOCX, XLSX, RTF, TXT, MD and CSV inputs
+scripts/fixtures/make-odf.mjs       writes report.odt and report.ods by hand, never through the converters
 tests/zip-tools.test.mjs            ZIP builder and reader tests, run with npm test
 tests/office-tools.test.mjs         Office conversion tests, run with npm test
+tests/odf-tools.test.mjs            OpenDocument conversion tests, run with npm test
+scripts/fixtures/office/…           sample DOCX, XLSX, ODT, ODS, RTF, TXT, MD and CSV inputs
+                                    (its REAL-FILES.md says where the three real OpenDocument files came from)
 scripts/verify.mjs                  integrity checks (catalog, votes, screenshots)
 robots.txt, sitemap.xml             what crawlers read (hand-written)
 .github/workflows/votes.yml         nightly reaction tally, commits data/votes.json
@@ -40,7 +43,7 @@ robots.txt, sitemap.xml             what crawlers read (hand-written)
 3. Run `node scripts/shots.mjs <slug> --force` if the tool's effect on the demo page changed.
 4. Check it in a browser before committing.
 
-An Office converter is generated instead. Create `bookmarklets/src/tools/<slug>.js` with the metadata block, a `// @parts ...` line and a `startTool({...})` call, then run `node scripts/compose.mjs`. That writes `bookmarklets/files/<slug>.js`, which `build.mjs` reads. Edit the source, never the generated file. `node scripts/compose.mjs --check` fails when a generated file is stale, and the composer appends the test export at the end so the browser run never sees it.
+An Office or OpenDocument converter is generated instead. Create `bookmarklets/src/tools/<slug>.js` with the metadata block, a `// @parts ...` line and a `startTool({...})` call, then run `node scripts/compose.mjs`. That writes `bookmarklets/files/<slug>.js`, which `build.mjs` reads. Edit the source, never the generated file. `node scripts/compose.mjs --check` fails when a generated file is stale, and the composer appends the test export at the end so the browser run never sees it.
 
 Metadata fields, all required:
 
@@ -83,7 +86,7 @@ Metadata fields, all required:
 - **The page is also a document.** The grid is built by `fetch()`, so anything that does not run scripts would see an empty page. `build.mjs` therefore writes two blocks into `index.html` between `<!-- tools:start -->` and `<!-- tools:end -->`: a `<noscript>` list of every tool with its description, and an `ItemList` of `SoftwareApplication` entries. Edit the tool files, never those blocks — `build.mjs --check` fails when they drift. Canonical URL, Open Graph, Twitter cards, `WebSite` and `FAQPage` structured data, `robots.txt` and `sitemap.xml` are hand-written; keep the FAQ text in the page and the FAQ schema saying the same thing. `?q=` preselects the search box because the `SearchAction` advertises it.
 - **The author card is one line of markup.** The footer holds `<burns-dev-card layout="full-width"></burns-dev-card>` and the script is loaded once in the head from the shared component URL. Standalone placement is `full-width`; never put the element inside a flex or grid row. Do not restyle its internals — the component owns its look, and a local override forks it.
 - **Votes live on GitHub, never in the page.** One comment per tool on the issue titled "Tool votes"; 👍 and 👎 reactions are the ballots. `scripts/votes.mjs` seeds comments and tallies them into `data/votes.json`, and the workflow commits it. No `localStorage` votes, no counter API.
-- **Office converters are deliberately small.** They read `.docx`/`.docm`, `.xlsx`/`.xlsm`, `.html`, `.rtf`, `.txt`, `.md`, `.csv` and `.tsv`; legacy `.doc` and `.xls` are rejected. Word output carries paragraphs, headings, emphasis, links, lists, tables, page breaks and images, not fonts, colours, columns, text boxes, headers, footers, footnotes, comments or tracked changes. PDF output is Helvetica, Latin-1, with simple table grids and images as blocks; the same browser rasterizer handles PNG, JPEG, GIF, BMP, WebP and SVG sources, and links or text wrap around images are not reproduced. Images are embedded when they are data URLs or CORS-readable, and otherwise skipped. HTML and Markdown readers rasterize GIF, BMP, WebP and SVG to PNG before writing Word; RTF keeps only PNG and JPEG. One output downloads directly; two or more stay in the panel for **Save all to folder** (Chrome/Edge) or **Download ZIP**. A batch is capped at 100 files, 100 MB each and 300 MB total.
+- **Office converters are deliberately small.** They read `.docx`/`.docm`, `.xlsx`/`.xlsm`, `.odt`, `.ods`, `.html`, `.rtf`, `.txt`, `.md`, `.csv` and `.tsv`; legacy `.doc` and `.xls` are rejected. Word output carries paragraphs, headings, emphasis, links, lists, tables, page breaks and images, not fonts, colours, columns, text boxes, headers, footers, footnotes, comments or tracked changes. PDF output is Helvetica, Latin-1, with simple table grids and images as blocks; the same browser rasterizer handles PNG, JPEG, GIF, BMP, WebP and SVG sources, and links or text wrap around images are not reproduced. Images are embedded when they are data URLs or CORS-readable, and otherwise skipped. HTML and Markdown readers rasterize GIF, BMP, WebP and SVG to PNG before writing Word; RTF keeps only PNG and JPEG. One output downloads directly; two or more stay in the panel for **Save all to folder** (Chrome/Edge) or **Download ZIP**. A batch is capped at 100 files, 100 MB each and 300 MB total. The OpenDocument parts read and write LibreOffice's own packages: styles are resolved through parent styles, spans become covered cells, the page size and margins feed PDF, and output keeps the stored first `mimetype` entry OpenDocument requires. ODF formulas keep their last saved value, dates become ISO text, and encrypted, ZIP64 or split packages are refused by name rather than half-read. `scripts/fixtures/make-odf.mjs` builds the ODT and ODS fixtures with plain XML and Node's zlib, so a fixture is never written by the reader under test; add a fixture there rather than bending a converter.
 - **YAGNI.** Add the smallest thing that works; delete what nothing uses.
 
 ## Verify before committing
@@ -96,6 +99,6 @@ node scripts/shots.mjs --display=:99 <slug> --force    # the floating players, w
 python3 -m http.server 4173   # then open http://127.0.0.1:4173
 ```
 
-`npm test` runs `tests/zip-tools.test.mjs` and `tests/office-tools.test.mjs`. Both load the built bookmarklets with `globalThis.__BL_TEST__` set, so their cores run in Node without a panel. The ZIP suite checks archive bytes, limits and extraction. The Office suite builds and reads DOCX, XLSX, PDF and RTF output, including ordered-list restarts, table images and PDF text around an image. The composer appends the test export at the end of each generated file; never add one by hand.
+`npm test` runs `tests/zip-tools.test.mjs`, `tests/office-tools.test.mjs` and `tests/odf-tools.test.mjs`. All three load the built bookmarklets with `globalThis.__BL_TEST__` set, so their cores run in Node without a panel. The ZIP suite checks archive bytes, limits and extraction. The Office suite builds and reads DOCX, XLSX, PDF and RTF output, including ordered-list restarts, table images and PDF text around an image. The ODF suite reads a LibreOffice `.odt` and `.ods`, writes the same document back out to every target, round-trips hand-built models through the `.odt` and `.ods` writers, and parses a 56 KB OpenOffice manual as it is. The composer appends the test export at the end of each generated file; never add one by hand.
 
 Stop any dev server you started and leave the workspace clean when you are done. Commit in small steps with a message that says why.

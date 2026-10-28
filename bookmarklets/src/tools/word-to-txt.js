@@ -20,7 +20,7 @@ startTool({
     const model = await BL.parseDocx(file, { signal: context.signal });
     return [{
       name: `${BL.baseName(file.name)}.txt`,
-      blob: new Blob([BL.docxToText(model)], { type: "text/plain" }),
+      blob: new Blob([BL.modelToText(model)], { type: "text/plain" }),
     }];
   },
 });

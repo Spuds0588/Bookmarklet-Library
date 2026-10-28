@@ -5,7 +5,8 @@ BL.runText = (runs, model = null) => (runs || []).map((run) => {
   return run.text || "";
 }).join("");
 
-BL.docxToText = (model) => {
+/* The text renderer works on the shared model, so the ODF tools use it too. */
+BL.modelToText = (model) => {
   const lines = [];
   for (const block of model.blocks || []) {
     if (block.type === "pagebreak") { lines.push(""); continue; }
@@ -39,7 +40,7 @@ BL.docxToMarkdown = (model) => BL.markdownFromModel(model);
 
 BL.docxToPdf = async (model, options = {}) => BL.pdfFromModel(model, options);
 
-BL.docxNote = (model, options = {}) => {
+BL.modelNote = (model, options = {}) => {
   const notes = [];
   if (model.skippedImages) notes.push(`${model.skippedImages} unsupported image${model.skippedImages === 1 ? "" : "s"} skipped`);
   if (options.pdf?.replaced) notes.push(`${options.pdf.replaced} character${options.pdf.replaced === 1 ? "" : "s"} replaced (PDF uses Latin-1)`);
