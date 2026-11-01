@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="150" viewBox="0 0 240 150">
+  <rect width="240" height="150" fill="#17181a"/>
+  <g fill="#f4f1ea" font-family="ui-monospace, Menlo, monospace">
+    <text x="16" y="24" font-size="9" letter-spacing="2">CREW BOARD</text>
+    <text x="16" y="58" font-size="14">06:00  DISPATCH</text>
+    <text x="16" y="82" font-size="14">09:15  VISIT</text>
+    <text x="16" y="106" font-size="14">14:00  HANDOFF</text>
+    <text x="16" y="134" font-size="9" opacity=".55">NORTHWIND / FIELD KIT</text>
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="150" viewBox="0 0 240 150">
+  <rect width="240" height="150" fill="#f4f1ea"/>
+  <g fill="none" stroke="#17181a" stroke-width="2">
+    <path d="M16 122h46V64h44V28h52v54h52"/>
+    <path d="M30 34h36v28H30zM150 96h54v28h-54z"/>
+  </g>
+  <g fill="#17181a">
+    <circle cx="16" cy="122" r="5"/>
+    <circle cx="210" cy="82" r="5"/>
+  </g>
+  <g font-family="ui-monospace, Menlo, monospace" font-size="9" fill="#6f6a61">
+    <text x="16" y="142">DEPOT</text>
+    <text x="150" y="142">STOP 4</text>
+  </g>
+</svg>

@@ -59,6 +59,10 @@
   .media { display: flex; gap: 20px; align-items: flex-start; margin: 26px 0; }
   video { width: 280px; height: 158px; background: #17181a; }
   .media p { margin: 0; font-size: 13px; color: #6f6a61; }
+  .gallery { display: flex; gap: 12px; margin: 18px 0 0; }
+  .gallery img { display: block; width: 160px; height: 104px; object-fit: cover; border: 1px solid #dcd9d3; background: #fff; }
+  .downloads { margin: 12px 0 0; padding-left: 18px; font-size: 13.5px; }
+  .downloads li { margin: 4px 0; }
   .toast-wrapper {
     position: fixed; right: 28px; bottom: 24px; width: 280px;
     padding: 13px 16px; background: #17181a; color: #fbfaf8;
@@ -70,7 +74,7 @@
   @media (prefers-color-scheme: dark) {
     body { background: #121212; color: #f2f2f2; }
     a { color: #f2f2f2; }
-    .top, .embed, footer, .ad, .ad-inline, th, td { border-color: #3a3a3a; }
+    .top, .embed, footer, .ad, .ad-inline, th, td, .gallery img { border-color: #3a3a3a; }
     .kicker, .byline, .byline a, .ad span, .ad-inline, th, label, footer { color: #a8a8a8; }
     input, textarea { background: #1c1c1c; color: #f2f2f2; border-color: #3a3a3a; }
     .toast-wrapper { background: #f2f2f2; color: #121212; }
@@ -139,6 +143,19 @@
     </div>
     <p>Field walkthrough, 2 min. Recorded on the demo route in March. The player and the audio clip work with the picture-in-picture tools in the library.</p>
   </div>
+
+  <h2>Field kit</h2>
+  <p>Everything the crew needs for a demo visit, kept in one place.</p>
+  <div class="gallery">
+    <img src="/media/route-map.svg" alt="Demo route map" width="160" height="104">
+    <img src="/media/crew-board.svg" alt="Crew board" width="160" height="104" loading="lazy">
+    <img src="/qr-sample.svg" alt="Field guide code" width="160" height="104">
+  </div>
+  <ul class="downloads">
+    <li><a href="/sample.zip" download>Field kit archive (ZIP)</a></li>
+    <li><a href="/report.docx">Visit report template (Word)</a></li>
+    <li><a href="/report.csv">Handoff checklist (CSV)</a></li>
+  </ul>
 
   <h2 id="faq">Questions the demo raised</h2>
   <p><b>How long does a demo run?</b> One shift, sometimes two. The demo ends when the notes are written.</p>

@@ -76,4 +76,4 @@ if (problems.length) {
   console.error(`${problems.length} problem(s):\n- ${problems.join("\n- ")}`);
   process.exit(1);
 }
-console.log(check ? `composed ${tools.length} converters are up to date` : `wrote ${written} converter bookmarklets`);
+console.log(check ? `composed ${tools.length} bookmarklets are up to date` : `wrote ${written} composed bookmarklets`);

@@ -1,7 +1,7 @@
 {
   "width": 1200,
   "height": 750,
-  "generated": "2026-10-28",
+  "generated": "2026-11-01",
   "tools": {
     "record-audio": {
       "file": "screenshots/record-audio.png",
@@ -121,10 +121,18 @@
       "changed": false,
       "reason": "download"
     },
+    "media-audio": {
+      "file": "screenshots/media-audio.png",
+      "changed": true
+    },
     "excalidraw-room": {
       "file": "screenshots/excalidraw-room.png",
       "changed": true,
       "popup": true
+    },
+    "media-videos": {
+      "file": "screenshots/media-videos.png",
+      "changed": true
     },
     "save-clipboard-as-png": {
       "changed": false,
@@ -281,6 +289,10 @@
       "changed": true,
       "steps": 3
     },
+    "media-files": {
+      "file": "screenshots/media-files.png",
+      "changed": true
+    },
     "lock-pdf": {
       "changed": false,
       "reason": "download"
@@ -288,6 +300,10 @@
     "unlock-pdf": {
       "changed": false,
       "reason": "download"
+    },
+    "media-images": {
+      "file": "screenshots/media-images.png",
+      "changed": true
     },
     "zip-files": {
       "file": "screenshots/zip-files.png",
@@ -499,7 +515,7 @@
     "neon-hell": {
       "file": "screenshots/neon-hell.png",
       "changed": true,
-      "steps": 3
+      "steps": 5
     },
     "doom": {
       "file": "screenshots/doom.png",
