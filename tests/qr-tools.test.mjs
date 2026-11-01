@@ -41,10 +41,34 @@ test("QR SVG carries a quiet zone and one crisp path", () => {
   assert.match(art, /viewBox="0 0 37 37"/);
   assert.match(art, /width="1024" height="1024"/);
   assert.match(art, /shape-rendering="crispEdges"/);
-  assert.match(art, /<rect width="37" height="37" fill="#fff"\/>/);
-  assert.match(art, /<path d="M/);
+  assert.match(art, /<rect width="37" height="37" fill="#ffffff"\/>/);
+  assert.match(art, /<path d="M[^"]+" fill="#000000"\/>/);
   assert.match(art, /aria-label="QR code"/);
   assert.doesNotMatch(art, /NaN|undefined/);
+});
+
+test("QR SVG draws custom ink and paper, or no paper at all", () => {
+  const QR = load();
+  const code = QR.makeCode("https://example.com/field-guide");
+  const branded = QR.svg(code, { foreground: "#123456", background: "#FEFEFE", label: "Field guide" });
+  assert.match(branded, /<rect width="37" height="37" fill="#fefefe"\/>/);
+  assert.match(branded, /<path d="[^"]+" fill="#123456"\/>/);
+  assert.match(branded, /aria-label="Field guide"/);
+
+  const transparent = QR.svg(code, { foreground: "#0f0", transparent: true });
+  assert.doesNotMatch(transparent, /<rect /);
+  assert.match(transparent, /<path d="[^"]+" fill="#00ff00"\/>/);
+  assert.ok(Math.abs(QR.contrastRatio("#000000", "#ffffff") - 21) < 0.01);
+});
+
+test("only a web URL from the clipboard replaces the page URL", () => {
+  const QR = load();
+  assert.equal(QR.clipboardUrl(" https://example.com/a?b=c "), "https://example.com/a?b=c");
+  assert.equal(QR.clipboardUrl("example.com/path"), "https://example.com/path");
+  assert.equal(QR.clipboardUrl("www.example.com"), "https://www.example.com/");
+  assert.equal(QR.clipboardUrl("not a url"), "");
+  assert.equal(QR.clipboardUrl("javascript:alert(1)"), "");
+  assert.equal(QR.clipboardUrl("ftp://example.com"), "");
 });
 
 test("QR encodes UTF-8 bytes rather than JavaScript code units", () => {

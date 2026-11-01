@@ -71,23 +71,40 @@ const STEPS = {
     // Let the mouse-captured hint fade so it does not sit over the status bar.
     { wait: 3800 },
   ],
-  // Let a couple of enemies arrive, then aim right and hold fire so the capture
-  // shows the arena in motion rather than an empty opening frame.
+  // The game opens paused so it cannot take the page's keys. Start it, let a
+  // couple of enemies arrive, then aim right and hold fire so the capture shows
+  // the arena in motion rather than the ready gate or an empty opening frame.
   "neon-hell": [
+    { wait: 300 },
+    { script: '(() => { const r=document.getElementById("nh-root").shadowRoot; const c=r.querySelector("canvas"); const b=c.getBoundingClientRect(); c.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,button:0,clientX:b.left+720,clientY:b.top+300})); c.dispatchEvent(new PointerEvent("pointerup",{bubbles:true,button:0})); })()' },
     // The first power-up lands around 3.5 seconds, so leave time for it and the
     // enemy wave to be on screen before the shot is taken.
     { wait: 4700 },
-    { script: 'const r=document.getElementById("nh-root").shadowRoot; const c=r.querySelector("canvas"); const b=c.getBoundingClientRect(); c.dispatchEvent(new PointerEvent("pointermove",{bubbles:true,clientX:b.left+720,clientY:b.top+300})); c.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,button:0,clientX:b.left+720,clientY:b.top+300}));' },
+    { script: '(() => { const r=document.getElementById("nh-root").shadowRoot; const c=r.querySelector("canvas"); const b=c.getBoundingClientRect(); c.dispatchEvent(new PointerEvent("pointermove",{bubbles:true,clientX:b.left+720,clientY:b.top+300})); c.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,button:0,clientX:b.left+720,clientY:b.top+300})); })()' },
     { wait: 1400 },
   ],
   // The picker draws its overlay once the capture is ready, then keeps the
   // redaction toast up for a few seconds: drag a region before it fades.
   "pixelate-section": [{ wait: 2400 }, { drag: [280, 320, 780, 580] }, { wait: 250 }],
   "generate-password": [{ wait: 300 }],
-  // Give the QR panel a short, meaningful URL so the capture is not a code for
-  // the fixture server itself.
+  // Give the QR panel a short, meaningful URL and a custom palette, so the
+  // capture shows the colour controls rather than a default black-and-white code.
   "qr-code": [
-    { script: 'const input=document.getElementById("bl-qr-host").shadowRoot.querySelector("textarea"); input.value="https://example.com/field-guide"; input.dispatchEvent(new Event("input",{bubbles:true}));' },
+    {
+      script: `(() => {
+        const root = document.getElementById("bl-qr-host").shadowRoot;
+        const input = root.querySelector("textarea");
+        input.value = "https://example.com/field-guide";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        const ink = root.querySelector("[data-ink]");
+        ink.value = "#173f5f";
+        ink.dispatchEvent(new Event("input", { bubbles: true }));
+        const paper = root.querySelector("[data-paper]");
+        paper.value = "#f3efe4";
+        paper.dispatchEvent(new Event("input", { bubbles: true }));
+        return true;
+      })()`,
+    },
     { wait: 300 },
   ],
   // A console is only a console once something has been run in it.
@@ -843,6 +860,8 @@ const MEDIA = new Map([
   ["/demo.mp3", ["demo.mp3", "audio/mpeg"]],
   ["/sample.zip", ["sample.zip", "application/zip"]],
   ["/qr-sample.svg", ["qr-sample.svg", "image/svg+xml"]],
+  ["/media/route-map.svg", ["media/route-map.svg", "image/svg+xml"]],
+  ["/media/crew-board.svg", ["media/crew-board.svg", "image/svg+xml"]],
   ["/report.docx", ["office/report.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]],
   ["/report.xlsx", ["office/report.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]],
   ["/report.html", ["office/report.html", "text/html"]],

@@ -2,6 +2,71 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-01 — Four tools save a page's media into a chosen folder
+
+**Changed**
+
+- Added **🖼️ Download all images**, **🎬 Download all videos**, **🎧 Download all audio** and **📥 Download all linked files**, all generated from one shared `media-grab` part so each installable file stays self-contained.
+- Images come from `img`/`picture`, `srcset`, `data-src` and other lazy attributes, and Open Graph/Twitter image tags. Videos and audio come from the elements and their `source` fallbacks, plus links to media files. Linked files come from anchors with `download` or a file extension. Every URL is resolved against the page, deduplicated and given a safe name from its path.
+- **Save all to folder** calls `showDirectoryPicker`, writes four files at a time, starts in Pictures, Videos, Music or Downloads by kind, and probes existing names so it numbers rather than overwrites. **Download each** covers browsers without the folder picker. Fetch, HTTP, empty-file and write failures are reported per row; CORS failures keep an **Open** link. `.m3u8`/`.mpd` playlists and files over 600 MB are listed but skipped.
+- The demo page gained a small image gallery and three file links so the four panels have real page content to list. README, AGENTS, TODO and the catalog description describe the new tools and their limits.
+
+**Verified**
+
+- Node tests cover the four selector sets, URL dedupe, extension/MIME classification, stream detection, `srcset` including a data URL, unsafe, long and Windows-reserved names, and numbered collisions.
+- Headless Chrome, generated panels: the image panel listed the three fixture images, the video panel listed `/demo.mp4`, the audio panel listed `/demo.mp3`, and the file panel listed the ZIP, Word and CSV links. Nothing on the page outside the shadow host changed.
+- A stubbed folder picker recorded the requested start folder and received every file; a stubbed writable captured the bytes, and a folder that already held `route-map.svg` received `route-map-2.svg` instead of overwriting it. A CORS refusal and an HTTP error each produced a row note and an **Open** link.
+- The four captures show the populated panels at 1200×750.
+
+**Limit**
+
+- The real native folder picker, a cancelled picker and a read-only folder were not clicked; the harness supplies an in-memory directory. Firefox and Safari have no File System Access API and were not driven through **Download each**.
+- Files are buffered in memory before writing and capped at 600 MB, so a very large video is listed but not saved. HLS/DASH, encrypted media, canvas output, CSS background images and JavaScript-fed players are out of scope.
+- Names come from the URL path. A `Content-Disposition` filename is ignored, and the URL name wins.
+
+## 2026-10-28 — QR codes get a palette and a transparent background
+
+**Changed**
+
+- The QR panel now has **Ink** and **Paper** colour pickers and a **Transparent background** checkbox. Colours are normalized to six-digit hex; the transparent preview sits on a checkerboard, and a low-contrast pair or a transparent background shows an inline warning without disabling an export.
+- The same colour and transparency settings feed the live preview, **Download PNG**, **Download SVG**, **Copy PNG** and **Copy SVG**, so there is still one renderer rather than downloads that can drift from what is on screen.
+- Opening the panel now checks the clipboard first. If it holds an http(s) URL (or a bare domain, promoted to https) that URL replaces the page URL; an empty clipboard, non-web text or a refused read leaves the page URL in place. The read is quiet and never focuses the textarea. **Use page URL** still overrides it.
+- A centre-logo picker was built and tested first, but it pushed the install URL to 72,231 characters, above Firefox's 65,536-character bookmark limit. The picker, image handling, H error correction and pad drawing were removed. The final tool keeps colours and transparency and measures 59,972 characters, about 5,500 under the ceiling.
+- README, AGENTS, TODO, the catalog description and the capture describe the final controls. The capture uses a cream-and-navy palette so the screenshot shows the colour controls at work.
+
+**Verified**
+
+- `npm test`: 60 tests pass. The QR tests cover custom and transparent SVG output, contrast and clipboard URL filtering.
+- Chrome, generated panel: a stubbed clipboard supplied `https://example.com/from-clipboard`, the textarea and status used it, and the panel kept focus. There are no logo controls left. Colour changes updated the preview and hex labels; transparency added the checkerboard, removed the paper rectangle and showed the surface warning; a low-contrast solid palette showed the contrast warning; returning to the custom palette cleared it.
+- The rendered SVG decoded with the bundled jsQR as the expected URL at version 4, both as a solid coloured code and as a transparent code composited on white. The PNG path decoded at 984 px. The transparent PNG decoded over white; dark ink on a dark surface did not decode, which is why the panel asks for a contrasting surface.
+- The committed capture shows the custom palette and both colour controls at the normal 1200×750 fixture size.
+
+**Limit**
+
+- The browser harness had no focused document, so the clipboard success path used a stub; the real permission prompt, a denied read and a non-URL clipboard still need a browser pass. Colours and transparent PNGs were exercised in Chrome only; Firefox and Safari were not tested. No physical scanner or phone camera has read the coloured or transparent outputs.
+- The install URL is 59,972 characters, under Firefox's 65,536-character limit but with only about 5.5 KB of headroom. The length was measured from the built catalog, not by dragging the link into a browser's bookmark bar, and Firefox and Safari installs were not tried.
+
+## 2026-10-28 — Neon Hell opens paused, plays mouseless, and gets bosses
+
+**Changed**
+
+- Neon Hell now opens paused behind a **CLICK TO PLAY** gate. It does not focus the canvas, hide page overflow or capture keys until the arena is clicked, so opening it cannot pull focus out of the page. Esc pauses and releases both the loop and the page; while paused the game ignores game keys instead of resuming on Esc, and a click or a gamepad Start is what starts it again. Window blur and a hidden tab also pause it.
+- `WASD` still moves with the existing low-drag drift. The arrow keys now aim in eight directions instead of moving, `Space` fires, and `X` drops a banked bomb; mouse aim and left-button fire still work and the last real input wins. A standard gamepad is picked up silently: left stick moves, right stick aims and auto-fires, B or X bombs, and Start pauses or resumes. While paused, a 120 ms poll keeps Start working without leaving the animation loop running.
+- Added the `M` **MORTAR** pickup. For ten seconds, primary fire becomes a slow 360 px/s round that passes through ships and detonates after 250 px in an 82 px blast for three damage. It adds a second `blasts` effect list, a distinct projectile draw and HUD timer; restart clears it.
+- Added three periodic bosses in random order, with a health bar under the score and an inbound banner. The Prism Warden (ring bursts), Helix Core (spiral fire) and Hive Mother (aimed fans and micro-chasers) mix two larger shapes, add 8 health per boss to a 54–72 base and fire enhanced patterns. The first arrives at 40 seconds, then one 50 seconds after each spawn. Nukes damage rather than delete a boss, player contact pushes off instead of removing it, and a boss kill clears its bullets and grants at least 20 seconds before the next one.
+- README, AGENTS, TODO, the detail copy and the capture describe the new start gate, controls, mortar and bosses. The card, detail view and README now call it a Geometry Wars inspired game contained entirely in one bookmarklet, and the window's accessible label says the same. The screenshot was recaptured after starting the game so it shows the arena and the new footer.
+
+**Verified**
+
+- `npm test`: 58 tests pass. `compose --check`, `build --check` and `verify` pass with 117 bookmarklets, eight categories, 82 screenshots and 35 tools explained without one.
+- Final built bookmarklet on the demo page in Chrome: it opened `READY`, left focus on the page link, kept page overflow and fired nothing from a paused Space. A click focused the canvas and started the run; Space fired four rounds in 320 ms without spending a bomb; ArrowLeft changed the aim source and the next bullet had `vx -620`. Esc set `PAUSED`, moved focus to BODY, restored overflow, left a paused Space unprevented and froze `G.t` for 380 ms; a click resumed it. A stubbed standard gamepad was detected silently: left stick reached `vx 272`, right stick gave `dy -1` and four `vy -620` rounds, B spent a bomb, and Start paused and resumed (the paused poll resumes without a loop).
+- Mortar: one round had travelled 108 px at 320 ms, then detonated with one blast, killed an hp-3 target and added 400. Boss: a spawned HELIX CORE had `r 42`, `hp 72`, sides `[6,4]` and 23 shots at 3.4 seconds; a 5-damage test hit cleared `G.boss`, cleared its shots and scored 3,200.
+- Source is 37.9 KB and the install URL is 67.1 KB. `screenshots/neon-hell.png` is 52 KB.
+
+**Limit**
+
+- The install URL is above Firefox's 64 KB bookmark limit. Only the decoded code was exercised in Chrome here; the 67 KB install URL was not driven through a bookmark in Firefox, Safari or Chrome. The game still has no touch controls, sound or high-score table, and gamepad testing used a stub rather than physical hardware.
+
 ## 2026-10-28 — Scan a QR code from the screen
 
 **Changed**

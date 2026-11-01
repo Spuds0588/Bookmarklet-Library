@@ -1,8 +1,8 @@
 /**
  * @name 🔳 QR code
  * @category text
- * @description Turn the page URL or any text into a QR code, then download or copy it as a PNG or SVG.
- * @tags qr, qr code, barcode, url, share, png, svg, clipboard
+ * @description Turn the page URL or any text into a QR code with custom colours and a transparent background, then download or copy it as a PNG or SVG.
+ * @tags qr, qr code, barcode, url, share, png, svg, clipboard, color, transparent
  * @added 2026-10-28
  * @featured false
  */
@@ -17,9 +17,54 @@
   const DEFAULT_STATUS = "Esc closes · nothing leaves this page.";
   const EMPTY = '<div class="empty">Type a URL or some text.</div>';
   const TOO_LONG = '<div class="empty">Too much text for one code.</div>';
+  const DEFAULT_INK = "#000000";
+  const DEFAULT_PAPER = "#ffffff";
 
   const escapeXml = (value) =>
     String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+
+  function normalizeHex(value, fallback = DEFAULT_INK) {
+    const hex = String(value ?? "").trim().replace(/^#/, "");
+    if (/^[0-9a-f]{3}$/i.test(hex)) {
+      return `#${hex.split("").map((character) => character + character).join("").toLowerCase()}`;
+    }
+    return /^[0-9a-f]{6}$/i.test(hex) ? `#${hex.toLowerCase()}` : fallback;
+  }
+
+  function channel(hex, start) {
+    const value = parseInt(hex.slice(start, start + 2), 16) / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  }
+
+  function luminance(hex) {
+    const color = normalizeHex(hex);
+    return 0.2126 * channel(color, 1) + 0.7152 * channel(color, 3) + 0.0722 * channel(color, 5);
+  }
+
+  function contrastRatio(first, second) {
+    const a = luminance(first);
+    const b = luminance(second);
+    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  }
+
+  // A clipboard URL should win over the page URL only when it really is one.
+  // Bare domains get https, and anything with a non-web scheme is ignored.
+  function clipboardUrl(value) {
+    const text = String(value ?? "").trim();
+    if (!text || text.length > 2048 || /\s/.test(text)) return "";
+    let candidate = text;
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(candidate)) {
+      const domain = /^(?:www\.)?[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+(?::\d+)?(?:[/?#][^\s]*)?$/i;
+      if (!domain.test(candidate)) return "";
+      candidate = `https://${candidate}`;
+    }
+    try {
+      const url = new URL(candidate);
+      return url.protocol === "http:" || url.protocol === "https:" ? url.href : "";
+    } catch {
+      return "";
+    }
+  }
 
   // A QR byte segment is a sequence of bytes, not JavaScript characters. Encode
   // UTF-8 first, then hand the encoder one Latin-1 character per byte so text
@@ -40,7 +85,12 @@
 
   // One path of horizontal runs keeps the SVG small and still crisp. The four
   // module quiet zone is part of the image, so the code scans after download.
-  function svg(code, label = "QR code") {
+  function svg(code, options = {}) {
+    const settings = typeof options === "string" ? { label: options } : options;
+    const label = settings.label || "QR code";
+    const ink = normalizeHex(settings.foreground, DEFAULT_INK);
+    const paper = normalizeHex(settings.background, DEFAULT_PAPER);
+    const transparent = Boolean(settings.transparent);
     const quiet = 4;
     const side = code.count + quiet * 2;
     let path = "";
@@ -59,7 +109,8 @@
     return (
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${side} ${side}" width="1024" height="1024" ` +
       `shape-rendering="crispEdges" role="img" aria-label="${escapeXml(label)}">` +
-      `<rect width="${side}" height="${side}" fill="#fff"/><path d="${path}" fill="#000"/></svg>`
+      (transparent ? "" : `<rect width="${side}" height="${side}" fill="${paper}"/>`) +
+      `<path d="${path}" fill="${ink}"/></svg>`
     );
   }
 
@@ -73,8 +124,42 @@
     return `${base ? `qr-${base}` : "qr-code"}.${kind}`;
   }
 
+  async function pngBlob(code, options = {}) {
+    const ink = normalizeHex(options.foreground, DEFAULT_INK);
+    const paper = normalizeHex(options.background, DEFAULT_PAPER);
+    const transparent = Boolean(options.transparent);
+    const scale = Math.max(4, Math.floor(1024 / (code.count + 8)));
+    const size = (code.count + 8) * scale;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("canvas unavailable");
+    if (!transparent) {
+      context.fillStyle = paper;
+      context.fillRect(0, 0, size, size);
+    }
+    context.fillStyle = ink;
+    for (let row = 0; row < code.count; row++) {
+      for (let column = 0; column < code.count; column++) {
+        if (!code.modules[row][column]) continue;
+        context.fillRect((column + 4) * scale, (row + 4) * scale, scale, scale);
+      }
+    }
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("png unavailable"))), "image/png");
+    });
+  }
+
   if (globalThis.__BL_TEST__) {
-    globalThis.__BL_TEST__.QR = { makeCode, svg, fileName };
+    globalThis.__BL_TEST__.QR = {
+      makeCode,
+      svg,
+      fileName,
+      pngBlob,
+      contrastRatio,
+      clipboardUrl,
+    };
     return;
   }
 
@@ -113,6 +198,18 @@
     .meta{margin:8px 0 0;min-height:17px;font:10px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;opacity:.62}
     .error{margin:8px 0 0;font-size:11px;line-height:1.4;color:#a11}
     @media(prefers-color-scheme:dark){.error{color:#ff8d8d}}
+    .style{display:flex;flex-direction:column;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+    .style .label{margin:0}
+    .swatches{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .swatch{display:flex;align-items:center;gap:7px;min-width:0;padding:4px 7px;border:1px solid var(--line)}
+    .swatch span{font:10px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.12em;text-transform:uppercase;opacity:.62}
+    .swatch input[type=color]{width:26px;height:24px;flex:none;padding:0;border:1px solid var(--line);background:transparent;cursor:pointer}
+    .swatch output{margin-left:auto;font:10px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;opacity:.8}
+    .check{display:flex;align-items:center;gap:8px;font-size:11px;cursor:pointer;user-select:none}
+    .check input{width:14px;height:14px;margin:0;accent-color:var(--ink)}
+    .hint{margin:0;font-size:10px;line-height:1.4;color:#7a5200}
+    @media(prefers-color-scheme:dark){.hint{color:#f4c26e}}
+    .preview[data-checker="true"]{background-color:#fff;background-image:linear-gradient(45deg,#e9e9e9 25%,transparent 25%),linear-gradient(-45deg,#e9e9e9 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e9e9e9 75%),linear-gradient(-45deg,transparent 75%,#e9e9e9 75%);background-size:14px 14px;background-position:0 0,0 7px,7px -7px,-7px 0}
     .actions{display:flex;flex-direction:column;gap:8px;margin-top:auto;padding-top:18px}
     .download-row{display:flex;gap:8px;align-items:stretch}
     .download-row .btn{flex:1;min-width:0}
@@ -172,6 +269,15 @@
             <textarea id="bl-qr-text" data-input rows="3" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Page URL or text"></textarea>
             <p class="meta" data-meta></p>
             <p class="error" data-error role="alert" hidden></p>
+            <div class="style">
+              <p class="label">Style</p>
+              <div class="swatches">
+                <label class="swatch"><span>Ink</span><input type="color" data-ink value="#000000" aria-label="QR code colour"><output data-ink-value>#000000</output></label>
+                <label class="swatch"><span>Paper</span><input type="color" data-paper value="#ffffff" aria-label="QR code background colour"><output data-paper-value>#ffffff</output></label>
+              </div>
+              <label class="check"><input type="checkbox" data-transparent> Transparent background</label>
+              <p class="hint" data-hint hidden></p>
+            </div>
             <div class="actions">
               <div class="download-row">
                 <button class="btn primary" type="button" data-png><span>Download PNG</span><small>~1024 px raster</small></button>
@@ -198,10 +304,24 @@
   const meta = root.querySelector("[data-meta]");
   const error = root.querySelector("[data-error]");
   const status = root.querySelector("[data-status]");
+  const hint = root.querySelector("[data-hint]");
+  const inkField = root.querySelector("[data-ink]");
+  const paperField = root.querySelector("[data-paper]");
+  const inkValue = root.querySelector("[data-ink-value]");
+  const paperValue = root.querySelector("[data-paper-value]");
+  const transparentToggle = root.querySelector("[data-transparent]");
   const actions = [...root.querySelectorAll("[data-png], [data-svg], [data-copy-png], [data-copy-svg]")];
+  const look = { ink: DEFAULT_INK, paper: DEFAULT_PAPER, transparent: false };
+  const pageUrl = location.href;
   let model = null;
   let renderTimer = 0;
   let statusTimer = 0;
+  let userTouched = false;
+  let closed = false;
+
+  function artOptions() {
+    return { foreground: look.ink, background: look.paper, transparent: look.transparent };
+  }
 
   function resetStatus() {
     clearTimeout(statusTimer);
@@ -216,21 +336,47 @@
     statusTimer = setTimeout(resetStatus, 5000);
   }
 
+  function updateHint() {
+    if (!model) {
+      hint.hidden = true;
+      return;
+    }
+    if (look.transparent) {
+      hint.textContent = "Transparent background: dark ink needs a light surface, light ink a dark one.";
+      hint.hidden = false;
+      return;
+    }
+    if (contrastRatio(look.ink, look.paper) < 3) {
+      hint.textContent = "Low contrast: this code may not scan. Ink and paper need to be far apart.";
+      hint.hidden = false;
+      return;
+    }
+    hint.hidden = true;
+  }
+
+  function scheduleRender() {
+    clearTimeout(renderTimer);
+    renderTimer = setTimeout(render, 70);
+  }
+
   function render() {
     const text = input.value;
+    preview.dataset.checker = look.transparent ? "true" : "false";
     if (!text.trim()) {
       model = null;
       preview.innerHTML = EMPTY;
       meta.textContent = "";
       error.hidden = true;
+      updateHint();
       for (const button of actions) button.disabled = true;
       return;
     }
     try {
       model = makeCode(text);
-      preview.innerHTML = svg(model);
+      preview.innerHTML = svg(model, artOptions());
       meta.textContent = `${model.count} × ${model.count} modules · v${model.version} · ${model.bytes} bytes · ECC Q`;
       error.hidden = true;
+      updateHint();
       for (const button of actions) button.disabled = false;
     } catch {
       model = null;
@@ -238,6 +384,7 @@
       meta.textContent = "";
       error.textContent = "That is too much for one QR code. Shorten the text and try again.";
       error.hidden = false;
+      updateHint();
       for (const button of actions) button.disabled = true;
     }
   }
@@ -261,37 +408,12 @@
     setStatus(`${name} is downloading.`, "ok");
   }
 
-  function pngBlob(code) {
-    return new Promise((resolve, reject) => {
-      const scale = Math.max(4, Math.floor(1024 / (code.count + 8)));
-      const size = (code.count + 8) * scale;
-      const canvas = document.createElement("canvas");
-      canvas.width = size;
-      canvas.height = size;
-      const context = canvas.getContext("2d");
-      if (!context) {
-        reject(new Error("canvas unavailable"));
-        return;
-      }
-      context.fillStyle = "#fff";
-      context.fillRect(0, 0, size, size);
-      context.fillStyle = "#000";
-      for (let row = 0; row < code.count; row++) {
-        for (let column = 0; column < code.count; column++) {
-          if (!code.modules[row][column]) continue;
-          context.fillRect((column + 4) * scale, (row + 4) * scale, scale, scale);
-        }
-      }
-      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("png unavailable"))), "image/png");
-    });
-  }
-
   async function downloadPng() {
     const text = input.value;
     const code = currentCode();
     if (!code) return;
     try {
-      saveBlob(await pngBlob(code), fileName("png", text));
+      saveBlob(await pngBlob(code, artOptions()), fileName("png", text));
     } catch {
       setStatus("The PNG could not be made.", "error");
     }
@@ -301,7 +423,7 @@
     const text = input.value;
     const code = currentCode();
     if (!code) return;
-    saveBlob(new Blob([svg(code)], { type: "image/svg+xml;charset=utf-8" }), fileName("svg", text));
+    saveBlob(new Blob([svg(code, artOptions())], { type: "image/svg+xml;charset=utf-8" }), fileName("svg", text));
   }
 
   async function copyPng() {
@@ -312,7 +434,7 @@
       return;
     }
     try {
-      await navigator.clipboard.write([new ClipboardItem({ "image/png": pngBlob(code) })]);
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": pngBlob(code, artOptions()) })]);
       setStatus("PNG copied to the clipboard.", "ok");
     } catch {
       setStatus("Could not copy the PNG. Download it instead.", "error");
@@ -322,7 +444,7 @@
   async function copySvg() {
     const code = currentCode();
     if (!code) return;
-    const markup = svg(code);
+    const markup = svg(code, artOptions());
     if (navigator.clipboard?.write && typeof ClipboardItem === "function") {
       try {
         await navigator.clipboard.write([new ClipboardItem({ "image/svg+xml": new Blob([markup], { type: "image/svg+xml" }) })]);
@@ -339,7 +461,33 @@
     }
   }
 
+  function syncColors() {
+    look.ink = normalizeHex(inkField.value, DEFAULT_INK);
+    look.paper = normalizeHex(paperField.value, DEFAULT_PAPER);
+    inkField.value = look.ink;
+    paperField.value = look.paper;
+    inkValue.textContent = look.ink;
+    paperValue.textContent = look.paper;
+    resetStatus();
+    scheduleRender();
+  }
+
+  async function preferClipboardUrl() {
+    if (!navigator.clipboard || typeof navigator.clipboard.readText !== "function") return;
+    try {
+      const candidate = clipboardUrl(await navigator.clipboard.readText());
+      if (!candidate || closed || userTouched || input.value !== pageUrl) return;
+      input.value = candidate;
+      render();
+      setStatus("Using the URL on your clipboard.", "ok");
+    } catch {}
+  }
+
   function close() {
+    if (closed) return;
+    closed = true;
+    clearTimeout(renderTimer);
+    clearTimeout(statusTimer);
     document.removeEventListener("keydown", onKey, true);
     host.remove();
     delete host.__blQrClose;
@@ -356,7 +504,9 @@
       return;
     }
     if (event.key !== "Tab") return;
-    const focusable = [...root.querySelectorAll("button, textarea")].filter((element) => !element.disabled);
+    const focusable = [...root.querySelectorAll("button, textarea, input")].filter(
+      (element) => !element.disabled && element.tabIndex >= 0 && element.getClientRects().length > 0,
+    );
     if (!focusable.length) return;
     const first = focusable[0];
     const last = focusable.at(-1);
@@ -376,7 +526,8 @@
   root.querySelector("[data-copy-png]").addEventListener("click", copyPng);
   root.querySelector("[data-copy-svg]").addEventListener("click", copySvg);
   root.querySelector("[data-page-url]").addEventListener("click", () => {
-    input.value = location.href;
+    userTouched = true;
+    input.value = pageUrl;
     resetStatus();
     render();
     input.focus();
@@ -386,14 +537,22 @@
     if (event.target === event.currentTarget) close();
   });
   input.addEventListener("input", () => {
+    userTouched = true;
     resetStatus();
-    clearTimeout(renderTimer);
-    renderTimer = setTimeout(render, 90);
+    scheduleRender();
+  });
+  inkField.addEventListener("input", syncColors);
+  paperField.addEventListener("input", syncColors);
+  transparentToggle.addEventListener("change", () => {
+    look.transparent = transparentToggle.checked;
+    resetStatus();
+    render();
   });
   document.addEventListener("keydown", onKey, true);
   host.__blQrClose = close;
 
-  input.value = location.href;
+  input.value = pageUrl;
   render();
   panel.focus({ preventScroll: true });
+  preferClipboardUrl();
 })();
