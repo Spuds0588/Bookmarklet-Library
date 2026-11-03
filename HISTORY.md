@@ -13,7 +13,9 @@ What has been done, in order. Newest entries first.
 
 - A throwaway harness in Chrome framed every candidate with `vscode.dev` as a control: vscode.dev (`frame-ancestors 'none'`) and `www.canva.com` were refused with the expected console error, while Photopea, `pixlr.com/editor/`, the Canva design embed, CodePen `/embed/`, CodeSandbox `/embed/`, StackBlitz `?embed=1`, OneCompiler `/embed/` and Excalidraw loaded without one.
 - Node tests cover the picker filter and saved name, the surface order, the `size:` echo that proves the file arrived rather than just that the app booted, the `populateCode` shape, the clipping notice and the selection rule.
-- Neither tool's live handshake is proven yet: Photopea's ready `"done"` ping did not arrive from a harness served over `http://127.0.0.1`, with or without a full referrer, and its author documents a referrer requirement for framed use. Both keep `@testing true` until a real page settles it.
+- The photo tool was run in headed Chrome over an https page: Photopea's `"done"`, the `size:360x240` echo and `saveToOE("png")` all came back, and the 360×240 PNG landed as `probe-edited.png`.
+- The handshake had failed for a plainer reason than the referrer first blamed: `https://www.photopea.com/` is now a marketing page, and the app boots only when the URL carries a `#` or an `=` — framing the root loaded the landing page, which never sends a ready ping. The embed is `https://www.photopea.com/#%7B%7D`.
+- The code tool's handoff is its capture: OneCompiler took the page's markup through `populateCode` and its preview rendered it. Neither tool carries `@testing` any more.
 
 ## A local PDF edits in a modal, then floats, then falls back to a popup
 

@@ -6,7 +6,6 @@
  * @traits network, web-app
  * @added 2026-11-03
  * @featured false
- * @testing true
  */
 (() => {
   // OneCompiler's editor is documented as an embeddable iframe with a

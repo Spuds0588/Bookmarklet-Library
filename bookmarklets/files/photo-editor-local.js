@@ -6,12 +6,14 @@
  * @traits network, web-app
  * @added 2026-11-03
  * @featured false
- * @testing true
  */
 (() => {
   // Photopea is the editor that is built to be framed: no X-Frame-Options, no
   // CSP, and a documented messaging API that takes a file as an ArrayBuffer.
-  const EMBED = "https://www.photopea.com/";
+  // The bare root of photopea.com is a marketing page: Photopea only boots its
+  // app when the URL carries a hash (the API's configuration form) or an "=".
+  // Framing the root loads the landing page, which never sends its ready ping.
+  const EMBED = "https://www.photopea.com/#%7B%7D";
   const ORIGIN = "https://www.photopea.com";
   const READY_MS = 30000;
   // A page whose CSP forbids frame-src fails silently, so the modal attempt
@@ -116,8 +118,8 @@
 
   const EMBED_STYLE = "width:100%;height:100vh;border:0;background:#fff";
 
-  // Photopea refuses to start in a frame that hides its referrer, so this frame
-  // deliberately leaves the browser's default policy alone.
+  // Photopea inspects its ancestor origins as it boots, so this frame keeps the
+  // browser's default referrer and security attributes rather than hiding them.
   function makeFrame(doc, style) {
     const frame = doc.createElement("iframe");
     frame.src = EMBED;

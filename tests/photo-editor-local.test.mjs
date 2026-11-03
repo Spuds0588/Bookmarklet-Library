@@ -13,7 +13,9 @@ const { isImageFile, editedName, fallbackOrder, parseSize, askSize, askPng, EMBE
 delete globalThis.__BL_TEST__;
 
 test("the tool frames Photopea, which publishes no framing restriction", () => {
-  assert.equal(EMBED, "https://www.photopea.com/");
+  // The bare root is Photopea's marketing page; only a hash URL boots the app.
+  assert.equal(EMBED, "https://www.photopea.com/#%7B%7D");
+  assert.ok(EMBED.includes("#"), "the editor only starts for a hash or query URL");
   assert.equal(ORIGIN, "https://www.photopea.com");
 });
 
