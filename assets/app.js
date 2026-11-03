@@ -251,7 +251,7 @@ function card(item) {
         item.external
           ? `<a class="install" href="${esc(item.href)}" target="_blank" rel="noopener" title="Opens the install page in the repository it lives in">
               <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
-              <span>Get it from ${esc(item.author)}</span>
+              <span>Open the install page</span>
             </a>
             <p class="install-hint">Lives in another repo · opens its install page</p>`
           : `<a class="install" href="${esc(item.href)}" draggable="true" title="Drag “${esc(item.name)}” onto your bookmarks bar">
@@ -431,7 +431,7 @@ function fillDetail(item) {
     nodes.detailInstall.setAttribute("target", "_blank");
     nodes.detailInstall.setAttribute("rel", "noopener");
     nodes.detailInstall.setAttribute("title", "Opens the install page in the repository it lives in");
-    nodes.detailInstall.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg><span>Get it from ${esc(item.author)}</span>`;
+    nodes.detailInstall.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg><span>Open the install page</span>`;
   } else {
     nodes.detailInstall.removeAttribute("target");
     nodes.detailInstall.removeAttribute("rel");

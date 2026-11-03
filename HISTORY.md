@@ -31,7 +31,7 @@ What has been done, in order. Newest entries first.
 **Tools that live elsewhere**
 
 - The catalog can now carry a bookmarklet that lives in another repository: `@external <install page>` with no code, and `@author`/`@credit` required so the other repo is named. `build` writes `external` and `externalUrl` and uses that URL as the href; `verify` skips the decode and byte checks and instead rejects an external entry that carries code or a byte count.
-- Added **📊 Turnstone on any page** (Files), pointing at `https://spuds0588.github.io/Turnstone/bookmarklet.html`. The card reads "Get it from Corey Burns", opens that page in a new tab and drops the copy button; the detail view says "Hosted elsewhere" where a size would be.
+- Added **📊 Turnstone on any page** (Files), pointing at `https://spuds0588.github.io/Turnstone/bookmarklet.html`. The card reads "Open the install page", opens that page in a new tab and drops the copy button; the detail view says "Hosted elsewhere" where a size would be.
 - The capture declares external entries with the existing `external` reason rather than failing for a missing screenshot, which is why the catalog now reports 36 tools explained without one.
 
 **The other repos, surveyed**
