@@ -8,7 +8,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 globalThis.__BL_TEST__ = {};
 new Function(await readFile(path.join(root, "bookmarklets", "files", "simplepdf-local.js"), "utf8"))();
-const { isPdfFile, buildRequest, parseReply, EMBED, ORIGIN } = globalThis.__BL_TEST__.simplepdfLocal;
+const { isPdfFile, buildRequest, parseReply, fallbackOrder, EMBED, ORIGIN, SURFACES, FRAME_MS, READY_MS } =
+  globalThis.__BL_TEST__.simplepdfLocal;
 delete globalThis.__BL_TEST__;
 
 test("the local tool frames the embeddable editor, not the one that refuses framing", () => {
@@ -49,6 +50,22 @@ test("replies are read from the JSON string the editor sends", () => {
 
   // An object payload is accepted too, since some builds post it unstringified.
   assert.equal(parseReply({ type: "REQUEST_RESULT", data: { request_id: "r3", result: { success: true } } }).id, "r3");
+});
+
+test("the modal frame comes first, then document picture-in-picture, then a popup", () => {
+  assert.deepEqual(SURFACES, ["iframe", "float", "popup"]);
+
+  assert.deepEqual(fallbackOrder({ documentPictureInPicture: true, open: true }), ["float", "popup"]);
+  assert.deepEqual(fallbackOrder({ documentPictureInPicture: false, open: true }), ["popup"]);
+  assert.deepEqual(fallbackOrder({ documentPictureInPicture: true, open: false }), ["float"]);
+  assert.deepEqual(fallbackOrder({ documentPictureInPicture: false, open: false }), []);
+});
+
+test("the framed attempt gives up before the hard readiness timeout", () => {
+  // A blocked frame never answers, so the modal must surrender early enough
+  // to leave time for a fallback that the user can actually see.
+  assert.ok(FRAME_MS > 0, "FRAME_MS must be positive");
+  assert.ok(FRAME_MS < READY_MS, `${FRAME_MS} should be well under ${READY_MS}`);
 });
 
 test("messages that are not this editor's replies are ignored", () => {
