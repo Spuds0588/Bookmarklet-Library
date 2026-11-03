@@ -54,7 +54,7 @@
 
 ## QR code (2026-10-28)
 
-- [x] **🔳 QR code** opens a shadow-root panel with the page URL, or a web URL found on the clipboard, regenerates on input, and reports version, module count and UTF-8 byte count. It encodes Q error correction and offers Download PNG (about 1000 px), Download SVG, Copy PNG and Copy SVG. The PNG clipboard path was exercised in Chrome; the SVG image write succeeded there, and the text-markup fallback covers browsers that refuse SVG image data. Esc closes and restores focus.
+- [x] **🔳 Create QR code** opens a shadow-root panel with the page URL, or a web URL found on the clipboard, regenerates on input, and reports version, module count and UTF-8 byte count. It encodes Q error correction and offers Download PNG (about 1000 px), Download SVG, Copy PNG and Copy SVG. The PNG clipboard path was exercised in Chrome; the SVG image write succeeded there, and the text-markup fallback covers browsers that refuse SVG image data. Esc closes and restores focus.
 - [x] Ink and Paper colour pickers and a transparent background, with the checkerboard preview and inline contrast or surface hint. Low contrast and transparency never disable a download.
 - [x] Clipboard-first prefill keeps the page URL when the clipboard has no web URL. The successful path was exercised in Chrome with a clipboard stub: the page URL stayed for non-URL text and a refused read.
 - [ ] Exercise the real clipboard permission prompt, a denied read and a non-URL clipboard in Chrome, Edge, Firefox and Safari. The browser harness had no focused document, so the successful read used a stub rather than the OS clipboard.
