@@ -2,6 +2,26 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — First production pass on the badges and the hosted hub
+
+**Changed**
+
+- Nothing shipped changed in this entry: it records the check of the `@traits` badges (commit `c83d2af`) and of the WebMCP bridge's handshake against the deployed `webmcp/` hub.
+- TODO keeps the parts that passed and the ones that still need a browser pass.
+
+**Verified**
+
+- Pages serves the new build: `data/catalog.json` carries the vocabulary and 122 tagged items, the detail container and the `<noscript>` trait list are in the page, and `assets/style.css` has the badge rules.
+- The published page renders 122 cards each with a badge row; the WebMCP card reads Online · Web app · 3rd-party · CORS-free; `#t/webmcp-bridge` shows four chips with their explanations and an install href byte-identical to the catalog's; search reports 97 tools for `offline` and 104 for `sensitive-safe`.
+- The bridge against the deployed hub, genuinely cross-origin (`http://127.0.0.1:4173` → `https://spuds0588.github.io/.../webmcp/`): the bookmarklet opened the hub, the handshake completed (`[WebMCP] Hub connected.`), and the hub received a 20-control map with the page's password input left unmapped.
+- Closing the hub window cleared the target's session — active flag, pop-up reference and all 20 `data-webmcp-id` attributes — and the next click opened a fresh hub that reconnected with the same 20 controls.
+
+**Limit**
+
+- The hub is a separate pop-up window rather than a tab, so its own run (a model step, the `?webmcp-test` actions, Kill) was not driven in production; those paths stay covered by the Node suite and the earlier local run.
+- A page that blocks the pop-up, a COOP-isolated page and a real local model remain untested. This profile allowed the pop-up even without a click gesture, so the blocked-pop-up branch never ran.
+- The production smoke test did not cover the chip filter, the theme toggle, dragging a bookmark or the two-tool export.
+
 ## 2026-11-03 — Every tool says what it needs
 
 **Changed**

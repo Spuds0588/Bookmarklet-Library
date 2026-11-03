@@ -5,6 +5,7 @@
 - [x] Repo is public and GitHub Pages serves `main`, root folder, at <https://spuds0588.github.io/Bookmarklet-Library/>. No build action is needed; `data/catalog.json` is committed.
 - [x] Page is crawlable without JavaScript: `build.mjs` writes a `<noscript>` tool list and `ItemList` structured data, with a canonical URL, Open Graph, Twitter cards, `WebSite` and `FAQPage` schema, `robots.txt` and `sitemap.xml`.
 - [ ] Open the published URL once and repeat the smoke test: search, chip filter, theme toggle, drag one tool, download a two-tool `bookmarks.html`.
+- [x] Done on the published URL on 2026-11-03: 122 cards with their badge rows, `#t/webmcp-bridge` chips and install href, and search for `offline` (97) and `sensitive-safe` (104). The chip filter, theme toggle, drag and export in the line above are still unexercised.
 - [x] Confirm every ARIVE/Wizni tool was left out (`npm run verify` enforces this).
 - [ ] Scan `README.md` and the page copy after publishing, in case a screenshot or URL is more revealing than intended.
 
@@ -90,7 +91,8 @@
 - [x] Node tests cover validation, token shape, prompt trimming, engine detection, bookmarklet origin/token/kill gates and cleanup. A local Chrome run verified the handshake, 20 indexed controls, a typed action, a two-step test-engine run, Kill and recovery, and close-and-relaunch.
 - [x] The connected hub is captured at 1200x750 and committed.
 - [ ] Load a real local model and run a task end to end. The verification browser exposed no built-in model and no WebGPU adapter; Chrome 156 on localhost reported Gemini Nano downloadable during the capture, but its weights were not downloaded.
-- [ ] Handshake with the deployed cross-origin hub from a normal page, a COOP-isolated page and a page that blocks the pop-up. Local verification was same-origin.
+- [x] Handshake with the deployed cross-origin hub from a normal page: a `127.0.0.1:4173` page connected to `spuds0588.github.io/Bookmarklet-Library/webmcp/`, logged the connection, and delivered its 20-control map with the password field excluded. Closing the hub cleared the session and its IDs, and the next click reconnected with a fresh hub.
+- [ ] A COOP-isolated page and a page that blocks the pop-up are still untested, and the automated browser allowed the pop-up without a click gesture, so the blocked branch never ran. The hub's own run was not driven in production: it opens as a separate pop-up window, so a model step, the `?webmcp-test` actions and Kill still rest on the Node suite and the local pass.
 - [ ] Exercise a select, a checkbox and a React/Vue-controlled form. Typing was verified against the demo form's native input event.
 - [ ] Bring the 8 KB bookmarklet down to the 3 KB prototype target by moving re-arm bookkeeping into the hub or minifying at build time, without losing the readable source.
 
