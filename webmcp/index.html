@@ -31,6 +31,8 @@
       <p>A Cross-Origin-Opener-Policy header severed the link to the tab that opened this window. Try a page without that header; the bridge needs its opener to stay attached.</p>
     </div>
 
+    <div class="help" data-model-help hidden></div>
+
     <ol class="steps">
       <li>Open the page you want the agent to work on.</li>
       <li>Click the bookmarklet once. This companion window connects to that tab.</li>
@@ -61,6 +63,7 @@
       <select id="model" aria-label="WebLLM model" hidden></select>
       <button class="btn" id="prepare" type="button" hidden>Prepare model</button>
       <p class="note" id="engine-note">Waiting for the target tab.</p>
+      <div class="help" data-model-help hidden></div>
     </div>
 
     <div class="log" id="log" role="log" aria-live="polite" aria-label="Session log"></div>

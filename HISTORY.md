@@ -2,6 +2,25 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — The hub names the flags that turn Gemini Nano on
+
+**Changed**
+
+- `webmcp/engine.js` gained `PROMPT_API_SETUP` and `modelSetup()`, which turn engine detection into the answer a person needs: whether the built-in model is missing, and the two `chrome://flags` switches that bring it back.
+- Both hub views fill one `[data-model-help]` block from that source. The setup page shows it under the install button; the active view shows it directly under the engine note, where “No local model” used to be the end of the story. A `chrome://` address cannot be followed from a page, so the flags stay copyable text and the link goes to Chrome's Prompt API notes.
+- The no-model note now says to turn the flags on rather than only reporting the absence. README, AGENTS and TODO describe the detection.
+
+**Verified**
+
+- `npm test`: 76 pass, including the new case for both flag names, the https docs link and a present Prompt API producing no help block.
+- `node scripts/compose.mjs --check`, `node scripts/build.mjs --check` and `node scripts/verify.mjs` pass on 122 tools; the hub is served as it is, so nothing is generated.
+- The hub page in Chrome 156, which has no Prompt API on this machine: the block renders in both views, both flags read back as text, the link is `developer.chrome.com/docs/ai/prompt-api`, and the engine note above it points at the block instead of dead-ending.
+
+**Limit**
+
+- Detection is a feature test, not a flag read: a page cannot see whether `#optimization-guide-on-device-model` is on, so a browser with the flag enabled but no weights reports “downloadable” and gets the Prepare button instead of this block.
+- The flags were not turned on and no model ran, so the download path it describes is still untested.
+
 ## 2026-11-03 — First production pass on the badges and the hosted hub
 
 **Changed**

@@ -8,6 +8,7 @@ import {
   createWebLLMEngine,
   detectEngines,
   hasWebGpuAdapter,
+  modelSetup,
 } from "./engine.js";
 
 const $ = (id) => document.getElementById(id);
@@ -247,6 +248,35 @@ function progressReporter(report) {
   log(percent === null ? report.text : `${report.text} · ${percent}%`);
 }
 
+// A missing Prompt API is a setup step, not a dead end: name the two flags that
+// turn Gemini Nano on and link Chrome's own notes. Both views share one source.
+function fillModelHelp(found = detectEngines()) {
+  const setup = modelSetup(found);
+  for (const box of document.querySelectorAll("[data-model-help]")) {
+    box.hidden = !setup.needed;
+    if (!setup.needed) {
+      box.replaceChildren();
+      continue;
+    }
+    const lead = document.createElement("p");
+    lead.textContent =
+      `Chrome keeps its built-in model behind two flags. Turn both on (the optimization-guide one offers Enabled BypassPerfRequirement for older machines), restart Chrome, then update ${setup.model} → Optimization Guide On Device Model.`;
+    const list = document.createElement("p");
+    list.className = "help-flags";
+    for (const flag of setup.flags) {
+      const code = document.createElement("code");
+      code.textContent = flag;
+      list.append(code);
+    }
+    const link = document.createElement("a");
+    link.href = setup.docs;
+    link.target = "_blank";
+    link.rel = "noreferrer noopener";
+    link.textContent = "Chrome's Prompt API setup notes";
+    box.replaceChildren(lead, list, link);
+  }
+}
+
 async function prepareEngine() {
   if (preparing) return;
   preparing = true;
@@ -263,6 +293,7 @@ async function prepareEngine() {
       return;
     }
     const found = detectEngines();
+    fillModelHelp(found);
     engineKind = "";
     engineReady = false;
     ui.prepare.hidden = true;
@@ -317,7 +348,7 @@ async function prepareEngine() {
     engineReady = false;
     ui.engineName.textContent = "No local model";
     ui.engineNote.textContent =
-      "This browser exposes neither Chrome's built-in model nor a usable WebGPU adapter. The bridge still connects and the map and Kill switch still work. Open the hub in Chrome with built-in AI enabled, or a browser with a working WebGPU adapter.";
+      "This browser exposes neither Chrome's built-in model nor a usable WebGPU adapter. The bridge still connects and the map and Kill switch still work. Turn on the flags below, or open the hub in a browser with a working WebGPU adapter.";
     log("No local model is available in this browser.", "warn");
   } finally {
     preparing = false;
@@ -627,5 +658,6 @@ if (new URLSearchParams(location.search).has("webmcp-test")) {
 }
 
 fillModels();
+fillModelHelp();
 if (!window.opener) showSetup(window.name === "WebMCP_Hub");
 else beginHandshake(false);

@@ -53,6 +53,30 @@ function builtInApi(scope = globalThis) {
   return scope.LanguageModel ?? scope.ai?.languageModel ?? null;
 }
 
+// Chrome still ships Gemini Nano behind two flags on most machines, so a
+// missing Prompt API is the ordinary case rather than a fault. These are the
+// switches a person has to turn on, and where to read the rest.
+export const PROMPT_API_SETUP = Object.freeze({
+  docs: "https://developer.chrome.com/docs/ai/prompt-api",
+  model: "chrome://components/",
+  flags: Object.freeze([
+    "chrome://flags/#prompt-api-for-gemini-nano",
+    "chrome://flags/#optimization-guide-on-device-model",
+  ]),
+});
+
+// What the hub should say about the built-in model: whether it is missing, and
+// the exact switches and link that bring it back. A chrome:// address cannot be
+// followed from a page, so callers show the flags as text.
+export function modelSetup(found = detectEngines()) {
+  return {
+    needed: !found.builtIn,
+    flags: PROMPT_API_SETUP.flags,
+    docs: PROMPT_API_SETUP.docs,
+    model: PROMPT_API_SETUP.model,
+  };
+}
+
 // navigator.gpu can exist in a browser that has no usable adapter (Electron
 // builds and some headless profiles do). Ask for one before offering WebLLM,
 // or the first model download ends in a failure.

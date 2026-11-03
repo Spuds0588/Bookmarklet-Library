@@ -12,6 +12,7 @@ import {
   builtInAvailability,
   detectEngines,
   hasWebGpuAdapter,
+  modelSetup,
 } from "../webmcp/engine.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -105,6 +106,19 @@ test("engine detection finds the Prompt API, the legacy namespace and WebGPU", a
     await hasWebGpuAdapter({ navigator: { gpu: { requestAdapter: async () => ({}) } } }),
     true,
   );
+});
+
+test("a missing Prompt API names the Chrome flags that turn it on", () => {
+  const missing = modelSetup({ builtIn: false, webgpu: false });
+  assert.equal(missing.needed, true);
+  assert.deepEqual(missing.flags, [
+    "chrome://flags/#prompt-api-for-gemini-nano",
+    "chrome://flags/#optimization-guide-on-device-model",
+  ]);
+  assert.match(missing.docs, /^https:\/\/developer\.chrome\.com\/docs\/ai\//);
+  assert.equal(missing.model, "chrome://components/");
+  assert.equal(modelSetup({ builtIn: true, webgpu: false }).needed, false);
+  assert.equal(modelSetup().needed, true);
 });
 
 test("the bookmarklet only answers its hub, needs the token, and obeys HALT", async () => {

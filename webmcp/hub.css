@@ -221,6 +221,35 @@ h1 span { color: var(--muted); font-weight: 400; }
   flex: none;
 }
 .engine .note { flex: 1 1 100%; }
+
+/* A missing built-in model is a setup step, so it gets the switches, not a shrug. */
+.help {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 100%;
+  padding: 9px 10px;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.help[hidden] { display: none; }
+.help p { margin: 0; }
+.help-flags { display: flex; flex-wrap: wrap; gap: 5px; }
+.help code {
+  padding: 2px 5px;
+  border: 1px solid var(--line);
+  color: var(--fg);
+  font: 10px/1.4 var(--mono);
+  overflow-wrap: anywhere;
+}
+.help a {
+  justify-self: start;
+  color: var(--fg);
+  font: 600 9.5px/1.4 var(--mono);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
 select {
   min-height: 30px;
   padding: 0 6px;
