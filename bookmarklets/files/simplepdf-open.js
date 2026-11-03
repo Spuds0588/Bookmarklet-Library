@@ -8,9 +8,9 @@
  * @featured false
  */
 (() => {
-  // The free editor. A SimplePDF account would swap this for
-  // https://<company>.simplepdf.com/editor and the same `open` parameter.
-  const EDITOR = "https://embed.simplepdf.com/editor";
+  // The free editor, checked in a browser: it honours `open` here as well as
+  // on embed.simplepdf.com. An account would use its own subdomain instead.
+  const EDITOR = "https://simplepdf.com/editor";
 
   const absolute = (value, base) => {
     try {

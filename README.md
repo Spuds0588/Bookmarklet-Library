@@ -151,7 +151,7 @@ A `pdftotext` mismatch on two of those vector PDFs turned out to be a real bug, 
 
 ## Edit a PDF in SimplePDF
 
-**📝 Open in SimplePDF** finds the PDF this tab already has — the document itself, the file behind a pdf.js viewer, or an embed, object or link on the page — and redirects the same window to `https://embed.simplepdf.com/editor?open=…`, so editing starts without downloading the file and picking it again. A `#page=4` on the original address is carried over as the editor's `page` parameter, and a presigned S3 or Azure URL keeps its query string.
+**📝 Open in SimplePDF** finds the PDF this tab already has — the document itself, the file behind a pdf.js viewer, or an embed, object or link on the page — and redirects the same window to `https://simplepdf.com/editor?open=…`, so editing starts without downloading the file and picking it again (both that address and `embed.simplepdf.com` accept `open`). A `#page=4` on the original address is carried over as the editor's `page` parameter, and a presigned S3 or Azure URL keeps its query string.
 
 The editor fetches the file itself, so the address has to be reachable without your cookies. A PDF that only exists as a `blob:`, a `data:` URL or behind a login is refused with a message instead of landing you in an editor that cannot load it. Chrome's built-in PDF viewer does not run bookmarklets at all, so on those tabs start from a page that links the PDF, or from a Firefox tab.
 ## Export a chat to Markdown

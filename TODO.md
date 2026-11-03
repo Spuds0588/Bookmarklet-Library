@@ -192,6 +192,5 @@
 
 ## SimplePDF handoff
 
-- [ ] Check whether the bare `https://simplepdf.com/editor` honours `open` as well as `https://embed.simplepdf.com/editor` does, and switch if so.
 - [ ] Decide whether a page with several PDFs should offer a choice instead of taking the first one found.
 - [ ] See whether the editor's `page` parameter also accepts a highlight or a selection worth carrying from Chrome's `#page=N&zoom=…` fragment.

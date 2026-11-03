@@ -62,7 +62,7 @@ test("anything the editor could not fetch is refused", () => {
 test("the editor link carries the PDF and the page it was on", () => {
   const url = editorUrl("https://files.example.com/report.pdf", 3);
   const parsed = new URL(url);
-  assert.equal(parsed.origin + parsed.pathname, "https://embed.simplepdf.com/editor");
+  assert.equal(parsed.origin + parsed.pathname, "https://simplepdf.com/editor");
   assert.equal(parsed.searchParams.get("open"), "https://files.example.com/report.pdf");
   assert.equal(parsed.searchParams.get("page"), "3");
 
