@@ -272,6 +272,10 @@
       "changed": true,
       "steps": 3
     },
+    "simplepdf-open": {
+      "changed": false,
+      "reason": "external"
+    },
     "rtf-to-odt": {
       "file": "screenshots/rtf-to-odt.png",
       "changed": true,

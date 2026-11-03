@@ -2,6 +2,12 @@
 
 What has been done, in order. Newest entries first.
 
+## SimplePDF handoff
+
+- **📝 Open in SimplePDF** (`files`) sends the tab's PDF to `https://embed.simplepdf.com/editor?open=…` in the same window, finding it as the document itself, a pdf.js `?file=` target, or an embed/object/iframe/link on the page.
+- `#page=N` becomes the editor's `page`; a presigned URL survives the trip encoded once. `blob:`, `data:` and login-only addresses are refused with a message, since the editor fetches the file and cannot present your cookies.
+- Five tests cover the URL pick (including uppercase `.PDF` and a relative `?file=`), the refused schemes, and the editor link; the tool is listed without a capture because it leaves the site.
+
 ## 2026-11-03 — Drive this page: one session, more steps, the result fed back
 
 **Why**

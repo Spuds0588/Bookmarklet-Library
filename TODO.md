@@ -189,3 +189,9 @@
 
 - [ ] Re-check the export parser against a future Chrome bookmark export, since the importer script was a one-off and is not kept in the repo.
 - [ ] When tools get meaningfully changed, use `@added` for the newest tool and keep the featured flag on the one worth showing off.
+
+## SimplePDF handoff
+
+- [ ] Check whether the bare `https://simplepdf.com/editor` honours `open` as well as `https://embed.simplepdf.com/editor` does, and switch if so.
+- [ ] Decide whether a page with several PDFs should offer a choice instead of taking the first one found.
+- [ ] See whether the editor's `page` parameter also accepts a highlight or a selection worth carrying from Chrome's `#page=N&zoom=…` fragment.

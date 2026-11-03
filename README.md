@@ -149,6 +149,11 @@ It has now been through 30 files: 15 public PDFs and 15 generated 2400×3200 sca
 
 A `pdftotext` mismatch on two of those vector PDFs turned out to be a real bug, not a reader quirk: a stream whose `/Length` is an indirect reference was being trimmed at its final line break, which shortened and corrupted embedded fonts. Lengths are resolved from the length object now, and the rebuilt pages render to byte-identical PNGs with matching text. The card keeps its **In testing** badge because the corpus is still small, and because a single page that cannot be compressed under the ceiling is reported instead of quietly dropped. A text-only PDF has nothing to recompress, so the panel says there is no gain rather than handing back a file that grew.
 
+## Edit a PDF in SimplePDF
+
+**📝 Open in SimplePDF** finds the PDF this tab already has — the document itself, the file behind a pdf.js viewer, or an embed, object or link on the page — and redirects the same window to `https://embed.simplepdf.com/editor?open=…`, so editing starts without downloading the file and picking it again. A `#page=4` on the original address is carried over as the editor's `page` parameter, and a presigned S3 or Azure URL keeps its query string.
+
+The editor fetches the file itself, so the address has to be reachable without your cookies. A PDF that only exists as a `blob:`, a `data:` URL or behind a login is refused with a message instead of landing you in an editor that cannot load it. Chrome's built-in PDF viewer does not run bookmarklets at all, so on those tabs start from a page that links the PDF, or from a Firefox tab.
 ## Export a chat to Markdown
 
 **💬 Export chat to Markdown** saves the whole conversation as one `.md` file, so a long thread can be handed to another model or a colleague without the clipboard cutting it short at the first thousand words.

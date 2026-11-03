@@ -429,6 +429,8 @@ const PREP = {
  * to be true: a download really lands in the downloads folder, a clipboard tool
  * really writes the clipboard, and so on. */
 const REASONS = {
+  // Leaves the tab for another site, so there is no page state to photograph.
+  "simplepdf-open": "external",
   "tab-screenshot": "download",
   "website-to-markdown": "download",
   "selection-to-markdown": "download",
