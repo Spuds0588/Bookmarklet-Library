@@ -2,6 +2,20 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — A maximum size, not just a splitting point
+
+**Changed**
+
+- The splitting field became **Max file size (MB)**: a range slider paired with a number input, both starting at 20, kept in sync in either direction. The number accepts 0.5–500 MB for scans that need more room; the slider covers the 1–60 MB range people actually hit.
+- The ceiling is now a promise rather than a suggestion. If any part still exceeds it, the whole document is recompressed at the next stronger preset and repacked, up to Strong, and only then does a page get reported as impossible. The row says which preset it had to use (`compressed at Strong to fit`).
+- A single-page file that goes over the ceiling is reported as still over it, because there is nothing to split.
+- The hint now says what the tool will do: compress until under the maximum, split what is left, and report a page that cannot fit.
+
+**Verified**
+
+- `npm test`: 111 pass, including the escalation ladder (`light` → `balanced` → `strong`, and no escalation past `strong`).
+- The capture checks the slider defaults to 20, types 0.05 MB into the number field, confirms the slider follows, then runs two PDFs through the picker and requires both rows to be saveable, both to report `compressed at Strong to fit`, and one archive to be offered.
+
 ## 2026-11-03 — Sizes read in MB, and splitting starts at 20 MB
 
 **Changed**

@@ -312,7 +312,7 @@
     "pdf-shrink": {
       "file": "screenshots/pdf-shrink.png",
       "changed": true,
-      "steps": 6
+      "steps": 7
     },
     "zip-files": {
       "file": "screenshots/zip-files.png",

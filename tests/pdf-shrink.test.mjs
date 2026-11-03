@@ -8,7 +8,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 globalThis.__BL_TEST__ = {};
 new Function(await readFile(path.join(root, "bookmarklets", "files", "pdf-shrink.js"), "utf8"))();
-const { isPdf, scanObjects, serializePdf, imageKind, replaceImageDict, presetFor, countPages, dictEnd, pageTree, subsetFor, splitParts, crc32, zipStore, uniqueName } =
+const { isPdf, scanObjects, serializePdf, imageKind, replaceImageDict, presetFor, countPages, dictEnd, pageTree, subsetFor, splitParts, crc32, zipStore, uniqueName, ladderFrom } =
   globalThis.__BL_TEST__.pdfShrink;
 delete globalThis.__BL_TEST__;
 
@@ -126,6 +126,13 @@ test("an indirect length becomes a byte count, not a pointer at another object",
   assert.doesNotMatch(dict, /\/Length \d+ \d+ R/);
   assert.match(dict, /\/Length 13\b/);
   assert.equal(textOf(rebuilt.get(4).stream), "BT /F1 12 Tf\n");
+});
+
+test("a part that does not fit is retried at the next stronger preset", () => {
+  assert.deepEqual(ladderFrom("light"), ["light", "balanced", "strong"]);
+  assert.deepEqual(ladderFrom("balanced"), ["balanced", "strong"]);
+  assert.deepEqual(ladderFrom("strong"), ["strong"]);
+  assert.deepEqual(ladderFrom(undefined), ["balanced", "strong"]);
 });
 
 test("files with the same name get distinct entries in one archive", () => {

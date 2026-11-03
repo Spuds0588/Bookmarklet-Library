@@ -133,6 +133,21 @@ const STEPS = {
       })()`,
     },
     { wait: 300 },
+    // A ceiling below what Balanced can reach proves the escalation path: the
+    // row must say which stronger preset finally fit.
+    {
+      script: `(() => {
+        const root = document.getElementById("bl-pdf-shrink-host").shadowRoot;
+        const range = root.querySelector("input[type=range]");
+        if (!range) throw new Error("no maximum-size slider");
+        if (range.value !== "20") throw new Error("slider defaults to " + range.value + ", not 20");
+        const number = root.querySelector("input[type=number]");
+        number.value = "0.05";
+        number.dispatchEvent(new Event("input", { bubbles: true }));
+        if (range.value !== "0.05") throw new Error("slider did not follow the typed value: " + range.value);
+        return number.value;
+      })()`,
+    },
     {
       script: `(() => {
         const root = document.getElementById("bl-pdf-shrink-host").shadowRoot;
@@ -151,6 +166,8 @@ const STEPS = {
         const status = root.querySelector(".status").textContent;
         const rows = [...root.querySelectorAll(".queue li")];
         if (rows.length !== 2) throw new Error("expected 2 queue rows, got " + rows.length + ": " + status);
+        const escalated = rows.filter((row) => /compressed at Strong to fit/.test(row.textContent));
+        if (escalated.length !== 2) throw new Error("escalation did not happen: " + rows.map((row) => row.textContent).join(" | "));
         const ready = rows.filter((row) => { const save = row.querySelector(".queue-save"); return save && !save.hidden && !save.disabled; });
         if (ready.length !== 2) throw new Error("only " + ready.length + " rows are ready to save: " + rows.map((row) => row.textContent).join(" | "));
         if (root.querySelector(".result").hidden) throw new Error("no result: " + status);

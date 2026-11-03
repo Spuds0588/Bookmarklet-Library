@@ -65,7 +65,8 @@
 - [x] The `pdftotext` mismatch was a real bug: a stream with an indirect `/Length` was trimmed at its last line break, corrupting embedded fonts (poppler said "Bad dynamic code table"). Lengths are resolved from the length object now; rendered pages hash identically and text matches exactly.
 - [ ] Widen the corpus past 30 files, especially JBIG2/CCITT scans, PDFs over 40 MB, and Word/Chrome exports with object streams.
 - [ ] Text-only PDFs cannot get smaller by recompression. The rebuild can still shrink them by dropping superseded objects, but that is the path under investigation above.
-- [ ] A page that stays over the split target is reported, not retried at a stronger preset for that page alone.
+- [x] **Max file size (MB)** slider plus number input, default 20. Parts that do not fit are rebuilt at the next stronger preset (up to Strong) before anything is reported as impossible.
+- [ ] A page that even Strong leaves over the ceiling could try a lower JPEG quality for that page alone instead of stopping at the preset.
 
 ## Export chat to Markdown (2026-11-03)
 

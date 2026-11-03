@@ -574,9 +574,27 @@
     return { ...outcome, bytes: better ? out : bytes, after: better ? out.length : bytes.length, unchanged: !better };
   }
 
+  const LADDER = ["light", "balanced", "strong"];
+
+  // From the chosen strength upwards. A ceiling is a promise, so a part that
+  // does not fit is compressed harder before it is called impossible.
+  function ladderFrom(name) {
+    const index = LADDER.indexOf(name);
+    return LADDER.slice(index < 0 ? 1 : index);
+  }
+
   async function splitPdf(bytes, targetBytes, presetName) {
-    const outcome = await optimizePdf(bytes, presetName);
-    return { ...outcome, parts: splitParts(outcome.pdf, targetBytes) };
+    const ladder = ladderFrom(presetName);
+    let outcome = null;
+    let parts = [];
+    let used = ladder[0];
+    for (const name of ladder) {
+      outcome = await optimizePdf(bytes, name);
+      parts = splitParts(outcome.pdf, targetBytes);
+      used = name;
+      if (parts.every((part) => part.bytes.length <= targetBytes)) break;
+    }
+    return { ...outcome, parts, preset: used, escalated: used !== ladder[0] };
   }
 
   /* Packing the parts ------------------------------------------------------ */
@@ -694,6 +712,8 @@
     .row span { font-size: 12px; }
     .row input { width: 92px; padding: 6px 7px; border: 1px solid #111; background: #fff; color: #111;
       font: 12px system-ui, sans-serif; text-align: right; }
+    .max { display: flex; flex-direction: column; gap: 7px; }
+    .range { width: 100%; margin: 0; accent-color: #111; }
     .status { margin: 0; padding: 9px 10px; border: 1px solid #111; background: #fff; font-size: 12.5px;
       overflow-wrap: anywhere; }
     .status.error { border-style: dashed; }
@@ -796,17 +816,25 @@
       presets.append(button);
     }
 
-    const splitRow = make("label", { class: "row" });
-    const splitInput = make("input", { type: "number", min: "0.2", step: "0.5", placeholder: "off", inputmode: "decimal", value: "20" });
-    splitRow.append(make("span", {}, "Split parts under (MB)"), splitInput);
+    const maxRow = make("label", { class: "row" });
+    const maxInput = make("input", { type: "number", min: "0.5", max: "500", step: "0.5", inputmode: "decimal", value: "20", "data-max": "" });
+    maxRow.append(make("span", {}, "Max file size (MB)"), maxInput);
+    const maxRange = make("input", { class: "range", type: "range", min: "0.05", max: "60", step: "0.05", value: "20", "aria-label": "Maximum file size in megabytes", "data-max-range": "" });
+    const maxBlock = make("div", { class: "max" });
+    maxBlock.append(maxRow, maxRange);
+    maxRange.addEventListener("input", () => { maxInput.value = maxRange.value; });
+    maxInput.addEventListener("input", () => {
+      const value = Number.parseFloat(maxInput.value);
+      if (Number.isFinite(value) && value > 0) maxRange.value = String(Math.min(60, Math.max(0.05, value)));
+    });
 
     const status = make("p", { class: "status" }, "Ready. Pick one or more PDFs, then press Shrink.");
     const result = make("div", { class: "result" });
     result.hidden = true;
-    const hint = make("p", { class: "hint" }, "Every file is rebuilt here in the browser, one after another. Pages, links and text are kept; only images are re-encoded, and only when the result is smaller. Results stay in this panel until you save them.");
+    const hint = make("p", { class: "hint" }, "Every file is rebuilt here in the browser, one after another. Pages, links and text are kept, and images are re-encoded until the file is under the maximum size; anything larger is split into parts that fit. A single page that cannot get under the ceiling is reported instead of dropped. Results stay in this panel until you save them.");
 
     const queue = make("ul", { class: "queue", "aria-label": "Files to shrink", "data-queue": "" });
-    body.append(drop, queue, presets, splitRow, status, result, hint);
+    body.append(drop, queue, presets, maxBlock, status, result, hint);
 
     const foot = make("footer", { class: "foot" });
     const download = make("button", { class: "primary", type: "button", "data-download": "" }, "Download");
@@ -948,7 +976,7 @@
         const bytes = new Uint8Array(await item.file.arrayBuffer());
         setStatus(`Recompressing ${name}…`);
         await new Promise((resolve) => setTimeout(resolve, 30));
-        const targetMb = Number.parseFloat(splitInput.value);
+        const targetMb = Number.parseFloat(maxInput.value);
         const target = Number.isFinite(targetMb) && targetMb > 0 ? targetMb * 1024 * 1024 : 0;
         const outcome = target ? await splitPdf(bytes, target, state.preset) : await shrinkPdf(bytes, state.preset);
         const parts = outcome.parts || null;
@@ -962,13 +990,15 @@
         }
 
         const base = baseName(name);
+        const harder = outcome.escalated ? ` · compressed at ${presetFor(outcome.preset).label} to fit` : "";
         if (parts && parts.length > 1) {
           item.result = parts.map((part, index) => ({ name: `${base}-part${index + 1}.pdf`, bytes: part.bytes }));
-          item.meta.textContent = `${parts.length} parts · ${mb(total)}`;
-          if (parts.some((part) => part.tooBig)) item.meta.textContent += " · a page is still over the limit";
+          item.meta.textContent = `${parts.length} parts · ${mb(total)}${harder}`;
+          if (parts.some((part) => part.tooBig)) item.meta.textContent += ` · a single page will not fit under ${mb(target)}`;
         } else {
           item.result = [{ name: `${base}-small.pdf`, bytes: parts ? parts[0].bytes : outcome.bytes }];
-          item.meta.textContent = `${mb(outcome.before)} → ${mb(total)} · ${Math.round((saved / outcome.before) * 100)}% smaller`;
+          item.meta.textContent = `${mb(outcome.before)} → ${mb(total)} · ${Math.round((saved / outcome.before) * 100)}% smaller${harder}`;
+          if (parts && parts[0] && parts[0].tooBig) item.meta.textContent += ` · still over ${mb(target)}`;
         }
         item.status = "done";
         item.save.hidden = false;
@@ -1024,7 +1054,7 @@
   if (globalThis.__BL_TEST__) {
     globalThis.__BL_TEST__.pdfShrink = {
       isPdf, scanObjects, serializePdf, imageKind, replaceImageDict, presetFor, countPages, dictEnd,
-      pageTree, subsetFor, splitParts, crc32, zipStore, shrinkPdf, splitPdf, readPdf, uniqueName,
+      pageTree, subsetFor, splitParts, crc32, zipStore, shrinkPdf, splitPdf, readPdf, uniqueName, ladderFrom,
     };
   } else if (document?.body) {
     open();
