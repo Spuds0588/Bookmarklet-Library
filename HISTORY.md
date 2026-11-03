@@ -2,6 +2,20 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Shrink PDF: the font bug the render check caught
+
+**Changed**
+
+- A stream whose `/Length` is an indirect reference was read by trusting the `endstream` marker and trimming every trailing line break. For binary data that legitimately ends in `0x0A` — embedded font programs, some images — that silently shortened the stream by a byte and corrupted it. Poppler reported `Bad 'Length' attribute in stream` and `Bad dynamic code table in flate stream`, and a page rendered differently after a rebuild.
+- Those streams now resolve their length from the length object itself, in a second pass once every object is known. The trim is gone; the fallback only removes the single line break that belongs to `endstream`.
+- Every written stream also carries a `/Length` that matches the bytes actually written, so a producer's off-by-a-few value cannot mislead a reader after the rebuild.
+
+**Verified**
+
+- `npm test`: 108 pass, including a stream whose data ends in a newline and whose length lives in another object.
+- On the real corpus, `pdftotext` differences disappeared: the four previously differing PDFs now match page for page. `pdftoppm` at 80 dpi produces byte-identical PNGs for the original and the rebuild, and poppler logs no syntax errors.
+- The scan measurements stand: 184 KB → 60 KB, 1.17 MB → 149 KB, 5.70 MB → 1.27 MB, 6.88 MB → 1.43 MB, with page counts and image counts unchanged.
+
 ## 2026-11-03 — Shrink PDF splits, and a 30-file corpus says what it really does
 
 **Changed**
@@ -19,7 +33,7 @@ What has been done, in order. Newest entries first.
 
 **Limit**
 
-- `pdftotext` returned slightly shorter text on two vector PDFs whose page content streams are byte-identical, so something in font or metadata ordering still differs. Until that is pinned down the tool keeps its **In testing** badge.
+- The `pdftotext` difference was traced to indirect `/Length` handling and fixed in the next entry, so the badge now reflects corpus size rather than a known defect.
 
 ## 2026-11-03 — Shrink PDF, without throwing the pages away
 

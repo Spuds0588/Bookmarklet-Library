@@ -80,6 +80,7 @@
       let dict = "";
       let body = "";
       let stream = null;
+      let streamStart = null;
 
       if (text.startsWith("<<", cursor)) {
         const close = dictEnd(text, cursor);
@@ -94,17 +95,20 @@
 
       if (streamMatch) {
         const start = cursor + streamMatch[0].length;
+        streamStart = start;
         const direct = dict.match(/\/Length\s+(\d+)(?!\s+\d+\s+R)/);
         let end;
         if (direct) {
           end = start + Number(direct[1]);
         } else {
-          // An indirect /Length lives in another object, so fall back to the
-          // endstream marker and drop the line break in front of it.
+          // The real length is a number in another object, resolved below. Until
+          // then, take the endstream marker and remove only the single line
+          // break that belongs to it: the data itself may end in a newline.
           const marker = text.indexOf("endstream", start);
           if (marker < 0) continue;
           end = marker;
-          while (end > start && (text[end - 1] === "\n" || text[end - 1] === "\r")) end--;
+          if (text[end - 1] === "\n") end--;
+          if (text[end - 1] === "\r") end--;
         }
         if (end > start && end <= bytes.length) stream = bytes.subarray(start, end);
       } else if (!dict) {
@@ -114,7 +118,24 @@
 
       // The position decides which definition wins when a number appears more
       // than once, which is how an incremental save supersedes an object.
-      objects.set(num, { num, gen, dict, body, stream, start: match.index });
+      objects.set(num, { num, gen, dict, body, stream, streamStart, start: match.index });
+    }
+
+    // Resolve indirect /Length values now that every object is known. Guessing
+    // from the endstream marker is not enough: trimming a line break there
+    // shortened any binary stream that happened to end with one, which damaged
+    // embedded fonts and made pages render differently.
+    for (const object of objects.values()) {
+      if (!object.stream || object.streamStart === null) continue;
+      const indirect = object.dict.match(/\/Length\s+(\d+)\s+(\d+)\s+R/);
+      if (!indirect) continue;
+      const target = objects.get(Number(indirect[1]));
+      const length = target ? Number(String(target.body || "").trim()) : NaN;
+      if (!Number.isFinite(length) || length < 0) continue;
+      const end = object.streamStart + length;
+      if (end <= bytes.length && end > object.streamStart) {
+        object.stream = bytes.subarray(object.streamStart, end);
+      }
     }
 
     return { text, objects };

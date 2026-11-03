@@ -60,7 +60,8 @@
 - [x] `tests/pdf-shrink.test.mjs` covers object scanning, indirect `/Length`, revision replacement, xref offsets round-tripping through the parser, eligibility rules and dictionary rewriting. The capture processes a generated 124 KB scan.
 - [x] Ran 30 files (15 public PDFs plus 15 generated 2400×3200 scans) through the real browser pipeline. Scans: 184 KB → 60 KB, 1.17 MB → 149 KB (87%), 5.70 MB → 1.27 MB, 6.88 MB → 1.43 MB. Page counts match `pdfinfo`, image object counts are unchanged, and page content streams hash identical.
 - [x] **Split parts under (MB)**: pages are packed in page-tree order, each part is rebuilt from only the objects its pages can reach, and the parts arrive in one stored ZIP. A page too heavy for the target is flagged instead of dropped. A 6.88 MB three-page scan at 300 KB became a 175 KB part plus a 1.25 MB single page marked over the limit.
-- [ ] `pdftotext` returned slightly shorter text on two vector PDFs whose page content streams are byte-identical. Rendered pages need a pixel comparison, and the font/metadata ordering that differs needs pinning down.
+- [x] The `pdftotext` mismatch was a real bug: a stream with an indirect `/Length` was trimmed at its last line break, corrupting embedded fonts (poppler said "Bad dynamic code table"). Lengths are resolved from the length object now; rendered pages hash identically and text matches exactly.
+- [ ] Widen the corpus past 30 files, especially JBIG2/CCITT scans, PDFs over 40 MB, and Word/Chrome exports with object streams.
 - [ ] Text-only PDFs cannot get smaller by recompression. The rebuild can still shrink them by dropping superseded objects, but that is the path under investigation above.
 - [ ] A page that stays over the split target is reported, not retried at a stronger preset for that page alone.
 

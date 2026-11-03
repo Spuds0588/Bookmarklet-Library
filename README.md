@@ -139,7 +139,7 @@ Set **Split parts under (MB)** and the same pass packs the pages, in page-tree o
 
 It has now been through 30 files: 15 public PDFs and 15 generated 2400×3200 scans. The scans went 184 KB → 60 KB, 1.17 MB → 149 KB (87% smaller), 5.70 MB → 1.27 MB and 6.88 MB → 1.43 MB (79%). `pdfinfo` page counts match, image object counts are unchanged, and page content streams hash identical before and after. Splitting a 3-page 6.88 MB scan at a 300 KB ceiling produced a 175 KB two-page part plus a 1.25 MB single page that the panel flags as too heavy to fit.
 
-Two honest limits. `pdftotext` returned slightly less text on two vector PDFs even though their page content streams were byte-identical, so something in font or metadata ordering still differs; that is why the card keeps its **In testing** badge. And a text-only PDF has nothing to recompress, so the panel says there is no gain rather than handing back a file that grew.
+A `pdftotext` mismatch on two of those vector PDFs turned out to be a real bug, not a reader quirk: a stream whose `/Length` is an indirect reference was being trimmed at its final line break, which shortened and corrupted embedded fonts. Lengths are resolved from the length object now, and the rebuilt pages render to byte-identical PNGs with matching text. The card keeps its **In testing** badge because the corpus is still small, and because a page that cannot fit a split target is reported rather than retried at a stronger preset. A text-only PDF has nothing to recompress, so the panel says there is no gain rather than handing back a file that grew.
 
 ## Export a chat to Markdown
 

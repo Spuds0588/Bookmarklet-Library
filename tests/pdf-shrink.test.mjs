@@ -45,15 +45,32 @@ test("objects are found, including streams with an indirect length", () => {
     "%PDF-1.4\n" +
       "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n" +
       "4 0 obj\n<< /Length 9 0 R >>\nstream\nBT /F1 12 Tf\nendstream\nendobj\n" +
-      "9 0 obj\n17\nendobj\n" +
+      "9 0 obj\n13\nendobj\n" +
       "trailer\n<< /Size 10 /Root 1 0 R >>\n%%EOF\n",
   );
   const { objects } = scanObjects(pdf);
   assert.equal(objects.size, 3);
   assert.equal(objects.get(1).dict, "<< /Type /Catalog /Pages 2 0 R >>");
-  // The /Length points at object 9, so the stream ends at endstream instead.
-  assert.equal(textOf(objects.get(4).stream), "BT /F1 12 Tf");
-  assert.equal(objects.get(9).body, "17");
+  // The length lives in object 9 and includes the trailing newline.
+  assert.equal(textOf(objects.get(4).stream), "BT /F1 12 Tf\n");
+  assert.equal(objects.get(9).body, "13");
+});
+
+test("an indirect length keeps every byte, including a trailing newline", () => {
+  const payload = "BT /F1 12 Tf\n";
+  const pdf = ascii(
+    "%PDF-1.4\n" +
+      "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n" +
+      `4 0 obj\n<< /Length 9 0 R >>\nstream\n${payload}endstream\nendobj\n` +
+      `9 0 obj\n${payload.length}\nendobj\n` +
+      "trailer\n<< /Size 10 /Root 1 0 R >>\n%%EOF\n",
+  );
+  const { objects } = scanObjects(pdf);
+  // The old fallback trimmed the final newline of the data, which corrupted
+  // any binary stream that ended in one.
+  assert.equal(textOf(objects.get(4).stream), payload);
+  assert.equal(objects.get(4).stream.length, payload.length);
+  assert.equal(objects.get(9).body, String(payload.length));
 });
 
 test("a later definition replaces the earlier one, dropping revision leftovers", () => {
