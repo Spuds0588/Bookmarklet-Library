@@ -110,7 +110,12 @@
           .filter(Boolean);
       }
       if (field === "checkbox" || field === "radio") entry.checked = Boolean(el.checked);
-      else if ((tag === "input" || tag === "textarea") && el.value) entry.value = String(el.value).slice(0, 40);
+      else if ((tag === "input" || tag === "textarea") && el.value) {
+        // An unlabeled field falls back to its value for the label; sending both
+        // spends prompt space saying the same thing twice.
+        const shown = String(el.value).trim().replace(/\s+/g, " ").slice(0, 48);
+        if (shown !== label) entry.value = shown.slice(0, 40);
+      }
       map.push(entry);
       el.setAttribute("data-webmcp-id", String(entry.id));
     }

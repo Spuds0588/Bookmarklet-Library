@@ -130,7 +130,7 @@ test("a page's own tools replace the control map in the prompt", () => {
     step: 1,
     maxSteps: 3,
   });
-  assert.match(prompt, /Page tools \(call these instead of clicking\)/);
+  assert.match(prompt, /Page tools \(call these by name; results come back as text\)/);
   assert.match(prompt, /addTodo/);
   assert.doesNotMatch(prompt, /Controls: \[/);
   assert.ok(SYSTEM_PROMPT.includes('"action":"tool"'));
@@ -296,7 +296,9 @@ test("the bookmarklet only answers its hub, needs the token, and obeys HALT", as
     assert.equal(map[1].href, "/docs");
     assert.equal(map[2].label, "One");
     assert.deepEqual(map[2].options, ["One", "Two"]);
-    assert.equal(map[3].value, "draft");
+    // A field with no label of its own is described by its value, once.
+    assert.equal(map[3].label, "draft");
+    assert.equal(map[3].value, undefined);
     assert.ok(!map.some((entry) => entry.tag === "input" && entry.type === "password"));
     assert.ok(!map.some((entry) => entry.type === "file"));
 

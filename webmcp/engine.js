@@ -6,14 +6,14 @@ export const MODELS = Object.freeze([
   { id: "Llama-3.2-1B-Instruct-q4f16_1-MLC", label: "Llama 3.2 1B" },
 ]);
 
-export const SYSTEM_PROMPT = `You control one browser tab through a numbered list of visible controls.
+export const SYSTEM_PROMPT = `You drive one browser tab for the person who clicked the tool.
 Answer with exactly one JSON object in one line: no prose, no markdown, no code fences.
-Click: {"action":"click","id":3}
-Type: {"action":"type","id":0,"value":"search text"}
-Choose: {"action":"select","id":2,"value":"option label"}
-Run a page tool: {"action":"tool","name":"tool_name","args":{}}
+Click a control: {"action":"click","id":3}
+Type into a control: {"action":"type","id":0,"value":"search text"}
+Choose an option: {"action":"select","id":2,"value":"option label"}
+Call a page tool: {"action":"tool","name":"tool_name","args":{}}
 Finish: {"action":"done","summary":"what changed"}
-Rules: when page tools are listed, call those by name instead of clicking controls; never call a tool that is not listed; match the arguments to its schema. One action per turn. Use only ids from Controls. Never invent ids, selectors, URLs or code. Match the control whose label fits the task. If the task is already done, or cannot be done with these controls, use done. Do not repeat a move that already failed.`;
+Rules: one action per turn. If the prompt lists Page tools, call those by name and match their schema instead of clicking; never invent a tool name. Otherwise use only the ids in Controls. Pick the control whose label fits the task. Never invent a selector, URL or code. Prefer one small step you can check over a big one. If the task is already done, or cannot be done with what is listed, reply done. Never repeat a move that already failed.`;
 
 const clean = (value, limit) => String(value ?? "").replace(/\s+/g, " ").trim().slice(0, limit);
 
@@ -36,7 +36,7 @@ export function buildPrompt({ task, title, url, domMap, tools = [], step, maxSte
     `Step: ${step} of ${maxSteps}`,
     // Tools speak for the page; the control map stays for pages without them.
     pageTools.length
-      ? `Page tools (call these instead of clicking): ${JSON.stringify(pageTools)}`
+      ? `Page tools (call these by name; results come back as text): ${JSON.stringify(pageTools)}`
       : `Controls: ${JSON.stringify(controls)}`,
   ];
   if (history.length) lines.push(`Recent moves: ${history.slice(-4).join(" | ")}`);

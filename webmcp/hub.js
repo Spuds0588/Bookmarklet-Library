@@ -525,6 +525,8 @@ async function runTask() {
           title: session.title,
           url: session.url,
           domMap: map,
+          // The page's tools stand in for its controls whenever it has them.
+          tools: session.tools ?? [],
           step,
           maxSteps,
           history,
@@ -578,7 +580,8 @@ async function runTask() {
           break;
         }
         log(`${decision.name}: ${toolReply.result.text || "(no output)"}`, "in");
-        history.push(`tool ${decision.name} -> ok`);
+        // The tool's answer is the next step's context, not just a log line.
+        history.push(`tool ${decision.name} -> ${(toolReply.result.text || "ok").slice(0, 120)}`);
         continue;
       }
 

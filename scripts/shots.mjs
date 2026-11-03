@@ -1002,6 +1002,214 @@ async function serveFixture() {
   return server;
 }
 
+/* WebMCP probe -----------------------------------------------------------
+ * A live run of the page agent with no model in the loop: the hub is driven
+ * through its ?webmcp-test hook, and the engine is a script of decisions. It
+ * prints what the hub saw, what the page did and — with --prompts — the exact
+ * prompt each step sent, which is how the instructions get tuned.
+ *
+ *   node scripts/shots.mjs --webmcp-probe                  controls path
+ *   node scripts/shots.mjs --webmcp-probe --tools          page-tool path
+ *   node scripts/shots.mjs --webmcp-probe --kill           add a Kill mid-run
+ *   node scripts/shots.mjs --webmcp-probe --prompts        dump the prompts
+ *   node scripts/shots.mjs --webmcp-probe --hub=prod        drive the live hub
+ *
+ * --tools installs a WebMCP-shaped document.modelContext in the fixture before
+ * the bookmarklet runs, so a page that publishes tools can be driven even in a
+ * Chrome that has the API switched off.
+ */
+const PROBE_TOOL_STUB = `(() => {
+  const registered = [];
+  const api = {
+    async registerTool(tool) { registered.push(tool); },
+    async getTools() { return registered.map((tool) => ({ ...tool, title: "" })); },
+    async executeTool(tool, args) {
+      const made = registered.find((entry) => entry.name === tool.name);
+      if (!made) throw new Error("unknown tool: " + tool.name);
+      return await made.execute(args ?? {}, { signal: new AbortController().signal });
+    },
+    addEventListener() {},
+    removeEventListener() {},
+  };
+  Object.defineProperty(document, "modelContext", { value: api, configurable: true });
+  Object.defineProperty(navigator, "modelContext", { value: api, configurable: true });
+  return true;
+})()`;
+
+const PROBE_TOOL = `document.modelContext.registerTool({
+  name: "set_region",
+  description: "Set the field team region shown on the page.",
+  inputSchema: { type: "object", properties: { value: { type: "string", description: "Region name" } }, required: ["value"] },
+  annotations: { readOnlyHint: false },
+  execute: async ({ value }) => {
+    const field = window.__REGION__ ?? [...document.querySelectorAll("input")].find((el) => /demo region/i.test(el.value || ""));
+    if (!field) return "no region field on this page";
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(field, String(value));
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+    return "Region set to " + value + ".";
+  },
+})`;
+
+async function probeWebmcp() {
+  const useTools = args.includes("--tools");
+  const wantKill = args.includes("--kill");
+  const showPrompts = args.includes("--prompts");
+  const hubMode = args.find((arg) => arg.startsWith("--hub="))?.slice(6) ?? "local";
+  const taskArg = args.find((arg) => arg.startsWith("--task="))?.slice(7);
+  const hub = hubMode === "prod"
+    ? "https://spuds0588.github.io/Bookmarklet-Library/webmcp/?webmcp-test"
+    : "http://127.0.0.1:4321/webmcp/?webmcp-test";
+  const task = taskArg ?? (useTools ? "Set the region to ridge" : "Type ridge into the region field");
+
+  const server = await serveFixture();
+  const { child, pipe: cdp } = await launchChrome(null);
+  const report = { mode: useTools ? "page tools" : "controls", hub };
+
+  const startRun = `(() => {
+    let call = 0;
+    const script = ${JSON.stringify(useTools
+      ? [{ action: "tool", name: "set_region", args: { value: "ridge" } }, { action: "done", summary: "Set the region." }]
+      : [{ action: "type", id: "{regionId}", value: "ridge" }, { action: "done", summary: "Typed the region." }])};
+    window.__PROMPTS__ = [];
+    __WEBMCP_TEST__.setEngine({
+      kind: "test",
+      label: "Scripted engine",
+      complete: async (prompt) => {
+        window.__PROMPTS__.push(prompt);
+        const step = script[call++] ?? { action: "done", summary: "Out of script." };
+        return JSON.stringify(step);
+      },
+    });
+  })()`;
+
+  const readHub = `({
+    title: document.title,
+    heading: document.querySelector("h1").textContent.trim(),
+    count: document.querySelector("#map-count").textContent.trim(),
+    summary: document.querySelector("#map-summary").textContent.trim(),
+    badge: document.querySelector("#badge").dataset.state,
+    map: document.querySelector("#map").textContent.replace(/\\s+/g, " ").slice(0, 200),
+    log: [...document.querySelectorAll("#log .entry")].map((entry) => entry.textContent),
+    prompts: window.__PROMPTS__ ?? [],
+  })`;
+
+  try {
+    await cdp.send("Target.setDiscoverTargets", { discover: true });
+    const { targetId, sessionId } = await openTool(cdp, DEMO_URL);
+    if (useTools) {
+      await evaluate(cdp, sessionId, PROBE_TOOL_STUB);
+      await evaluate(cdp, sessionId, PROBE_TOOL);
+    }
+    const source = await readFile(path.join(root, "bookmarklets", "devtools", "webmcp-bridge.js"), "utf8");
+    const code = source.slice(source.indexOf("*/") + 2).trim();
+    // The demo field has no aria-label, so hold the element itself rather than
+    // looking it up again by text after its value changes.
+    await evaluate(cdp, sessionId, `window.__REGION__ = [...document.querySelectorAll("input")].find((el) => /demo region/i.test(el.value || "")) ?? null; true`);
+    await evaluate(cdp, sessionId, `window.__WEBMCP_HUB_URL__ = ${JSON.stringify(hub)}; true`);
+    await evaluate(cdp, sessionId, code);
+
+    let popup = null;
+    for (let i = 0; i < 80 && !popup; i++) {
+      await sleep(250);
+      popup = (await cdp.send("Target.getTargets")).targetInfos.find(
+        (target) => target.type === "page" && target.openerId === targetId,
+      );
+    }
+    if (!popup) throw new Error("the hub window never opened");
+    const hubSession = (await cdp.send("Target.attachToTarget", { targetId: popup.targetId, flatten: true })).sessionId;
+    await cdp.send("Page.enable", {}, hubSession);
+    await cdp.send("Runtime.enable", {}, hubSession);
+    for (let i = 0; i < 60; i++) {
+      const count = await evaluate(cdp, hubSession, `document.querySelector("#map-count").textContent.trim()`).catch(() => "0");
+      if (count !== "0") break;
+      await sleep(250);
+    }
+
+    const before = await evaluate(cdp, hubSession, `document.querySelector("#map").textContent`);
+    const regionId = useTools
+      ? null
+      : await evaluate(cdp, hubSession, `(() => {
+          const entry = __WEBMCP_TEST__.session().domMap.find((node) => /demo region/i.test((node.label || "") + " " + (node.value || "")));
+          return entry ? entry.id : -1;
+        })()`);
+    const script = useTools
+      ? startRun
+      : startRun.replace('"{regionId}"', String(regionId));
+    await evaluate(cdp, hubSession, script);
+    await evaluate(cdp, hubSession, `(() => {
+      const field = document.querySelector("#task");
+      field.value = ${JSON.stringify(task)};
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+      document.querySelector("#steps").value = "3";
+      document.querySelector("#run").click();
+      return true;
+    })()`);
+
+    let state = await evaluate(cdp, hubSession, readHub);
+    for (let i = 0; i < 60; i++) {
+      await sleep(250);
+      state = await evaluate(cdp, hubSession, readHub);
+      if (state.log.some((line) => /Finished|Stopped/.test(line))) break;
+    }
+    const page = await evaluate(cdp, sessionId, `({
+      value: window.__REGION__ ? window.__REGION__.value : null,
+      active: window.__WEBMCP_ACTIVE__ === true,
+    })`);
+    report.run = { count: state.count, summary: state.summary, badge: state.badge, log: state.log.slice(-5), page, mapBefore: before.replace(/\s+/g, " ").slice(0, 160) };
+
+    if (wantKill) {
+      await evaluate(cdp, hubSession, `(() => {
+        __WEBMCP_TEST__.setEngine({
+          kind: "test",
+          label: "Scripted engine",
+          complete: async () => {
+            await new Promise((resolve) => setTimeout(resolve, 400));
+            return JSON.stringify(${JSON.stringify(useTools
+              ? { action: "tool", name: "set_region", args: { value: "churn" } }
+              : { action: "type", id: regionId, value: "churn" })});
+          },
+        });
+        const field = document.querySelector("#task");
+        field.value = "Keep going";
+        field.dispatchEvent(new Event("input", { bubbles: true }));
+        document.querySelector("#run").click();
+        return true;
+      })()`);
+      await sleep(1000);
+      const running = await evaluate(cdp, hubSession, `document.querySelector("#badge").dataset.state`);
+      await evaluate(cdp, hubSession, `document.querySelector("#kill").click()`);
+      await sleep(700);
+      const halted = await evaluate(cdp, hubSession, `({
+        badge: document.querySelector("#badge").dataset.state,
+        log: [...document.querySelectorAll("#log .entry")].map((entry) => entry.textContent).slice(-2),
+      })`);
+      const refused = await evaluate(cdp, hubSession, `(async () => {
+        window.__IN__ = [];
+        addEventListener("message", (event) => window.__IN__.push(event.data && event.data.result));
+        __WEBMCP_TEST__.send(${JSON.stringify(useTools ? "EXEC_TOOL" : "EXEC_ACTION")}, ${JSON.stringify(useTools
+          ? { name: "set_region", args: { value: "late" } }
+          : { action: "type", targetId: regionId, value: "late" })});
+        await new Promise((resolve) => setTimeout(resolve, 900));
+        return window.__IN__.slice(-1)[0] ?? null;
+      })()`);
+      report.kill = { running, ...halted, refused };
+    }
+
+    if (showPrompts) report.prompts = state.prompts;
+    console.log(JSON.stringify(report, null, 2));
+  } finally {
+    await cdp.send("Browser.close").catch(() => {});
+    await sleep(200);
+    child.kill();
+    server.close();
+  }
+}
+
+if (args.includes("--webmcp-probe")) {
+  await probeWebmcp();
+  process.exit(0);
+}
+
 const display = displayArg && (await stat(`/tmp/.X11-unix/X${displayArg.replace(":", "")}`).then(() => true).catch(() => false)) ? displayArg : null;
 if (displayArg && !display) {
   console.error(`No X server on ${displayArg}; the display-only tools will keep their note instead.`);
