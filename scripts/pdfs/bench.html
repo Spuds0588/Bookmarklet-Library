@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PDF shrink bench</title>
+<style>
+  body { font: 13px/1.5 ui-monospace, monospace; margin: 24px; }
+  table { border-collapse: collapse; }
+  td, th { border-bottom: 1px solid #ccc; padding: 3px 10px; text-align: right; }
+  td:first-child, th:first-child { text-align: left; }
+</style>
+</head>
+<body>
+<h1>PDF shrink bench</h1>
+<p id="state">starting…</p>
+<table id="rows"></table>
+<script>window.__BL_TEST__ = {};</script>
+<script src="/bookmarklets/files/pdf-shrink.js"></script>
+<script>
+  window.__bench = { done: false, rows: [], split: [] };
+  const table = document.getElementById("rows");
+  const state = document.getElementById("state");
+  const lib = window.__BL_TEST__.pdfShrink;
+
+  const addRow = (cells) => {
+    const row = document.createElement("tr");
+    for (const value of cells) {
+      const cell = document.createElement("td");
+      cell.textContent = String(value);
+      row.append(cell);
+    }
+    table.append(row);
+  };
+
+  const fetched = async (name) => {
+    const response = await fetch("/scripts/pdfs/" + name);
+    if (!response.ok) throw new Error("fetch " + response.status);
+    return new Uint8Array(await response.arrayBuffer());
+  };
+
+  const pageCountOf = (bytes) => {
+    const { objects } = lib.scanObjects(bytes);
+    return lib.countPages(objects);
+  };
+
+  (async () => {
+    const names = await (await fetch("/scripts/pdfs/index.json")).json();
+    for (const name of names) {
+      const started = performance.now();
+      try {
+        const bytes = await fetched(name);
+        const result = await lib.shrinkPdf(bytes, "balanced");
+        const row = {
+          name,
+          before: result.before,
+          after: result.after,
+          pages: result.pages,
+          outPages: result.unchanged ? result.pages : pageCountOf(result.bytes),
+          changed: !result.unchanged,
+          candidates: result.candidates,
+          shrunk: result.shrunk,
+          skipped: result.skipped,
+          ms: Math.round(performance.now() - started),
+        };
+        window.__bench.rows.push(row);
+        addRow([name, (row.before / 1024).toFixed(0) + "K", (row.after / 1024).toFixed(0) + "K",
+          (100 - (row.after / row.before) * 100).toFixed(0) + "%", row.pages, row.outPages,
+          row.shrunk + "/" + row.candidates, row.ms + "ms"]);
+      } catch (error) {
+        window.__bench.rows.push({ name, error: String((error && error.message) || error) });
+        addRow([name, "-", "-", "-", "-", "-", String((error && error.message) || error), "-"]);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    // A 300 KB ceiling on 2-3 page scans forces real splitting; each part is
+    // then re-parsed to prove its page count and that its bytes stay under the
+    // target (unless a single page cannot fit).
+    for (const name of names.filter((entry) => entry.startsWith("scan-"))) {
+      try {
+        const bytes = await fetched(name);
+        const result = await lib.splitPdf(bytes, 300 * 1024, "balanced");
+        const parts = result.parts.map((part) => ({
+          pages: part.pageCount,
+          kb: Math.round(part.bytes.length / 1024),
+          tooBig: part.tooBig,
+          outPages: pageCountOf(part.bytes),
+        }));
+        const zip = lib.zipStore(result.parts.map((part, index) => ({ name: name + "-part" + index + ".pdf", bytes: part.bytes })));
+        window.__bench.split.push({
+          name,
+          before: bytes.length,
+          totalPages: result.pages,
+          parts,
+          zip: zip.length,
+          pagesAcrossParts: parts.reduce((sum, part) => sum + part.outPages, 0),
+          allUnderTarget: parts.every((part) => part.tooBig || part.kb * 1024 <= 300 * 1024),
+        });
+      } catch (error) {
+        window.__bench.split.push({ name, error: String((error && error.message) || error) });
+      }
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    window.__bench.done = true;
+    state.textContent = "done: " + window.__bench.rows.length + " files, " + window.__bench.split.length + " split runs";
+  })();
+</script>
+</body>
+</html>

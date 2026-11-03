@@ -135,7 +135,11 @@ The images are the weight in a scan. Each JPEG is decoded, drawn at a smaller si
 
 What it deliberately leaves alone: transparency masks and soft masks, `ImageMask` stencils, CCITT and JBIG2 fax images, CMYK and indexed colour, and predictors. Shrinking one half of a mask pair would leave the other misaligned, so those are skipped rather than guessed at. Encrypted PDFs are refused, because their streams cannot be read without the key.
 
-Two honest limits. The tool has only been run against generated fixtures and its own test PDFs, not a shelf of real-world documents, so it carries the **In testing** badge until that changes. And there is no "split under N MB" mode: browsers block the second download a page starts, so a split would appear to work and quietly lose every part after the first.
+Set **Split parts under (MB)** and the same pass packs the pages, in page-tree order, into parts under that ceiling. Each part is rebuilt from only the objects its pages can reach, so a part does not carry the images of the pages it left out, and all parts arrive in one ZIP — a browser blocks the second download a page starts, so separate files would silently stop after the first. A single page that is still too heavy is reported as over the limit rather than quietly dropped.
+
+It has now been through 30 files: 15 public PDFs and 15 generated 2400×3200 scans. The scans went 184 KB → 60 KB, 1.17 MB → 149 KB (87% smaller), 5.70 MB → 1.27 MB and 6.88 MB → 1.43 MB (79%). `pdfinfo` page counts match, image object counts are unchanged, and page content streams hash identical before and after. Splitting a 3-page 6.88 MB scan at a 300 KB ceiling produced a 175 KB two-page part plus a 1.25 MB single page that the panel flags as too heavy to fit.
+
+Two honest limits. `pdftotext` returned slightly less text on two vector PDFs even though their page content streams were byte-identical, so something in font or metadata ordering still differs; that is why the card keeps its **In testing** badge. And a text-only PDF has nothing to recompress, so the panel says there is no gain rather than handing back a file that grew.
 
 ## Export a chat to Markdown
 

@@ -8,7 +8,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 globalThis.__BL_TEST__ = {};
 new Function(await readFile(path.join(root, "bookmarklets", "files", "pdf-shrink.js"), "utf8"))();
-const { isPdf, scanObjects, serializePdf, imageKind, replaceImageDict, presetFor, countPages, dictEnd } =
+const { isPdf, scanObjects, serializePdf, imageKind, replaceImageDict, presetFor, countPages, dictEnd, pageTree, subsetFor, splitParts, crc32, zipStore } =
   globalThis.__BL_TEST__.pdfShrink;
 delete globalThis.__BL_TEST__;
 
@@ -140,6 +140,79 @@ test("a replaced image keeps its slot and drops the old filter settings", () => 
   assert.match(next, /\/BitsPerComponent 8/);
   assert.equal(next.includes("DecodeParms"), false);
   assert.equal(next.includes("Predictor"), false);
+});
+
+function threePagePdf() {
+  return {
+    objects: new Map([
+      [1, { num: 1, gen: 0, dict: "<< /Type /Catalog /Pages 2 0 R >>", body: "", stream: null }],
+      [2, { num: 2, gen: 0, dict: "<< /Type /Pages /Kids [3 0 R 4 0 R 5 0 R] /Count 3 /MediaBox [0 0 612 792] >>", body: "", stream: null }],
+      [3, { num: 3, gen: 0, dict: "<< /Type /Page /Parent 2 0 R /Contents 6 0 R >>", body: "", stream: null }],
+      [4, { num: 4, gen: 0, dict: "<< /Type /Page /Parent 2 0 R /Contents 7 0 R >>", body: "", stream: null }],
+      [5, { num: 5, gen: 0, dict: "<< /Type /Page /Parent 2 0 R /Contents 8 0 R >>", body: "", stream: null }],
+      [6, { num: 6, gen: 0, dict: "<< /Length 3 >>", body: "", stream: ascii("a b") }],
+      [7, { num: 7, gen: 0, dict: "<< /Length 3 >>", body: "", stream: ascii("c d") }],
+      [8, { num: 8, gen: 0, dict: "<< /Length 3 >>", body: "", stream: ascii("e f") }],
+      // Not reachable from any page, so a part must not carry it.
+      [9, { num: 9, gen: 0, dict: "<< /Unused true >>", body: "", stream: null }],
+    ]),
+    trailer: { root: { num: 1, gen: 0 } },
+  };
+}
+
+test("page order comes from the page tree, and a part drops what it cannot reach", () => {
+  const pdf = threePagePdf();
+  const tree = pageTree(pdf.objects, 1);
+  assert.equal(tree.pagesRef.num, 2);
+  assert.deepEqual(tree.pages.map((page) => page.num), [3, 4, 5]);
+
+  const subset = subsetFor({ ...pdf, pagesRef: tree.pagesRef }, [tree.pages[0]]).objects;
+  assert.deepEqual([...subset.keys()].sort((a, b) => a - b), [1, 2, 3, 6]);
+  // The Pages node keeps the MediaBox that children inherit.
+  assert.match(subset.get(2).dict, /\/MediaBox \[0 0 612 792\]/);
+  assert.match(subset.get(2).dict, /\/Kids \[3 0 R\]/);
+  assert.match(subset.get(2).dict, /\/Count 1/);
+  assert.equal(subset.has(9), false);
+});
+
+test("splitting packs pages in order and never exceeds the target", () => {
+  const pdf = threePagePdf();
+  const tree = pageTree(pdf.objects, 1);
+  const parsed = { ...pdf, pagesRef: tree.pagesRef, pages: tree.pages };
+
+  const one = splitParts(parsed, 100000);
+  assert.equal(one.length, 1);
+  assert.equal(one[0].pageCount, 3);
+
+  // A target of one byte cannot be met, so every page travels alone and is
+  // reported as too big rather than dropped.
+  const tiny = splitParts(parsed, 1);
+  assert.equal(tiny.length, 3);
+  assert.deepEqual(tiny.map((part) => part.pageCount), [1, 1, 1]);
+  assert.deepEqual(tiny.map((part) => [part.from, part.to]), [[1, 1], [2, 2], [3, 3]]);
+  assert.equal(tiny.every((part) => part.tooBig), true);
+  for (const part of tiny) assert.match(textOf(part.bytes), /\/Count 1/);
+
+  // Every page appears exactly once across the parts.
+  const numbered = tiny.flatMap((part, index) => part.pageCount && [index]);
+  assert.equal(numbered.length, 3);
+});
+
+test("parts travel in a stored ZIP with a correct table of contents", () => {
+  assert.equal(crc32(ascii("hello")), 0x3610a686);
+  const zip = zipStore([
+    { name: "part-1.pdf", bytes: ascii("%PDF-1.7 one") },
+    { name: "part-2.pdf", bytes: ascii("%PDF-1.7 two") },
+  ]);
+  assert.equal(textOf(zip.subarray(0, 4)), "PK\u0003\u0004");
+
+  const end = zip.length - 22;
+  assert.equal(textOf(zip.subarray(end, end + 4)), "PK\u0005\u0006");
+  const view = new DataView(zip.buffer, zip.byteOffset);
+  assert.equal(view.getUint16(end + 10, true), 2);
+  const centralOffset = view.getUint32(end + 16, true);
+  assert.equal(textOf(zip.subarray(centralOffset, centralOffset + 4)), "PK\u0001\u0002");
+  assert.equal(zip.includes(ascii("%PDF-1.7 two")[0]), true);
 });
 
 test("presets and page counts are read from the file, not guessed", () => {

@@ -58,9 +58,11 @@
 - [x] Pages, text, links and annotations survive because the document is rewritten, not re-rasterised. Objects inside PDF 1.5 object streams are lifted to the top level; superseded copies from incremental saves are dropped.
 - [x] Skips anything it cannot do safely: `/SMask`, `/Mask`, `/ImageMask`, CCITT/JBIG2, CMYK, indexed colour, predictors, and encrypted files. Output is only offered when it is smaller.
 - [x] `tests/pdf-shrink.test.mjs` covers object scanning, indirect `/Length`, revision replacement, xref offsets round-tripping through the parser, eligibility rules and dictionary rewriting. The capture processes a generated 124 KB scan.
-- [ ] **No corpus yet.** Real documents are where the edge cases live: Word/Chrome exports with object streams, scans with JBIG2, PDFs with `/DecodeParms` arrays, and files over ~40 MB. Run a dozen real PDFs through it and fix what breaks.
-- [ ] Text-only PDFs cannot get smaller this way, and the panel says so. Object-level garbage collection (dropping unreachable objects) is the next real gain, but it needs reference parsing that is careful enough to be safe.
-- [ ] No split-to-size mode. Browsers block the extra downloads, so it would silently lose parts.
+- [x] Ran 30 files (15 public PDFs plus 15 generated 2400×3200 scans) through the real browser pipeline. Scans: 184 KB → 60 KB, 1.17 MB → 149 KB (87%), 5.70 MB → 1.27 MB, 6.88 MB → 1.43 MB. Page counts match `pdfinfo`, image object counts are unchanged, and page content streams hash identical.
+- [x] **Split parts under (MB)**: pages are packed in page-tree order, each part is rebuilt from only the objects its pages can reach, and the parts arrive in one stored ZIP. A page too heavy for the target is flagged instead of dropped. A 6.88 MB three-page scan at 300 KB became a 175 KB part plus a 1.25 MB single page marked over the limit.
+- [ ] `pdftotext` returned slightly shorter text on two vector PDFs whose page content streams are byte-identical. Rendered pages need a pixel comparison, and the font/metadata ordering that differs needs pinning down.
+- [ ] Text-only PDFs cannot get smaller by recompression. The rebuild can still shrink them by dropping superseded objects, but that is the path under investigation above.
+- [ ] A page that stays over the split target is reported, not retried at a stronger preset for that page alone.
 
 ## Export chat to Markdown (2026-11-03)
 

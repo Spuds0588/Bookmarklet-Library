@@ -2,6 +2,25 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Shrink PDF splits, and a 30-file corpus says what it really does
+
+**Changed**
+
+- Added **Split parts under (MB)** to 🗜️ Shrink PDF. Pages are packed in page-tree order; each part is rebuilt from only the objects its pages can reach, and every part ships in one stored ZIP, because a browser blocks the second download a page starts. A page that cannot fit is reported, never dropped.
+- Two correctness bugs the corpus found: replacing an image rewrote `/Filter` and `/ColorSpace` without their key names, and written streams kept the producer's `/Length` even when the bytes differed from it, which could truncate a content stream. Every stream now carries a `/Length` matching the bytes written.
+- A rebuild is discarded when it would not beat the original. Lifting compressed object streams into plain objects costs bytes, and on a file with little to gain that outweighs the images, so the original is handed back and the panel says there is no gain.
+- Page subsets keep the Pages node's inherited keys (`MediaBox`, `Resources`) and replace only `/Kids` and `/Count`, so a page that inherited its size keeps it.
+
+**Verified**
+
+- `npm test`: 107 pass, including page-tree order, subset reachability, forced multi-part splits and the ZIP table of contents.
+- 30 files through a real browser: 15 public PDFs and 15 generated 2400×3200 scans. Scans went 184 KB → 60 KB, 1.17 MB → 149 KB (87%), 5.70 MB → 1.27 MB (77%), 6.88 MB → 1.43 MB (79%). `pdfinfo` page counts match, image object counts are unchanged, and page content streams hash identical.
+- Splitting at a 300 KB ceiling turned a 3-page 6.88 MB scan into a 175 KB two-page part and a 1.25 MB single page honestly flagged as too heavy to fit.
+
+**Limit**
+
+- `pdftotext` returned slightly shorter text on two vector PDFs whose page content streams are byte-identical, so something in font or metadata ordering still differs. Until that is pinned down the tool keeps its **In testing** badge.
+
 ## 2026-11-03 — Shrink PDF, without throwing the pages away
 
 **Changed**

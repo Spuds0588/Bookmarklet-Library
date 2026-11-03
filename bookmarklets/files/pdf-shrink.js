@@ -112,7 +112,9 @@
         body = text.slice(cursor, stop > cursor ? stop : cursor).trim();
       }
 
-      objects.set(num, { num, gen, dict, body, stream });
+      // The position decides which definition wins when a number appears more
+      // than once, which is how an incremental save supersedes an object.
+      objects.set(num, { num, gen, dict, body, stream, start: match.index });
     }
 
     return { text, objects };
@@ -138,6 +140,100 @@
   function refIn(dict, key) {
     const match = dict.match(new RegExp(`/${key}\\s+(\\d+)\\s+(\\d+)\\s+R`));
     return match ? { num: Number(match[1]), gen: Number(match[2]) } : null;
+  }
+
+  function refsIn(dict) {
+    return [...String(dict).matchAll(/(\d+)\s+(\d+)\s+R/g)].map((match) => ({
+      num: Number(match[1]),
+      gen: Number(match[2]),
+    }));
+  }
+
+  function arrayRefs(dict, key) {
+    const match = String(dict).match(new RegExp(`/${key}\\s*\\[([^\\]]*)\\]`));
+    return match ? refsIn(match[1]) : [];
+  }
+
+  // Page order comes from the page tree, never from object order: images and
+  // fonts sit between the pages, and scans usually put them all at the end.
+  function pageTree(objects, catalogNum) {
+    const catalog = objects.get(catalogNum);
+    const pagesRef = catalog ? refIn(catalog.dict, "Pages") : null;
+    const pages = [];
+    const seen = new Set();
+    const walk = (ref) => {
+      if (!ref || seen.has(ref.num)) return;
+      seen.add(ref.num);
+      const node = objects.get(ref.num);
+      if (!node) return;
+      if (/\/Type\s*\/Pages/.test(node.dict)) {
+        for (const child of arrayRefs(node.dict, "Kids")) walk(child);
+      } else if (/\/Type\s*\/Page\b/.test(node.dict)) {
+        pages.push({ num: node.num, gen: node.gen });
+      }
+    };
+    if (pagesRef) walk(pagesRef);
+    return { pagesRef, pages };
+  }
+
+  // A part keeps only what its pages can reach, so pages left out take their
+  // images, fonts and annotations with them. The Pages node keeps every other
+  // key it had, because children can inherit MediaBox and Resources from it.
+  function subsetFor(pdf, selection) {
+    const objects = new Map();
+    const queue = [pdf.trailer.root, pdf.pagesRef, ...selection].filter(Boolean);
+    const visited = new Set();
+
+    while (queue.length) {
+      const ref = queue.shift();
+      if (!ref || visited.has(ref.num)) continue;
+      visited.add(ref.num);
+      const original = pdf.objects.get(ref.num);
+      if (!original || original.drop) continue;
+      objects.set(ref.num, { ...original });
+      // The page tree would otherwise pull in every sibling page, so the Kids
+      // edge is replaced by the selection itself.
+      const refs = visited.has(pdf.pagesRef?.num)
+        ? refsIn(original.dict.replace(/\/Kids\s*\[[^\]]*\]/, ""))
+        : refsIn(original.dict);
+      for (const next of refs) queue.push(next);
+    }
+
+    const pages = pdf.pagesRef ? objects.get(pdf.pagesRef.num) : null;
+    if (pages) {
+      const kept = pages.dict
+        .replace(/\s*\/Kids\s*\[[^\]]*\]/, "")
+        .replace(/\s*\/Count\s+\d+/, "")
+        .replace(/\s*>>\s*$/, "");
+      const kids = selection.map((page) => `${page.num} ${page.gen} R`).join(" ");
+      objects.set(pages.num, { ...pages, dict: `${kept} /Kids [${kids}] /Count ${selection.length} >>` });
+    }
+    return { objects };
+  }
+
+  // Grows each part a page at a time and keeps the last build that fits, so a
+  // part never exceeds the target unless a single page does on its own.
+  function splitParts(pdf, targetBytes) {
+    const { pages, pagesRef } = pdf;
+    if (!pages.length) throw new Error("root");
+    const build = (start, end) =>
+      serializePdf(subsetFor({ ...pdf, pagesRef }, pages.slice(start, end)).objects, pdf.trailer);
+
+    const parts = [];
+    let start = 0;
+    while (start < pages.length) {
+      let end = start + 1;
+      let bytes = build(start, end);
+      while (end < pages.length) {
+        const candidate = build(start, end + 1);
+        if (candidate.length > targetBytes) break;
+        bytes = candidate;
+        end++;
+      }
+      parts.push({ bytes, pageCount: end - start, from: start + 1, to: end, tooBig: bytes.length > targetBytes });
+      start = end;
+    }
+    return parts;
   }
 
   async function inflateLoose(bytes) {
@@ -173,7 +269,12 @@
         const nextOffset = header[(index + 1) * 2 + 1];
         const end = first + (Number.isFinite(nextOffset) ? nextOffset : text.length);
         const body = text.slice(start, end).trim();
-        if (body && !objects.has(num)) objects.set(num, { num, gen: 0, dict: body, body: "", stream: null });
+        if (!body) continue;
+        // A compressed object can be newer than a top-level one with the same
+        // number, so the later position wins instead of the first seen.
+        const existing = objects.get(num);
+        if (existing && (existing.start ?? 0) > (object.start ?? 0)) continue;
+        objects.set(num, { num, gen: 0, dict: body, body: "", stream: null, start: object.start });
       }
       object.drop = true;
     }
@@ -216,7 +317,17 @@
     for (const object of list) {
       offsets.set(object.num, size);
       pushText(`${object.num} ${object.gen || 0} obj\n`);
-      pushText(object.dict || object.body || "<< >>");
+      let dict = object.dict || object.body || "<< >>";
+      if (object.stream) {
+        // The bytes written are the bytes counted. A producer's /Length that
+        // was off, or an indirect one pointing at the original size, would
+        // otherwise leave a reader guessing where the stream ends.
+        const length = `/Length ${object.stream.length}`;
+        dict = /\/Length\s+(\d+|\d+\s+\d+\s+R)/.test(dict)
+          ? dict.replace(/\/Length\s+(\d+|\d+\s+\d+\s+R)/, length)
+          : dict.replace(/>>\s*$/, `${length} >>`);
+      }
+      pushText(dict);
       if (object.stream) {
         pushText("\nstream\n");
         push(object.stream);
@@ -389,7 +500,7 @@
     return PRESETS[name] || PRESETS.balanced;
   }
 
-  async function shrinkPdf(bytes, presetName) {
+  async function optimizePdf(bytes, presetName) {
     const preset = presetFor(presetName);
     const pdf = await readPdf(bytes);
     let candidates = 0;
@@ -416,17 +527,114 @@
       shrunk++;
     }
 
-    if (!candidates) throw new Error("noImages");
-    const out = serializePdf(pdf.objects, pdf.trailer);
+    const tree = pageTree(pdf.objects, pdf.trailer.root.num);
     return {
-      bytes: out,
+      pdf: { ...pdf, pagesRef: tree.pagesRef, pages: tree.pages },
       before: bytes.length,
-      after: out.length,
-      pages: countPages(pdf.objects),
       candidates,
       shrunk,
       skipped,
+      pages: countPages(pdf.objects),
     };
+  }
+
+  async function shrinkPdf(bytes, presetName) {
+    const outcome = await optimizePdf(bytes, presetName);
+    if (!outcome.candidates) throw new Error("noImages");
+    const out = serializePdf(outcome.pdf.objects, outcome.pdf.trailer);
+    // Lifting compressed object streams into plain objects costs bytes, and on
+    // a file with little to gain that can outweigh the images. The original is
+    // the better file then, so it is handed back untouched.
+    const better = outcome.shrunk > 0 && out.length < bytes.length;
+    return { ...outcome, bytes: better ? out : bytes, after: better ? out.length : bytes.length, unchanged: !better };
+  }
+
+  async function splitPdf(bytes, targetBytes, presetName) {
+    const outcome = await optimizePdf(bytes, presetName);
+    return { ...outcome, parts: splitParts(outcome.pdf, targetBytes) };
+  }
+
+  /* Packing the parts ------------------------------------------------------ */
+
+  const CRC_TABLE = (() => {
+    const table = new Uint32Array(256);
+    for (let index = 0; index < 256; index++) {
+      let value = index;
+      for (let bit = 0; bit < 8; bit++) value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
+      table[index] = value >>> 0;
+    }
+    return table;
+  })();
+
+  function crc32(bytes) {
+    let crc = 0xffffffff;
+    for (let index = 0; index < bytes.length; index++) crc = CRC_TABLE[(crc ^ bytes[index]) & 0xff] ^ (crc >>> 8);
+    return (crc ^ 0xffffffff) >>> 0;
+  }
+
+  // One download instead of several: a browser blocks the second file a page
+  // starts, so parts travel together in a stored (uncompressed) ZIP.
+  function zipStore(files, date = new Date()) {
+    const locals = [];
+    const central = [];
+    let offset = 0;
+    const time = ((date.getHours() << 11) | (date.getMinutes() << 5) | (date.getSeconds() >> 1)) & 0xffff;
+    const day = (((date.getFullYear() - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate()) & 0xffff;
+
+    for (const file of files) {
+      const name = fromLatin1(file.name);
+      const crc = crc32(file.bytes);
+      const local = new Uint8Array(30 + name.length);
+      const view = new DataView(local.buffer);
+      view.setUint32(0, 0x04034b50, true);
+      view.setUint16(4, 20, true);
+      view.setUint16(6, 0x0800, true);
+      view.setUint16(8, 0, true);
+      view.setUint16(10, time, true);
+      view.setUint16(12, day, true);
+      view.setUint32(14, crc, true);
+      view.setUint32(18, file.bytes.length, true);
+      view.setUint32(22, file.bytes.length, true);
+      view.setUint16(26, name.length, true);
+      local.set(name, 30);
+
+      const record = new Uint8Array(46 + name.length);
+      const recordView = new DataView(record.buffer);
+      recordView.setUint32(0, 0x02014b50, true);
+      recordView.setUint16(4, 20, true);
+      recordView.setUint16(6, 20, true);
+      recordView.setUint16(8, 0x0800, true);
+      recordView.setUint16(10, 0, true);
+      recordView.setUint16(12, time, true);
+      recordView.setUint16(14, day, true);
+      recordView.setUint32(16, crc, true);
+      recordView.setUint32(20, file.bytes.length, true);
+      recordView.setUint32(24, file.bytes.length, true);
+      recordView.setUint16(28, name.length, true);
+      recordView.setUint32(42, offset, true);
+      record.set(name, 46);
+
+      locals.push(local, file.bytes);
+      central.push(record);
+      offset += local.length + file.bytes.length;
+    }
+
+    const centralSize = central.reduce((total, record) => total + record.length, 0);
+    const end = new Uint8Array(22);
+    const endView = new DataView(end.buffer);
+    endView.setUint32(0, 0x06054b50, true);
+    endView.setUint16(8, files.length, true);
+    endView.setUint16(10, files.length, true);
+    endView.setUint32(12, centralSize, true);
+    endView.setUint32(16, offset, true);
+
+    const out = new Uint8Array(offset + centralSize + end.length);
+    let cursor = 0;
+    for (const chunk of [...locals, ...central, end]) {
+      out.set(chunk, cursor);
+      cursor += chunk.length;
+    }
+    return out;
   }
 
   /* The panel ------------------------------------------------------------- */
@@ -457,6 +665,10 @@
     .presets button[aria-pressed="true"] { background: #111; color: #fbfaf8; }
     .presets button small { display: block; margin-top: 3px; font: 9px/1.3 system-ui, sans-serif;
       letter-spacing: 0; text-transform: none; opacity: .75; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .row span { font-size: 12px; }
+    .row input { width: 92px; padding: 6px 7px; border: 1px solid #111; background: #fff; color: #111;
+      font: 12px system-ui, sans-serif; text-align: right; }
     .status { margin: 0; padding: 9px 10px; border: 1px solid #111; background: #fff; font-size: 12.5px;
       overflow-wrap: anywhere; }
     .status.error { border-style: dashed; }
@@ -525,12 +737,16 @@
       presets.append(button);
     }
 
+    const splitRow = make("label", { class: "row" });
+    const splitInput = make("input", { type: "number", min: "0.2", step: "0.5", placeholder: "off", inputmode: "decimal" });
+    splitRow.append(make("span", {}, "Split parts under (MB)"), splitInput);
+
     const status = make("p", { class: "status" }, "Ready. Pick a PDF, then press Shrink.");
     const result = make("div", { class: "result" });
     result.hidden = true;
     const hint = make("p", { class: "hint" }, "The file is rebuilt here in the browser. Pages, links and text are kept; only images are re-encoded, and only when the result is smaller.");
 
-    body.append(drop, presets, status, result, hint);
+    body.append(drop, presets, splitRow, status, result, hint);
 
     const foot = make("footer", { class: "foot" });
     const download = make("button", { class: "primary", type: "button", "data-download": "" }, "Download");
@@ -602,26 +818,44 @@
         setStatus("Recompressing images and rebuilding the file…");
         // Let the status paint before the main thread gets busy.
         await new Promise((resolve) => setTimeout(resolve, 30));
-        const outcome = await shrinkPdf(bytes, state.preset);
-        state.result = outcome;
+        const targetMb = Number.parseFloat(splitInput.value);
+        const target = Number.isFinite(targetMb) && targetMb > 0 ? targetMb * 1024 * 1024 : 0;
+        const outcome = target ? await splitPdf(bytes, target, state.preset) : await shrinkPdf(bytes, state.preset);
+        const parts = outcome.parts || null;
+        const total = parts ? parts.reduce((sum, part) => sum + part.bytes.length, 0) : outcome.after;
+        const saved = outcome.before - total;
 
-        const saved = outcome.before - outcome.after;
-        const percent = Math.round((saved / outcome.before) * 100);
-        if (saved <= 0) {
-          setStatus(`No gain: the rebuilt file is ${kb(outcome.after)}, about the same as the original. Nothing was downloaded.`, true);
+        if (!parts && saved <= 0) {
+          setStatus(`No gain: the rebuilt file is ${kb(total)}, about the same as the original. Nothing was downloaded.`, true);
           result.hidden = true;
           return;
         }
 
-        setStatus(`Done. ${outcome.pages} page${outcome.pages === 1 ? "" : "s"} kept.`);
-        const figure = make("b", {}, `${kb(outcome.before)} → ${kb(outcome.after)}`);
-        const detail = make(
-          "span",
-          {},
-          `${percent}% smaller · ${outcome.shrunk} of ${outcome.candidates} images recompressed${outcome.skipped ? `, ${outcome.skipped} left alone because re-encoding did not help` : ""}`,
-        );
-        result.replaceChildren(figure, detail);
+        const base = state.file.name.replace(/\.pdf$/i, "");
+        let filename = `${base}-small.pdf`;
+        let output = outcome.bytes;
+        if (parts && parts.length > 1) {
+          filename = `${base}-parts.zip`;
+          output = zipStore(parts.map((part, index) => ({ name: `${base}-part${index + 1}.pdf`, bytes: part.bytes })));
+        } else if (parts) {
+          output = parts[0].bytes;
+        }
+        state.result = { bytes: output, filename };
+
+        const ranges = parts
+          ? parts.map((part) => (part.from === part.to ? `${part.from}` : `${part.from}–${part.to}`)).join(", ")
+          : "";
+        const headline = parts && parts.length > 1
+          ? `${parts.length} parts · ${kb(total)}`
+          : `${kb(outcome.before)} → ${kb(total)}`;
+        const detail = parts && parts.length > 1
+          ? `pages ${ranges} · each under ${kb(target)}${parts.some((part) => part.tooBig) ? " except one page that is larger on its own" : ""} · ${outcome.shrunk} of ${outcome.candidates} images recompressed`
+          : `${Math.round((saved / outcome.before) * 100)}% smaller · ${outcome.shrunk} of ${outcome.candidates} images recompressed${outcome.skipped ? `, ${outcome.skipped} left alone because re-encoding did not help` : ""}`;
+
+        setStatus(`Done. ${outcome.pages} page${outcome.pages === 1 ? "" : "s"} in ${parts && parts.length > 1 ? `${parts.length} files, zipped` : "1 file"}.`);
+        result.replaceChildren(make("b", {}, headline), make("span", {}, detail));
         result.hidden = false;
+        download.textContent = parts && parts.length > 1 ? "Download .zip" : "Download";
         download.disabled = false;
       } catch (error) {
         const message = MESSAGES[error?.message] || `Could not shrink this PDF: ${error?.message || error}`;
@@ -636,18 +870,18 @@
 
     download.addEventListener("click", () => {
       if (!state.result) return;
-      const base = state.file.name.replace(/\.pdf$/i, "");
-      const blob = new Blob([state.result.bytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
+      const { bytes, filename } = state.result;
+      const type = filename.endsWith(".zip") ? "application/zip" : "application/pdf";
+      const url = URL.createObjectURL(new Blob([bytes], { type }));
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `${base}-small.pdf`;
+      anchor.download = filename;
       anchor.rel = "noopener";
       document.body.append(anchor);
       anchor.click();
       anchor.remove();
       setTimeout(() => URL.revokeObjectURL(url), 30000);
-      setStatus(`Saved ${base}-small.pdf (${kb(state.result.after)}).`);
+      setStatus(`Saved ${filename} (${kb(bytes.length)}).`);
     });
 
     document.body.append(host);
@@ -656,6 +890,7 @@
   if (globalThis.__BL_TEST__) {
     globalThis.__BL_TEST__.pdfShrink = {
       isPdf, scanObjects, serializePdf, imageKind, replaceImageDict, presetFor, countPages, dictEnd,
+      pageTree, subsetFor, splitParts, crc32, zipStore, shrinkPdf, splitPdf, readPdf,
     };
   } else if (document?.body) {
     open();
