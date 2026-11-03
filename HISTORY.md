@@ -14,11 +14,12 @@ What has been done, in order. Newest entries first.
 
 - `npm test`: 76 pass, including the new case for both flag names, the https docs link and a present Prompt API producing no help block.
 - `node scripts/compose.mjs --check`, `node scripts/build.mjs --check` and `node scripts/verify.mjs` pass on 122 tools; the hub is served as it is, so nothing is generated.
-- The hub page in Chrome 156, which has no Prompt API on this machine: the block renders in both views, both flags read back as text, the link is `developer.chrome.com/docs/ai/prompt-api`, and the engine note above it points at the block instead of dead-ending.
+- The deployed hub page in Chrome 156, which exposes no Prompt API on this machine: both `[data-model-help]` blocks come back filled and visible, each carrying the two flags as copyable text, and the link resolves to `developer.chrome.com/docs/ai/prompt-api`. The setup page shows its block under the install button.
 
 **Limit**
 
 - Detection is a feature test, not a flag read: a page cannot see whether `#optimization-guide-on-device-model` is on, so a browser with the flag enabled but no weights reports “downloadable” and gets the Prepare button instead of this block.
+- The headless Chrome on this machine does expose `LanguageModel` — its hub offers Gemini Nano as a download — so the connected view there only shows the hidden case. `--disable-features=PromptAPIForGeminiNano,AILanguageModel,OptimizationGuideOnDeviceModel` left the API in place and `Object.defineProperty` on the global is refused, so the visible connected block rests on the shared renderer plus the desktop browser, not a screenshot of a live session.
 - The flags were not turned on and no model ran, so the download path it describes is still untested.
 
 ## 2026-11-03 — First production pass on the badges and the hosted hub
