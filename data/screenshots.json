@@ -309,6 +309,11 @@
       "file": "screenshots/media-images.png",
       "changed": true
     },
+    "pdf-shrink": {
+      "file": "screenshots/pdf-shrink.png",
+      "changed": true,
+      "steps": 6
+    },
     "zip-files": {
       "file": "screenshots/zip-files.png",
       "changed": true,

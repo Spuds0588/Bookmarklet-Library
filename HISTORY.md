@@ -2,6 +2,25 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Shrink PDF, without throwing the pages away
+
+**Changed**
+
+- Added **🗜️ Shrink PDF** under Files. It scans every object in the file, recompresses the images it can decode safely, and writes a new PDF with a fresh cross-reference table: pages, links, annotations and the text layer all survive. Light, Balanced and Strong trade resolution for size; grey stays grey; an image is only replaced when the new stream is smaller.
+- The sketch this started from rebuilt the document out of the image objects it found. That throws away every text and vector page, takes page order from object order, mis-slices streams whose `/Length` is an indirect reference, and inflates with `deflate-raw` on data that is zlib-wrapped. It also wrote `<span>`s through `innerHTML`.
+- Objects inside PDF 1.5 object streams are lifted to the top level, so the rebuilt file needs no cross-reference stream. When a number is defined twice by an incremental save, the later definition wins and the older bytes are not written at all.
+- Masks, stencils, CCITT/JBIG2, CMYK, indexed colour and predictors are skipped rather than guessed at; encrypted files are refused. A rebuild that is not smaller is not offered as a download.
+- Marked `@testing true` (the dashed **In testing** badge) because it has been proven on generated fixtures and unit tests, not on a shelf of real documents.
+
+**Verified**
+
+- `npm test`: 104 pass, including scanning with an indirect `/Length`, last-definition-wins, xref offsets that round-trip back through the parser, image eligibility and dictionary rewriting.
+- The capture shrinks a generated 124 KB scan through the panel's real file input and Shrink button.
+
+**Limit**
+
+- No real-world corpus yet, and no split-to-size mode: browsers block the extra downloads, so a split would lose parts without saying so.
+
 ## 2026-11-03 — Chat export survives Trusted Types
 
 **Changed**

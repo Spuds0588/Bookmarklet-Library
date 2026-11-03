@@ -4,7 +4,7 @@
 
 A searchable catalog of small browser tools. Find one that does the job, drag it to your bookmarks bar, click it on any page. Nothing to install, no accounts, no extensions.
 
-125 bookmarklets across eight categories: capture, annotate, text, files, dev tools, view, games and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site. Four tools use a hosted helper page: the URL chat loads PeerJS from a CDN, Doom loads its own WebAssembly engine and shareware WAD from this site, the QR reader decodes screen captures locally, and the WebMCP hub runs the local agent window.
+126 bookmarklets across eight categories: capture, annotate, text, files, dev tools, view, games and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site. Four tools use a hosted helper page: the URL chat loads PeerJS from a CDN, Doom loads its own WebAssembly engine and shareware WAD from this site, the QR reader decodes screen captures locally, and the WebMCP hub runs the local agent window.
 
 ## Use it
 
@@ -25,7 +25,7 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 | Capture | Tab screenshot, OCR a screen region, record tab/camera/audio, Loom links |
 | Annotate | Screenshot markup (arrows, boxes, numbered steps), freehand draw |
 | Text | Advanced find, find and replace on inputs, page to Markdown, read aloud, extract emails, table to CSV/Markdown, text-fragment citations, password generation, QR codes |
-| Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, ZIP create/extract, Word/HTML/RTF/TXT/Markdown and Excel/CSV conversion both ways, OpenDocument `.odt`/`.ods` conversion both ways, HTML snippet saver, Loom export, send a PDF to DocuSign, export a whole chat to Markdown |
+| Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, ZIP create/extract, Word/HTML/RTF/TXT/Markdown and Excel/CSV conversion both ways, OpenDocument `.odt`/`.ods` conversion both ways, HTML snippet saver, Loom export, send a PDF to DocuSign, export a whole chat to Markdown, shrink a PDF |
 | Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder, layout and accessibility overlays, environment switcher, form harvester/stamper, webhook dispatcher, a local AI agent that drives the page |
 | View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, sticky-header removal, link highlighting, dark mode, force scroll, presenter spotlight, Jitsi meeting, URL chat, voice commands, preview downloads |
 | Games | Doom, Neon Hell |
@@ -126,6 +126,16 @@ The PDF writer uses the Helvetica family, Latin-1 text, the DOCX page size and m
 ## Bulk media downloads
 
 **🖼️ Download all images**, **🎬 Download all videos**, **🎧 Download all audio** and **📥 Download all linked files** open a panel that lists what the page already loads. The image tool reads `img` and `picture` sources, `srcset`, the usual lazy-load attributes and social preview tags; the video and audio tools read the elements and their `source` fallbacks; the file tool reads anchors that carry `download` or point at a file extension. **Save all to folder** asks for a folder with the File System Access API and writes every file there, numbering names that already exist instead of overwriting them. **Download each** uses the browser's downloads folder when it cannot pick one. Each file is fetched from its own URL, so a file served without CORS headers is marked blocked and gets an **Open** link rather than a quiet failure. HLS and DASH playlists (`.m3u8`, `.mpd`) are listed but skipped, as is any single file over 600 MB. Nothing is uploaded and nothing is decrypted or re-encoded: a canvas, a CSS background, an encrypted stream or a player fed by JavaScript is not a file this can read.
+
+## Shrink a PDF
+
+**🗜️ Shrink PDF** makes a scan-heavy PDF smaller without turning it into a pile of pictures. It reads the file, re-encodes the images it can safely touch, and rebuilds the PDF around them: every page, every link and the whole text layer stay where they were.
+
+The images are the weight in a scan. Each JPEG is decoded, drawn at a smaller size or a lower quality, and written back as a JPEG; raw Flate bitmaps go through a canvas and come out as JPEGs too. Light keeps pages up to 2400px, Balanced uses 1800px, and Strong drops to 1200px. An image is only replaced when the new stream is genuinely smaller, so a file that is already tight comes back with no change and no download. Grey pages stay grey, because colour costs bytes and adds nothing to a scanned form.
+
+What it deliberately leaves alone: transparency masks and soft masks, `ImageMask` stencils, CCITT and JBIG2 fax images, CMYK and indexed colour, and predictors. Shrinking one half of a mask pair would leave the other misaligned, so those are skipped rather than guessed at. Encrypted PDFs are refused, because their streams cannot be read without the key.
+
+Two honest limits. The tool has only been run against generated fixtures and its own test PDFs, not a shelf of real-world documents, so it carries the **In testing** badge until that changes. And there is no "split under N MB" mode: browsers block the second download a page starts, so a split would appear to work and quietly lose every part after the first.
 
 ## Export a chat to Markdown
 

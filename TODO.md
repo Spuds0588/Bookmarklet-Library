@@ -52,6 +52,16 @@
 - [ ] The phase 2 document's runtime builder/registry idea was not adopted: these tools configure in their own panel or exchange JSON, because the catalog has no build-at-runtime step. Revisit only if a builder earns its keep.
 - [ ] The URL chat depends on the public PeerJS broker and CDN. If that service is unavailable, the hosted page says so; there is no fallback signalling server.
 
+## Shrink PDF (2026-11-03)
+
+- [x] **🗜️ Shrink PDF** parses the whole file, recompresses eligible images (JPEG, and raw Flate RGB/Grey through a canvas), and rebuilds a PDF with a fresh xref table.
+- [x] Pages, text, links and annotations survive because the document is rewritten, not re-rasterised. Objects inside PDF 1.5 object streams are lifted to the top level; superseded copies from incremental saves are dropped.
+- [x] Skips anything it cannot do safely: `/SMask`, `/Mask`, `/ImageMask`, CCITT/JBIG2, CMYK, indexed colour, predictors, and encrypted files. Output is only offered when it is smaller.
+- [x] `tests/pdf-shrink.test.mjs` covers object scanning, indirect `/Length`, revision replacement, xref offsets round-tripping through the parser, eligibility rules and dictionary rewriting. The capture processes a generated 124 KB scan.
+- [ ] **No corpus yet.** Real documents are where the edge cases live: Word/Chrome exports with object streams, scans with JBIG2, PDFs with `/DecodeParms` arrays, and files over ~40 MB. Run a dozen real PDFs through it and fix what breaks.
+- [ ] Text-only PDFs cannot get smaller this way, and the panel says so. Object-level garbage collection (dropping unreachable objects) is the next real gain, but it needs reference parsing that is careful enough to be safe.
+- [ ] No split-to-size mode. Browsers block the extra downloads, so it would silently lose parts.
+
 ## Export chat to Markdown (2026-11-03)
 
 - [x] **💬 Export chat to Markdown** finds the messages on ChatGPT, Claude and Gemini, converts the rendered HTML to Markdown and saves one dated `.md` file.

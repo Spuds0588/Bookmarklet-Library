@@ -114,6 +114,47 @@ const STEPS = {
     { click: 'a[href="/report.csv"]' },
     { wait: 900 },
   ],
+  // A file has to arrive through the panel's own input, then the real Shrink
+  // button runs the parser, the recompression and the rebuild.
+  "pdf-shrink": [
+    { wait: 250 },
+    {
+      script: `(() => {
+        const bytes = globalThis.__blPdfBytes;
+        if (!bytes) throw new Error("fixture bytes were not preloaded");
+        const root = document.getElementById("bl-pdf-shrink-host").shadowRoot;
+        const input = root.querySelector("input[type=file]");
+        const file = new File([bytes], "scanned-field-report.pdf", { type: "application/pdf" });
+        const transfer = new DataTransfer();
+        transfer.items.add(file);
+        input.files = transfer.files;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        return true;
+      })()`,
+    },
+    { wait: 300 },
+    {
+      script: `(() => {
+        const root = document.getElementById("bl-pdf-shrink-host").shadowRoot;
+        const button = root.querySelector("[data-shrink]");
+        if (!button || button.disabled) throw new Error("Shrink is not ready");
+        button.click();
+        return true;
+      })()`,
+    },
+    { wait: 5000 },
+    // A screenshot of an error panel would still look like a capture, so fail
+    // the run unless the shrink really produced a downloadable result.
+    {
+      script: `(() => {
+        const root = document.getElementById("bl-pdf-shrink-host").shadowRoot;
+        const status = root.querySelector(".status").textContent;
+        if (root.querySelector(".result").hidden) throw new Error("no result: " + status);
+        if (root.querySelector("[data-download]").disabled) throw new Error("download is disabled: " + status);
+        return status;
+      })()`,
+    },
+  ],
   // A console is only a console once something has been run in it.
   "js-runner": [
     { type: "document.querySelector('h1').textContent = 'JS Runner ran this line';", into: "#js-runner-container textarea" },
@@ -223,6 +264,11 @@ const PREP = {
       main.insertAdjacentHTML("afterbegin", '<div data-message-author-role="user"><div class="md"><p>Can you turn the field guide into a retention plan?</p></div></div><div data-message-author-role="assistant"><div class="md"><p>Yes. Three steps, in order.</p><ul><li>Keep the demo route open for a week.</li><li>Send the notes to Dana on Monday.</li><li>Drop the print run until the new rate sheet lands.</li></ul></div></div>');
       return true;
     })()`,
+  ],
+  // The bytes are fetched before the tool runs, because the panel only exists
+  // afterwards; the step below hands them to its real file input.
+  "pdf-shrink": [
+    `(async () => { const response = await fetch("/scanned.pdf"); globalThis.__blPdfBytes = new Uint8Array(await response.arrayBuffer()); return true; })()`,
   ],
   "video-pip": ["document.querySelector('video').play()"],
   "audio-pip": ["document.querySelector('audio').play()"],
@@ -906,6 +952,7 @@ const MEDIA = new Map([
   ["/report.odt", ["office/report.odt", "application/vnd.oasis.opendocument.text"]],
   ["/report.ods", ["office/report.ods", "application/vnd.oasis.opendocument.spreadsheet"]],
   ["/sample.pdf", ["sample.pdf", "application/pdf"]],
+  ["/scanned.pdf", ["scanned.pdf", "application/pdf"]],
 ]);
 
 const DOOM_TYPES = {
