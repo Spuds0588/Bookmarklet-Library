@@ -344,8 +344,12 @@
         // was off, or an indirect one pointing at the original size, would
         // otherwise leave a reader guessing where the stream ends.
         const length = `/Length ${object.stream.length}`;
-        dict = /\/Length\s+(\d+|\d+\s+\d+\s+R)/.test(dict)
-          ? dict.replace(/\/Length\s+(\d+|\d+\s+\d+\s+R)/, length)
+        // The reference form must come first in the alternation: matching `73`
+        // inside `73 0 R` would leave `/Length 79 0 R`, a pointer at whatever
+        // object carries that number instead of a byte count.
+        const existing = /\/Length\s+(\d+\s+\d+\s+R|\d+)/;
+        dict = existing.test(dict)
+          ? dict.replace(existing, length)
           : dict.replace(/>>\s*$/, `${length} >>`);
       }
       pushText(dict);

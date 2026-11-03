@@ -110,6 +110,24 @@ test("the rebuilt file is a valid PDF whose xref points at every object", () => 
   assert.equal(textOf(objects.get(4).stream), "q 1 0 0 1 Q\n");
 });
 
+test("an indirect length becomes a byte count, not a pointer at another object", () => {
+  const pdf = ascii(
+    "%PDF-1.4\n" +
+      "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n" +
+      "4 0 obj\n<< /Length 9 0 R >>\nstream\nBT /F1 12 Tf\nendstream\nendobj\n" +
+      "9 0 obj\n13\nendobj\n" +
+      "trailer\n<< /Size 10 /Root 1 0 R >>\n%%EOF\n",
+  );
+  const { objects } = scanObjects(pdf);
+  const rebuilt = scanObjects(serializePdf(objects, { root: { num: 1, gen: 0 }, id: "" })).objects;
+  const dict = rebuilt.get(4).dict;
+  // Matching the number alone once left `13 0 R` dangling after the count, so
+  // readers looked for a stream in an unrelated object.
+  assert.doesNotMatch(dict, /\/Length \d+ \d+ R/);
+  assert.match(dict, /\/Length 13\b/);
+  assert.equal(textOf(rebuilt.get(4).stream), "BT /F1 12 Tf\n");
+});
+
 test("only images this tool can re-encode are offered up", () => {
   const base = "/Type /XObject /Subtype /Image /Width 100 /Height 200 /ColorSpace /DeviceRGB /BitsPerComponent 8";
   const jpeg = `<< ${base} /Filter /DCTDecode /Length 5 >>`;

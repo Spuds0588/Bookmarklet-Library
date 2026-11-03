@@ -8,7 +8,7 @@ What has been done, in order. Newest entries first.
 
 - A stream whose `/Length` is an indirect reference was read by trusting the `endstream` marker and trimming every trailing line break. For binary data that legitimately ends in `0x0A` — embedded font programs, some images — that silently shortened the stream by a byte and corrupted it. Poppler reported `Bad 'Length' attribute in stream` and `Bad dynamic code table in flate stream`, and a page rendered differently after a rebuild.
 - Those streams now resolve their length from the length object itself, in a second pass once every object is known. The trim is gone; the fallback only removes the single line break that belongs to `endstream`.
-- Every written stream also carries a `/Length` that matches the bytes actually written, so a producer's off-by-a-few value cannot mislead a reader after the rebuild.
+- Every written stream also carries a `/Length` that matches the bytes actually written, so a producer's off-by-a-few value cannot mislead a reader after the rebuild. That rewrite had the same class of bug: the pattern matched a bare number, so `/Length 73 0 R` came out as `/Length 79 0 R` — a pointer at whatever object 79 happened to be. The reference form is consumed whole now; poppler's `xref num not found` and `Bad 'Length' attribute` warnings went from fifteen per file to zero.
 
 **Verified**
 
