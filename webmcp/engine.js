@@ -121,27 +121,43 @@ export async function createBuiltInEngine(onProgress, scope = globalThis) {
       onProgress?.({ text: "Downloading the built-in model", progress: event.loaded });
     });
   };
+  const openSession = (extra = {}) =>
+    api.create({
+      temperature: 0.1,
+      topK: 1,
+      initialPrompts: [{ role: "system", content: SYSTEM_PROMPT }],
+      ...extra,
+    });
   // Preparing a downloadable model has to do the download now; otherwise the
   // button would look finished and the first Run would stall on it.
   if (availability !== "available") {
-    const warm = await api.create({ temperature: 0.1, topK: 1, monitor });
+    const warm = await openSession({ monitor });
     try {
       warm.destroy?.();
     } catch {}
   }
+
+  // One session for the whole run. Creating a session per step re-attached the
+  // download monitor, so every action logged "downloading the built-in model"
+  // again and paid the model's start-up cost. The prompt already carries the
+  // map and the recent moves, so the session does not need its own memory.
+  let live = null;
+  const drop = () => {
+    try {
+      live?.destroy?.();
+    } catch {}
+    live = null;
+  };
+  const sessionFor = async () => {
+    if (!live) live = await openSession(availability === "available" ? {} : {});
+    return live;
+  };
   return {
     kind: "builtin",
     label: "Chrome built-in AI",
-    // A fresh session per turn keeps the small context window from filling
-    // with the previous prompts; the downloaded weights stay cached.
     async complete(prompt, { signal } = {}) {
-      const session = await api.create({
-        temperature: 0.1,
-        topK: 1,
-        monitor,
-      });
-      try {
-        const options = signal ? { signal } : {};
+      const options = signal ? { signal } : {};
+      const ask = async (session) => {
         try {
           return await session.prompt(prompt, { ...options, responseConstraint: DECISION_SCHEMA });
         } catch (error) {
@@ -151,13 +167,19 @@ export async function createBuiltInEngine(onProgress, scope = globalThis) {
           }
           throw error;
         }
-      } finally {
-        try {
-          session.destroy?.();
-        } catch {}
+      };
+      try {
+        return await ask(await sessionFor());
+      } catch (error) {
+        // A full context or a broken session is recoverable: start a clean one
+        // once and retry, rather than failing the whole run on it.
+        const message = String(error?.message || error);
+        if (!/context|quota|too (long|large)|exceed|limit/i.test(message)) throw error;
+        drop();
+        return ask(await sessionFor());
       }
     },
-    destroy() {},
+    destroy: drop,
   };
 }
 

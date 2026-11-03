@@ -1,4 +1,4 @@
-import { LIMITS, makeToken, parseDecision } from "./protocol.js";
+import { LIMITS, describeOutcome, makeToken, parseDecision } from "./protocol.js";
 import {
   MODELS,
   SYSTEM_PROMPT,
@@ -512,6 +512,7 @@ async function runTask() {
     const history = [];
     let previous = "";
     let repeats = 0;
+    let refusals = 0;
 
     for (let step = 1; step <= maxSteps; step++) {
       if (halted || id !== runToken) break;
@@ -577,11 +578,17 @@ async function runTask() {
         map = session.domMap;
         if (!toolReply.result?.ok) {
           log(`The page refused it: ${toolReply.result?.error || "unknown error"}`, "error");
-          break;
+          history.push(`tool ${decision.name} -> ${describeOutcome(decision, toolReply, map)}`);
+          map = session.domMap;
+          if (++refusals >= 3) {
+            log("Stopped after three refusals.", "error");
+            break;
+          }
+          continue;
         }
+        refusals = 0;
         log(`${decision.name}: ${toolReply.result.text || "(no output)"}`, "in");
-        // The tool's answer is the next step's context, not just a log line.
-        history.push(`tool ${decision.name} -> ${(toolReply.result.text || "ok").slice(0, 120)}`);
+        history.push(`tool ${decision.name} -> ${describeOutcome(decision, toolReply, map)}`);
         continue;
       }
 
@@ -594,12 +601,23 @@ async function runTask() {
       }
       session.domMap = cleanMap(reply.domMap);
       renderMap();
+      const label = map.find((entry) => entry.id === decision.id)?.label || decision.id;
       if (!reply.result?.ok) {
         log(`The page refused it: ${reply.result?.error || "unknown error"}`, "error");
-        break;
+        // A refusal is information: the next turn gets it and can pick another
+        // control instead of the run ending on the first dead end.
+        history.push(`${decision.action} ${label} -> ${describeOutcome(decision, reply, map)}`);
+        map = session.domMap;
+        if (++refusals >= 3) {
+          log("Stopped after three refusals.", "error");
+          break;
+        }
+        continue;
       }
-      log(`Action applied. ${session.domMap.length} controls now.`, "in");
-      history.push(`${decision.action} ${map.find((entry) => entry.id === decision.id)?.label || decision.id} -> ok`);
+      refusals = 0;
+      const outcome = describeOutcome(decision, reply, map);
+      log(`Action applied: ${outcome}.`, "in");
+      history.push(`${decision.action} ${label} -> ${outcome}`);
       map = session.domMap;
     }
   } catch (error) {

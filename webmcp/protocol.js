@@ -5,8 +5,10 @@ export const LIMITS = Object.freeze({
   label: 48,
   text: 2000,
   summary: 240,
-  steps: 5,
-  maxSteps: 12,
+  // A real task is several moves: search, read, open, fill, submit. Five cut
+  // off most of them, so the run stopped while it was still getting somewhere.
+  steps: 25,
+  maxSteps: 100,
   tools: 12,
   toolArgs: 600,
   actionWaitMs: 6000,
@@ -29,6 +31,34 @@ export const DECISION_SCHEMA = Object.freeze({
   required: ["action"],
   additionalProperties: false,
 });
+
+// What the last move actually did, in the words the next turn needs. Without
+// this the model only hears "ok" and cannot tell a page that changed from one
+// that ignored the click.
+export function describeOutcome(decision, reply, before = []) {
+  const result = reply?.result ?? {};
+  if (result.ok === false) {
+    return `failed: ${String(result.error || "the page refused it").slice(0, 120)}`;
+  }
+  if (typeof result.text === "string" && result.text.trim()) {
+    return result.text.replace(/\s+/g, " ").trim().slice(0, 120);
+  }
+  const previous = Array.isArray(before) ? before : [];
+  const after = Array.isArray(reply?.domMap) ? reply.domMap : previous;
+  // A changed control count is the loudest signal; when the count is the same the
+  // map is compared entry by entry, because typing into a field changes a label
+  // without adding or removing anything.
+  if (after.length !== previous.length) {
+    const delta = after.length - previous.length;
+    return `${after.length} controls now (${delta > 0 ? "+" : ""}${delta})`;
+  }
+  const changed = after.find((entry, index) => JSON.stringify(entry) !== JSON.stringify(previous[index]));
+  if (changed) {
+    const label = changed.label ?? changed.value ?? `control ${changed.id}`;
+    return `updated “${String(label).slice(0, 60)}”`;
+  }
+  return "no visible change";
+}
 
 export function makeToken(crypto = globalThis.crypto) {
   if (!crypto?.getRandomValues) throw new Error("This browser cannot generate a session token.");

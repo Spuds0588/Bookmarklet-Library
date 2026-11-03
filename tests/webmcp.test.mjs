@@ -4,12 +4,13 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { LIMITS, makeToken, parseDecision } from "../webmcp/protocol.js";
+import { LIMITS, describeOutcome, makeToken, parseDecision } from "../webmcp/protocol.js";
 import {
   MODELS,
   SYSTEM_PROMPT,
   buildPrompt,
   builtInAvailability,
+  createBuiltInEngine,
   detectEngines,
   hasWebGpuAdapter,
   modelSetup,
@@ -368,4 +369,76 @@ test("the bookmarklet only answers its hub, needs the token, and obeys HALT", as
       else globalThis[name] = saved.get(name);
     }
   }
+});
+
+test("the next turn hears what the last move actually did", () => {
+  assert.equal(
+    describeOutcome({ action: "click" }, { result: { ok: true }, domMap: new Array(7) }, new Array(18)),
+    "7 controls now (-11)",
+  );
+  assert.equal(
+    describeOutcome({ action: "click" }, { result: { ok: true }, domMap: new Array(18) }, new Array(18)),
+    "no visible change",
+  );
+  // Typing changes a label without changing the count, which a count-only
+  // comparison reported as nothing happening.
+  assert.equal(
+    describeOutcome(
+      { action: "type" },
+      { result: { ok: true }, domMap: [{ id: 11, tag: "input", label: "ridge" }] },
+      [{ id: 11, tag: "input", label: "demo region — north" }],
+    ),
+    "updated “ridge”",
+  );
+  assert.equal(
+    describeOutcome({ action: "tool" }, { result: { ok: true, text: "  Added   milk " }, domMap: [] }, []),
+    "Added milk",
+  );
+  assert.match(
+    describeOutcome({ action: "click" }, { result: { ok: false, error: "that control is gone" }, domMap: [] }, []),
+    /^failed: that control is gone/,
+  );
+});
+
+test("a run is allowed more than a handful of steps", () => {
+  // Five stopped real tasks halfway; the default and the cap both moved up.
+  assert.ok(LIMITS.steps >= 25, `default steps is ${LIMITS.steps}`);
+  assert.ok(LIMITS.maxSteps >= 100, `max steps is ${LIMITS.maxSteps}`);
+});
+
+test("the built-in engine keeps one session instead of rebuilding it every step", async () => {
+  let created = 0;
+  const fake = {
+    LanguageModel: {
+      availability: async () => "available",
+      create: async () => {
+        created++;
+        return { prompt: async () => '{"action":"done","summary":"x"}', destroy() {} };
+      },
+    },
+  };
+  const engine = await createBuiltInEngine(() => {}, fake);
+  await engine.complete("first");
+  await engine.complete("second");
+  assert.equal(created, 1, "a second completion should reuse the session");
+  engine.destroy();
+});
+
+test("a downloadable model is warmed once, then the run reuses that session", async () => {
+  let created = 0;
+  const fake = {
+    LanguageModel: {
+      availability: async () => "downloadable",
+      create: async () => {
+        created++;
+        return { prompt: async () => '{"action":"done","summary":"x"}', destroy() {} };
+      },
+    },
+  };
+  const engine = await createBuiltInEngine(() => {}, fake);
+  assert.equal(created, 1, "preparing should pull the model down once");
+  await engine.complete("first");
+  await engine.complete("second");
+  assert.equal(created, 2, "only the warm-up and the first real session should be created");
+  engine.destroy();
 });

@@ -2,6 +2,24 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Drive this page: one session, more steps, the result fed back
+
+**Why**
+
+- A real run showed three faults at once: the log said "downloading the built-in model" before every action, the run stopped at five steps, and the model repeated a move because it never heard what its last one did.
+
+**What changed**
+
+- `createBuiltInEngine` opens one session per run and reuses it. The download monitor is attached only to the warm-up create, so it cannot replay progress per step; the prompt already carries the map and the recent moves, so per-step sessions bought nothing. A context or quota error drops the session once and retries instead of failing the step.
+- Default step budget 5 → 25, hard cap 12 → 100 (`LIMITS.steps`, `LIMITS.maxSteps`, and the hub's number input).
+- `describeOutcome(decision, reply, beforeCount)` turns an action reply into the observation the next prompt needs: a page tool's text, `7 controls now (-11)`, `updated “ridge”` when a label changed, `no visible change`, or `failed: <reason>`. The loop pushes that into history, so the model sees the effect of its own move.
+- A refusal no longer ends the run. It is logged, fed back and retried, with a stop after three refusals so a dead end cannot spin.
+
+**Verified**
+
+- Node tests for the observation format, the raised limits, and session reuse against a fake Prompt API that counts `create` calls: one session for two completions, and exactly two for a downloadable model (warm-up plus first real session).
+- The scripted probe (`node scripts/shots.mjs --webmcp-probe`) still drives the whole loop with no model, and the hub's capture is recaptured with the new step default.
+
 ## 2026-11-03 — The webhook dispatcher becomes a builder
 
 **Why**
