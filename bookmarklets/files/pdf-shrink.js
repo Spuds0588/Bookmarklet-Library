@@ -682,11 +682,15 @@
 
   /* The panel ------------------------------------------------------------- */
 
+  // A wizard, not a form: dropping files is the only action, compression starts
+  // by itself, and the panel turns into progress and then into the finished
+  // files. There is one compression setting, because the job is "as small as
+  // this can get without making the words unreadable", not a slider to tune.
   const CSS = `
-    .wrap { position: fixed; inset: 0; z-index: 2147483647; display: flex; align-items: center; justify-content: center;
-      background: rgba(0,0,0,.72); font: 14px/1.5 system-ui, -apple-system, sans-serif; color: #111; }
+    .wrap { position: fixed; inset: 0; z-index: 2147483647; background: rgba(0,0,0,.72);
+      font: 14px/1.5 system-ui, -apple-system, sans-serif; color: #111; }
     .panel { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex;
-      flex-direction: column; width: min(460px, 92vw); max-height: 90vh; background: #fbfaf8;
+      flex-direction: column; width: min(520px, 94vw); max-height: 90vh; background: #fbfaf8;
       border: 1px solid #111; box-shadow: 0 24px 60px rgba(0,0,0,.45); }
     .panel[data-dragged] { transform: none; }
     .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px;
@@ -698,54 +702,72 @@
     .close { padding: 4px 8px; border: 1px solid #111; background: transparent; color: #111;
       font: 600 10px/1 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
     .body { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; overflow: auto; }
-    .drop { display: flex; flex-direction: column; gap: 3px; padding: 14px 12px; text-align: center;
+    .intake { display: flex; flex-direction: column; gap: 10px; }
+    .intake[hidden] { display: none; }
+    .drop { display: flex; flex-direction: column; gap: 3px; padding: 18px 12px; text-align: center;
       border: 1px dashed #111; background: #fff; cursor: pointer; }
     .drop b { font-size: 13px; }
     .drop span { font-size: 11.5px; color: #666; }
     .drop.over { background: #111; color: #fbfaf8; }
     .drop.over span { color: #cfcac0; }
     .drop input { display: none; }
-    .presets { display: flex; gap: 6px; }
-    .presets button { flex: 1; padding: 7px 4px; border: 1px solid #111; background: transparent; color: #111;
-      font: 600 9.5px/1.3 ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
-    .presets button[aria-pressed="true"] { background: #111; color: #fbfaf8; }
-    .presets button small { display: block; margin-top: 3px; font: 9px/1.3 system-ui, sans-serif;
-      letter-spacing: 0; text-transform: none; opacity: .75; }
     .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .row span { font-size: 12px; }
     .row input { width: 92px; padding: 6px 7px; border: 1px solid #111; background: #fff; color: #111;
       font: 12px system-ui, sans-serif; text-align: right; }
     .max { display: flex; flex-direction: column; gap: 7px; }
     .range { width: 100%; margin: 0; accent-color: #111; }
+    .bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px;
+      border: 1px solid #111; background: #fff; }
+    .bar[hidden] { display: none; }
+    .bar b { font-size: 12px; font-weight: 600; }
+    .add-more { padding: 3px 7px; border: 1px solid #111; background: transparent; color: #111;
+      font: 600 9px/1 ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+    .jobs { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none;
+      border: 1px solid #111; background: #fff; max-height: 176px; overflow: auto; }
+    .jobs:empty { display: none; }
+    .job { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding: 8px 10px;
+      border-bottom: 1px solid #ddd; }
+    .job:last-child { border-bottom: 0; }
+    .job-name { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .job-meta { grid-column: 1; font: 11px/1.4 ui-monospace, monospace; color: #555; }
+    .job-state { grid-row: 1 / span 2; grid-column: 2; align-self: center;
+      font: 600 9px/1 ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; color: #555; }
+    .job.done .job-state { color: #111; }
+    .job-track { grid-column: 1 / -1; height: 2px; margin-top: 5px; background: #e6e2d9; }
+    .job-fill { display: block; height: 100%; width: 0; background: #111; transition: width .25s linear; }
+    .results { display: flex; flex-direction: column; gap: 9px; padding: 10px; border: 1px solid #111; background: #fff; }
+    .results[hidden] { display: none; }
+    .results-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .results-head b { font-size: 13px; }
+    .results-head span { font: 600 9.5px/1.4 ui-monospace, monospace; letter-spacing: .06em;
+      text-transform: uppercase; color: #666; text-align: right; }
+    .drag-all { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px dashed #111;
+      background: #fbfaf8; cursor: grab; font: 600 10px/1.3 ui-monospace, monospace; letter-spacing: .05em;
+      text-transform: uppercase; }
+    .drag-all:active { cursor: grabbing; background: #111; color: #fbfaf8; }
+    .drag-all[hidden] { display: none; }
+    .drag-all-pill { padding: 3px 5px; border: 1px solid currentColor; font-size: 9px; }
+    .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+    .tile { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 9px 6px;
+      border: 1px solid #111; background: #fbfaf8; cursor: grab; text-align: center; }
+    .tile:active { cursor: grabbing; }
+    .tile-icon { padding: 4px 6px; border: 1px solid #111; font: 600 9px/1 ui-monospace, monospace; letter-spacing: .06em; }
+    .tile-name { font: 10px/1.3 ui-monospace, monospace; overflow-wrap: anywhere; }
+    .tile-size { font: 9.5px/1.2 ui-monospace, monospace; color: #666; }
+    .tile-save { margin-top: 2px; padding: 3px 6px; border: 1px solid #111; background: transparent; color: #111;
+      font: 600 8.5px/1 ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
     .status { margin: 0; padding: 9px 10px; border: 1px solid #111; background: #fff; font-size: 12.5px;
       overflow-wrap: anywhere; }
     .status.error { border-style: dashed; }
-    .result { display: flex; flex-direction: column; gap: 4px; padding: 10px; border: 1px solid #111; background: #fff; }
-    .result b { font-size: 18px; letter-spacing: -.01em; }
-    .result span { font-size: 12px; color: #555; }
     .hint { margin: 0; font-size: 11.5px; color: #666; }
-    .foot { display: flex; gap: 8px; justify-content: flex-end; padding: 10px 14px; border-top: 1px solid #111; }
+    .foot { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; padding: 10px 14px;
+      border-top: 1px solid #111; }
     .foot button { padding: 6px 10px; border: 1px solid #111; background: transparent; color: #111;
       font: 600 10px/1 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
     .foot .primary { background: #111; color: #fbfaf8; }
-    .foot .primary:disabled { opacity: .4; cursor: default; }
-    .queue { display: flex; flex-direction: column; flex: none; margin: 0; padding: 0; list-style: none;
-      border: 1px solid #111; background: #fff; max-height: 190px; overflow: auto; }
-    .queue:empty { display: none; }
-    .queue li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 10px; padding: 8px 10px;
-      border-bottom: 1px solid #ddd; }
-    .queue li:last-child { border-bottom: 0; }
-    .queue-name { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .queue-meta { grid-column: 1; font: 11px/1.4 ui-monospace, monospace; color: #555; overflow-wrap: anywhere; }
-    .queue-actions { grid-row: 1 / span 2; grid-column: 2; align-self: center; display: flex; gap: 6px; }
-    .queue-save { padding: 4px 7px; border: 1px solid #111;
-      background: transparent; color: #111; font: 600 9px/1 ui-monospace, monospace; letter-spacing: .06em;
-      text-transform: uppercase; cursor: pointer; }
-    .queue-save:disabled { opacity: .35; cursor: default; }
-    .queue-drag { padding: 4px 7px; border: 1px dashed #111; background: transparent; color: #111;
-      font: 600 9px/1 ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; cursor: grab; }
-    .queue-drag:active { background: #111; color: #fbfaf8; cursor: grabbing; }
-    .queue-drag[hidden] { display: none; }
+    .foot button:disabled { opacity: .4; cursor: default; }
+    .foot button[hidden] { display: none; }
   `;
 
   // Sizes are always MB, with decimals below 10 MB: upload limits are quoted
@@ -848,10 +870,12 @@
     style.textContent = CSS;
     root.append(style);
 
-    const state = { preset: "balanced", busy: false };
+    // One setting, chosen here rather than offered as a choice: Strong holds
+    // 1800 px so small print survives, and spends the savings on JPEG quality.
+    const state = { preset: "strong", busy: false };
 
     const wrap = make("div", { class: "wrap" });
-    const panel = make("section", { class: "panel", role: "dialog", "aria-modal": "true", "aria-label": "Shrink a PDF" });
+    const panel = make("section", { class: "panel", role: "dialog", "aria-modal": "true", "aria-label": "Shrink PDFs" });
     const head = make("header", { class: "head" });
     const titles = make("div");
     titles.append(make("h2", { class: "title" }, "Shrink PDFs"), make("p", { class: "meta" }, "Images only · pages and text stay"));
@@ -859,51 +883,53 @@
     head.append(titles, closeButton);
 
     const body = make("div", { class: "body" });
+
+    const intake = make("div", { class: "intake" });
     const drop = make("label", { class: "drop" });
-    const dropTitle = make("b", {}, "Choose PDFs");
-    const dropText = make("span", {}, "or drop several here · nothing is uploaded");
+    const dropTitle = make("b", {}, "Drop PDFs here");
+    const dropText = make("span", {}, "pick several at once · compression starts on its own");
     const input = make("input", { type: "file", accept: "application/pdf,.pdf", multiple: "" });
     drop.append(dropTitle, dropText, input);
-
-    const presets = make("div", { class: "presets", role: "group", "aria-label": "Compression strength" });
-    const presetButtons = new Map();
-    for (const [id, preset] of Object.entries(PRESETS)) {
-      const button = make("button", { type: "button", "aria-pressed": String(id === state.preset) });
-      button.append(make("span", {}, preset.label), make("small", {}, preset.note));
-      button.addEventListener("click", () => {
-        state.preset = id;
-        for (const [key, node] of presetButtons) node.setAttribute("aria-pressed", String(key === id));
-      });
-      presetButtons.set(id, button);
-      presets.append(button);
-    }
-
     const maxRow = make("label", { class: "row" });
     const maxInput = make("input", { type: "number", min: "0.5", max: "500", step: "0.5", inputmode: "decimal", value: "20", "data-max": "" });
     maxRow.append(make("span", {}, "Max file size (MB)"), maxInput);
     const maxRange = make("input", { class: "range", type: "range", min: "0.05", max: "60", step: "0.05", value: "20", "aria-label": "Maximum file size in megabytes", "data-max-range": "" });
     const maxBlock = make("div", { class: "max" });
     maxBlock.append(maxRow, maxRange);
-    maxRange.addEventListener("input", () => { maxInput.value = maxRange.value; });
-    maxInput.addEventListener("input", () => {
-      const value = Number.parseFloat(maxInput.value);
-      if (Number.isFinite(value) && value > 0) maxRange.value = String(Math.min(60, Math.max(0.05, value)));
-    });
+    intake.append(drop, maxBlock);
 
-    const status = make("p", { class: "status" }, "Ready. Pick one or more PDFs, then press Shrink.");
-    const result = make("div", { class: "result" });
-    result.hidden = true;
-    const hint = make("p", { class: "hint" }, "Pages, links and text are kept; images are re-encoded to fit. Drag the title bar to move the panel, or a finished row onto an upload box.");
+    const bar = make("div", { class: "bar" });
+    bar.hidden = true;
+    const barText = make("b");
+    const addMore = make("button", { class: "add-more", type: "button" }, "Add more");
+    bar.append(barText, addMore);
 
-    const queue = make("ul", { class: "queue", "aria-label": "Files to shrink", "data-queue": "" });
-    body.append(drop, queue, presets, maxBlock, status, result, hint);
+    const jobs = make("ul", { class: "jobs", "aria-label": "Compression progress", "data-jobs": "" });
+
+    const results = make("section", { class: "results", "aria-label": "Finished files" });
+    results.hidden = true;
+    const resultsHead = make("div", { class: "results-head" });
+    const resultsTitle = make("b", {}, "Ready");
+    const resultsNote = make("span");
+    resultsHead.append(resultsTitle, resultsNote);
+    const dragAll = make("div", { class: "drag-all", draggable: "true", "data-drag-all": "", title: "Drag every finished file at once" });
+    dragAll.append(make("span", { class: "drag-all-pill" }, "PDF"), make("span", {}, "Drag all onto the upload box"));
+    dragAll.hidden = true;
+    const tiles = make("div", { class: "tiles", "data-tiles": "" });
+    results.append(resultsHead, dragAll, tiles);
+
+    const status = make("p", { class: "status" }, "Drop PDFs and they start compressing. The finished files appear here to drag or save.");
+    const hint = make("p", { class: "hint" }, "Always the strongest setting: 1800 px long edge at JPEG 0.62, which held 99% of the words on scanned pages. Anything over the maximum size is split into parts that fit, and a page that cannot fit is reported instead of dropped.");
+
+    body.append(intake, bar, jobs, results, status, hint);
 
     const foot = make("footer", { class: "foot" });
+    const folder = make("button", { type: "button", "data-folder": "" }, "Save all to folder");
+    folder.hidden = typeof window.showDirectoryPicker !== "function";
+    folder.disabled = true;
     const download = make("button", { class: "primary", type: "button", "data-download": "" }, "Download");
     download.disabled = true;
-    const shrinkButton = make("button", { type: "button", "data-shrink": "" }, "Shrink");
-    shrinkButton.disabled = true;
-    foot.append(download, shrinkButton);
+    foot.append(folder, download);
 
     panel.append(head, body, foot);
     wrap.append(panel);
@@ -924,6 +950,12 @@
     closeButton.addEventListener("click", close);
     wrap.addEventListener("click", (event) => {
       if (event.target === wrap) close();
+    });
+
+    maxRange.addEventListener("input", () => { maxInput.value = maxRange.value; });
+    maxInput.addEventListener("input", () => {
+      const value = Number.parseFloat(maxInput.value);
+      if (Number.isFinite(value) && value > 0) maxRange.value = String(Math.min(60, Math.max(0.05, value)));
     });
 
     function setStatus(message, error = false) {
@@ -951,63 +983,232 @@
       setStatus(`Saved ${filename} (${mb(bytes.length)}).`);
     }
 
-    // What a row would hand over: the PDF itself, or the archive when the file
-    // had to be split, so a drag carries the same thing Save would write.
-    function dragFileFor(item) {
-      if (!item.result.length) return null;
-      if (item.result.length === 1) return { name: item.result[0].name, type: "application/pdf", bytes: item.result[0].bytes };
-      return { name: `${baseName(item.file.name)}-parts.zip`, type: "application/zip", bytes: zipStore(item.result) };
+    // Everything that finished, with the names the archive and the folder save
+    // will use: split files become one archive per source file, and two sources
+    // with the same name get distinct entries.
+    function resultFiles() {
+      const used = new Set();
+      return items
+        .filter((item) => item.result.length)
+        .flatMap((item) => {
+          if (item.result.length > 1) {
+            const name = uniqueName(`${baseName(item.file.name)}-parts.zip`, used);
+            return [{ name, bytes: zipStore(item.result), type: "application/zip" }];
+          }
+          return item.result.map((entry) => ({
+            name: uniqueName(entry.name, used),
+            bytes: entry.bytes,
+            type: "application/pdf",
+          }));
+        });
     }
 
-    function rowFor(file) {
-      const row = make("li");
-      const name = make("span", { class: "queue-name" }, file.name);
-      const meta = make("span", { class: "queue-meta" }, `${mb(file.size)} · queued`);
-      const actions = make("div", { class: "queue-actions" });
-      const save = make("button", { class: "queue-save", type: "button", "data-save": "" }, "Save");
-      save.disabled = true;
-      save.hidden = true;
-      const drag = make("span", { class: "queue-drag", draggable: "true", "data-drag": "", title: "Drag this straight onto an upload box" }, "Drag");
-      drag.hidden = true;
-      const item = { file, status: "queued", result: [], meta, save, drag };
-      save.addEventListener("click", () => {
-        if (!item.result.length) return;
-        if (item.result.length === 1) saveBytes(item.result[0].bytes, item.result[0].name);
-        else saveBytes(zipStore(item.result), `${baseName(item.file.name)}-parts.zip`);
+    function startDrag(event, files) {
+      if (!event.dataTransfer || !files.length) {
+        event.preventDefault();
+        return;
+      }
+      const transfer = event.dataTransfer;
+      transfer.effectAllowed = "copy";
+      // A file input on this page reads dataTransfer.files, so a drag of real
+      // File objects is what makes "drag all" land as several files at once.
+      for (const file of files) {
+        try {
+          transfer.items.add(new File([file.bytes], file.name, { type: file.type }));
+        } catch {
+          /* a browser that refuses File items still gets the download payload */
+        }
+      }
+      const first = files[0];
+      const url = URL.createObjectURL(new Blob([first.bytes], { type: first.type }));
+      setTimeout(() => URL.revokeObjectURL(url), 120000);
+      transfer.setData("DownloadURL", downloadDragPayload(first.name, first.type, url));
+      transfer.setData("text/plain", files.map((file) => file.name).join("\n"));
+      setStatus(files.length === 1 ? `Dragging ${first.name} — drop it on the upload box.` : `Dragging ${files.length} files — drop them on the upload box.`);
+    }
+
+    function tileFor(entry) {
+      const tile = make("div", { class: "tile", draggable: "true", "data-tile": entry.name });
+      const icon = make("span", { class: "tile-icon" }, entry.type === "application/zip" ? "ZIP" : "PDF");
+      const name = make("span", { class: "tile-name" }, entry.name);
+      const size = make("span", { class: "tile-size" }, mb(entry.bytes.length));
+      const save = make("button", { class: "tile-save", type: "button" }, "Save");
+      save.addEventListener("click", (event) => {
+        event.stopPropagation();
+        saveBytes(entry.bytes, entry.name);
       });
-      drag.addEventListener("dragstart", (event) => {
-        const payload = dragFileFor(item);
-        if (!payload || !event.dataTransfer) {
-          event.preventDefault();
+      tile.append(icon, name, size, save);
+      tile.addEventListener("dragstart", (event) => startDrag(event, [entry]));
+      return tile;
+    }
+
+    function jobFor(file) {
+      const row = make("li", { class: "job" });
+      const name = make("span", { class: "job-name" }, file.name);
+      const meta = make("span", { class: "job-meta" }, `${mb(file.size)} · waiting`);
+      const mark = make("span", { class: "job-state" }, "Waiting");
+      const track = make("span", { class: "job-track" });
+      const fill = make("span", { class: "job-fill" });
+      track.append(fill);
+      row.append(name, meta, mark, track);
+      jobs.append(row);
+      return { file, status: "queued", result: [], meta, mark, fill, row };
+    }
+
+    function progress(item, percent, label) {
+      item.fill.style.width = `${percent}%`;
+      if (label) item.meta.textContent = label;
+    }
+
+    function showBar() {
+      const total = items.reduce((sum, item) => sum + item.file.size, 0);
+      const ceiling = Number.parseFloat(maxInput.value);
+      const ceilingNote = Number.isFinite(ceiling) && ceiling > 0 ? ` · max ${mb(ceiling * 1024 * 1024)}` : "";
+      barText.textContent = `${items.length} PDF${items.length === 1 ? "" : "s"} · ${mb(total)}${ceilingNote}`;
+    }
+
+    function showSummary() {
+      const files = resultFiles();
+      const done = items.filter((item) => item.status === "done");
+      const none = items.filter((item) => item.status === "none");
+      const failed = items.filter((item) => item.status === "error");
+      download.disabled = files.length === 0;
+      folder.disabled = files.length === 0;
+      download.textContent = files.length > 1 ? "Download all (.zip)" : "Download";
+      dragAll.hidden = files.length === 0;
+      if (!files.length) {
+        results.hidden = true;
+        return;
+      }
+      const before = done.reduce((sum, item) => sum + item.file.size, 0);
+      const after = files.reduce((sum, file) => sum + file.bytes.length, 0);
+      const saved = before ? Math.round(((before - after) / before) * 100) : 0;
+      resultsTitle.textContent = files.length === 1 ? "1 file ready" : `${files.length} files ready`;
+      const notes = [`${mb(before)} → ${mb(after)}`, saved > 0 ? `${saved}% smaller` : "no saving"];
+      if (none.length) notes.push(`${none.length} with no gain`);
+      if (failed.length) notes.push(`${failed.length} failed`);
+      resultsNote.textContent = notes.join(" · ");
+      tiles.replaceChildren(...files.map(tileFor));
+      results.hidden = false;
+    }
+
+    async function saveAllToFolder() {
+      const files = resultFiles();
+      if (!files.length || typeof window.showDirectoryPicker !== "function") return;
+      try {
+        // Picking a folder beats a ZIP here: the files arrive as themselves, so
+        // the page's own upload control can take several at once from the folder.
+        const directory = await window.showDirectoryPicker({ id: "bl-pdf-shrink", mode: "readwrite" });
+        setStatus(`Writing ${files.length} file${files.length === 1 ? "" : "s"} to ${directory.name}…`);
+        for (const file of files) {
+          const handle = await directory.getFileHandle(file.name, { create: true });
+          const writable = await handle.createWritable();
+          await writable.write(file.bytes);
+          await writable.close();
+        }
+        setStatus(`Saved ${files.length} file${files.length === 1 ? "" : "s"} to ${directory.name}. Drag them from there into the upload box.`);
+      } catch (error) {
+        if (error?.name === "AbortError") {
+          setStatus("Folder pick cancelled; nothing was written.");
           return;
         }
-        const url = URL.createObjectURL(new Blob([payload.bytes], { type: payload.type }));
-        setTimeout(() => URL.revokeObjectURL(url), 120000);
-        event.dataTransfer.effectAllowed = "copy";
-        event.dataTransfer.setData("DownloadURL", downloadDragPayload(payload.name, payload.type, url));
-        event.dataTransfer.setData("text/plain", payload.name);
-        setStatus(`Dragging ${payload.name} (${mb(payload.bytes.length)}) — drop it on the upload box.`);
-      });
-      actions.append(drag, save);
-      row.append(name, meta, actions);
-      queue.append(row);
-      return item;
+        setStatus(`Could not write to that folder: ${error?.message || error}`, true);
+      }
+    }
+
+    async function processItem(item) {
+      item.status = "working";
+      item.row.classList.add("working");
+      item.mark.textContent = "Working";
+      progress(item, 12, `${mb(item.file.size)} · reading`);
+      setStatus(`Compressing ${item.file.name}…`);
+      try {
+        const bytes = new Uint8Array(await item.file.arrayBuffer());
+        progress(item, 45, "re-encoding images");
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        const targetMb = Number.parseFloat(maxInput.value);
+        const target = Number.isFinite(targetMb) && targetMb > 0 ? targetMb * 1024 * 1024 : 0;
+        const outcome = target ? await splitPdf(bytes, target, state.preset) : await shrinkPdf(bytes, state.preset);
+        const parts = outcome.parts || null;
+        const total = parts ? parts.reduce((sum, part) => sum + part.bytes.length, 0) : outcome.after;
+        const saved = outcome.before - total;
+
+        if (saved <= 0 && (!parts || parts.length === 1)) {
+          item.status = "none";
+          item.row.classList.add("none");
+          item.mark.textContent = "No gain";
+          progress(item, 100, `${mb(outcome.before)} · already tight, left as it was`);
+          return;
+        }
+
+        const base = baseName(item.file.name);
+        if (parts && parts.length > 1) {
+          item.result = parts.map((part, index) => ({ name: `${base}-part${index + 1}.pdf`, bytes: part.bytes, type: "application/pdf" }));
+          progress(item, 100, `${parts.length} parts · ${mb(total)}`);
+          if (parts.some((part) => part.tooBig)) progress(item, 100, `${parts.length} parts · ${mb(total)} · a page will not fit under ${mb(target)}`);
+        } else {
+          item.result = [{ name: `${base}-small.pdf`, bytes: parts ? parts[0].bytes : outcome.bytes, type: "application/pdf" }];
+          progress(item, 100, `${mb(outcome.before)} → ${mb(total)} · ${Math.round((saved / outcome.before) * 100)}% smaller`);
+          if (parts && parts[0] && parts[0].tooBig) progress(item, 100, `${mb(outcome.before)} → ${mb(total)} · still over ${mb(target)}`);
+        }
+        item.status = "done";
+        item.row.classList.add("done");
+        item.mark.textContent = "Done";
+      } catch (error) {
+        item.status = "error";
+        item.row.classList.add("error");
+        item.mark.textContent = "Failed";
+        progress(item, 100, (MESSAGES[error?.message] || String(error?.message || error)).slice(0, 90));
+      } finally {
+        showSummary();
+      }
+    }
+
+    async function run() {
+      if (state.busy) return;
+      const queued = items.filter((item) => item.status === "queued").length;
+      if (!queued) return;
+      state.busy = true;
+      try {
+        for (;;) {
+          const next = items.find((item) => item.status === "queued");
+          if (!next) break;
+          await processItem(next);
+        }
+      } finally {
+        state.busy = false;
+        const done = items.filter((item) => item.status === "done").length;
+        const none = items.filter((item) => item.status === "none").length;
+        const failed = items.filter((item) => item.status === "error").length;
+        const left = items.length - done - none - failed;
+        if (left > 0) {
+          setStatus(`${done} ready, ${left} still to go. Add more or press Save.`, false);
+        } else {
+          setStatus(
+            `${done + none} file${done + none === 1 ? "" : "s"} finished${none ? `, ${none} already tight` : ""}${failed ? `, ${failed} failed` : ""}. Drag them onto the upload box, or save them.`,
+            done === 0,
+          );
+        }
+      }
     }
 
     function addFiles(list) {
       const files = [...list];
       const pdfs = files.filter((file) => /\.pdf$/i.test(file.name) || file.type === "application/pdf");
       const skipped = files.length - pdfs.length;
-      for (const file of pdfs) items.push(rowFor(file));
-      shrinkButton.disabled = items.length === 0;
       if (!pdfs.length) {
         setStatus("That does not look like a PDF. Choose a .pdf file.", true);
         return;
       }
+      for (const file of pdfs) items.push(jobFor(file));
+      // The intake is out of the way from here: the wizard owns the panel now,
+      // and "Add more" brings the drop zone back.
+      intake.hidden = true;
+      bar.hidden = false;
+      showBar();
       const waiting = items.filter((item) => item.status === "queued").length;
-      dropTitle.textContent = `${items.length} file${items.length === 1 ? "" : "s"} queued`;
-      dropText.textContent = "drop more any time · nothing is uploaded";
-      setStatus(`${waiting} PDF${waiting === 1 ? "" : "s"} ready to shrink${skipped ? `, ${skipped} non-PDF ${skipped === 1 ? "file" : "files"} skipped` : ""}. Press Shrink.`);
+      setStatus(`Compressing ${waiting} PDF${waiting === 1 ? "" : "s"}${skipped ? `, ${skipped} non-PDF ${skipped === 1 ? "file" : "files"} skipped` : ""}…`);
+      void run();
     }
 
     input.addEventListener("change", () => {
@@ -1025,110 +1226,14 @@
       addFiles(event.dataTransfer?.files || []);
     });
 
-    function resultFiles() {
-      const used = new Set();
-      return items
-        .filter((item) => item.result.length)
-        .flatMap((item) => item.result.map((entry) => ({ name: uniqueName(entry.name, used), bytes: entry.bytes })));
-    }
+    addMore.addEventListener("click", () => {
+      intake.hidden = false;
+      setStatus("Add more PDFs; they join the queue and start on their own.");
+    });
 
-    function showSummary() {
-      const files = resultFiles();
-      const done = items.filter((item) => item.status === "done");
-      const none = items.filter((item) => item.status === "none");
-      const failed = items.filter((item) => item.status === "error");
-      download.disabled = files.length === 0;
-      download.textContent = files.length > 1 ? "Download all (.zip)" : "Download";
-      if (!files.length) {
-        result.hidden = true;
-        return;
-      }
-      const before = done.reduce((sum, item) => sum + item.file.size, 0);
-      const after = done.reduce((sum, item) => sum + item.result.reduce((partSum, part) => partSum + part.bytes.length, 0), 0);
-      const headline = done.length === 1
-        ? (done[0].result.length > 1 ? `${done[0].result.length} parts · ${mb(after)}` : `${mb(before)} → ${mb(after)}`)
-        : `${done.length} files · ${mb(before)} → ${mb(after)}`;
-      const notes = [`${files.length} file${files.length === 1 ? "" : "s"} ready`];
-      if (none.length) notes.push(`${none.length} with no gain`);
-      if (failed.length) notes.push(`${failed.length} failed`);
-      result.replaceChildren(make("b", {}, headline), make("span", {}, notes.join(" · ")));
-      result.hidden = false;
-    }
+    folder.addEventListener("click", () => void saveAllToFolder());
 
-    async function processItem(item) {
-      const name = item.file.name;
-      item.status = "working";
-      item.meta.textContent = "working…";
-      setStatus(`Reading ${name}…`);
-      try {
-        const bytes = new Uint8Array(await item.file.arrayBuffer());
-        setStatus(`Recompressing ${name}…`);
-        await new Promise((resolve) => setTimeout(resolve, 30));
-        const targetMb = Number.parseFloat(maxInput.value);
-        const target = Number.isFinite(targetMb) && targetMb > 0 ? targetMb * 1024 * 1024 : 0;
-        const outcome = target ? await splitPdf(bytes, target, state.preset) : await shrinkPdf(bytes, state.preset);
-        const parts = outcome.parts || null;
-        const total = parts ? parts.reduce((sum, part) => sum + part.bytes.length, 0) : outcome.after;
-        const saved = outcome.before - total;
-
-        if (saved <= 0 && (!parts || parts.length === 1)) {
-          item.status = "none";
-          item.meta.textContent = `${mb(outcome.before)} · no gain, left as it was`;
-          return;
-        }
-
-        const base = baseName(name);
-        const harder = outcome.escalated ? ` · compressed at ${presetFor(outcome.preset).label} to fit` : "";
-        if (parts && parts.length > 1) {
-          item.result = parts.map((part, index) => ({ name: `${base}-part${index + 1}.pdf`, bytes: part.bytes }));
-          item.meta.textContent = `${parts.length} parts · ${mb(total)}${harder}`;
-          if (parts.some((part) => part.tooBig)) item.meta.textContent += ` · a single page will not fit under ${mb(target)}`;
-        } else {
-          item.result = [{ name: `${base}-small.pdf`, bytes: parts ? parts[0].bytes : outcome.bytes }];
-          item.meta.textContent = `${mb(outcome.before)} → ${mb(total)} · ${Math.round((saved / outcome.before) * 100)}% smaller${harder}`;
-          if (parts && parts[0] && parts[0].tooBig) item.meta.textContent += ` · still over ${mb(target)}`;
-        }
-        item.status = "done";
-        item.save.hidden = false;
-        item.save.disabled = false;
-        item.drag.hidden = false;
-      } catch (error) {
-        item.status = "error";
-        item.meta.textContent = (MESSAGES[error?.message] || String(error?.message || error)).slice(0, 90);
-      } finally {
-        showSummary();
-      }
-    }
-
-    async function run() {
-      if (state.busy) return;
-      if (!items.some((item) => item.status === "queued")) {
-        setStatus("Every queued file has already been tried. Add another PDF or drop more.", true);
-        return;
-      }
-      state.busy = true;
-      shrinkButton.disabled = true;
-      download.disabled = true;
-      result.hidden = true;
-      try {
-        for (;;) {
-          const next = items.find((item) => item.status === "queued");
-          if (!next) break;
-          setStatus(`Shrinking ${next.file.name}…`);
-          await processItem(next);
-        }
-      } finally {
-        state.busy = false;
-        shrinkButton.disabled = items.length === 0;
-        showSummary();
-        const done = items.filter((item) => item.status === "done").length;
-        const none = items.filter((item) => item.status === "none").length;
-        const failed = items.filter((item) => item.status === "error").length;
-        setStatus(`Finished. ${done} shrank${none ? `, ${none} had no gain` : ""}${failed ? `, ${failed} failed` : ""}.`, done === 0);
-      }
-    }
-
-    shrinkButton.addEventListener("click", () => void run());
+    dragAll.addEventListener("dragstart", (event) => startDrag(event, resultFiles()));
 
     download.addEventListener("click", () => {
       const files = resultFiles();

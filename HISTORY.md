@@ -2,6 +2,25 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Shrink PDF becomes a wizard
+
+**Why**
+
+- The old panel asked for a strength, then a Shrink press, then a Save per file, and the thing a person actually wants — files small enough for an upload box — was three interactions away.
+
+**What changed**
+
+- Dropping files is the only action. `addFiles` starts `run()` itself, the intake collapses into a summary bar with **Add more**, and the Shrink button and the preset picker are gone. `state.preset` is fixed at `strong` (1800 px long edge, JPEG 0.62) because the job is "as small as this goes while staying readable", not a preference.
+- Each file has a progress row with a staged bar (reading, re-encoding, done) rather than a button appearing after the fact.
+- Results moved into their own section: one tile per file with its name and size, each draggable, plus **Drag all**, which puts real `File` objects on the drag so a page's own file input can take several files from one drop, while still setting `DownloadURL` for targets that only understand a download drag.
+- **Save all to folder** uses `showDirectoryPicker` and writes every file with `createWritable`, so nothing is zipped and the upload control can take the files from disk. Browsers without the API hide the button instead of offering something that cannot work.
+- A split file still travels as one ZIP per source, and that is what its tile and the batch buttons hand over.
+
+**Verified in the capture**
+
+- Files are added without pressing anything; the intake is hidden and the bar reads `2 PDFs`; both rows reach Done with a size change; two tiles are draggable; `dragstart` on Drag all carries `dataTransfer.files.length === 2` and an `application/pdf:…-small.pdf:blob:` payload; the archive and folder buttons are enabled.
+- The trade-off is recorded in TODO: real `File` objects only travel inside the page that started the drag, so "drag all" into another window is still a hand check.
+
 ## 2026-11-03 — Exports lose a folder, and Turnstone joins the catalog
 
 **The export was one folder too deep**
@@ -32,7 +51,7 @@ What has been done, in order. Newest entries first.
 
 **What changed**
 
-- The panel follows its title bar: `pointerdown` on the header records the offset, `pointermove` on the window writes `left`/`top`, and `clampOrigin` keeps at least the header on screen. Nothing else in the panel starts a drag, so the close button, presets and inputs still work.
+- The panel follows its title bar: `pointerdown` on the header records the offset, `pointermove` on the window writes `left`/`top`, and `clampOrigin` keeps at least the header on screen. Nothing else in the panel starts a drag, so the close button and the inputs still work.
 - A finished row gained a **Drag** handle. `dragstart` writes `DownloadURL` as `mime:name:blob-url` with `effectAllowed = "copy"`, which is the shape Chromium uses for a download drag, plus `text/plain` as a name fallback. A row that was split drags its ZIP, so the drag and Save hand over the same file.
 - The blob URL is created per drag and revoked after two minutes, so a drag that is never dropped leaves nothing behind.
 

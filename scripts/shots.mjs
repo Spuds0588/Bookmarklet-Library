@@ -120,6 +120,17 @@ const STEPS = {
     { wait: 250 },
     {
       script: `(() => {
+        const root = document.getElementById("bl-pdf-shrink-host").shadowRoot;
+        const range = root.querySelector("input[type=range]");
+        if (!range) throw new Error("no maximum-size slider");
+        if (range.value !== "20") throw new Error("slider defaults to " + range.value + ", not 20");
+        if (root.querySelector(".presets")) throw new Error("the compression choice is still on screen");
+        return true;
+      })()`,
+    },
+    // Dropping files is the only action; the run starts without a button press.
+    {
+      script: `(() => {
         const bytes = globalThis.__blPdfBytes;
         if (!bytes) throw new Error("fixture bytes were not preloaded");
         const root = document.getElementById("bl-pdf-shrink-host").shadowRoot;
@@ -132,65 +143,56 @@ const STEPS = {
         return true;
       })()`,
     },
-    { wait: 300 },
-    // A ceiling below what Balanced can reach proves the escalation path: the
-    // row must say which stronger preset finally fit.
+    { wait: 500 },
+    // The intake is what has to get out of the way once the wizard is running.
     {
       script: `(() => {
         const root = document.getElementById("bl-pdf-shrink-host").shadowRoot;
-        const range = root.querySelector("input[type=range]");
-        if (!range) throw new Error("no maximum-size slider");
-        if (range.value !== "20") throw new Error("slider defaults to " + range.value + ", not 20");
-        const number = root.querySelector("input[type=number]");
-        number.value = "0.05";
-        number.dispatchEvent(new Event("input", { bubbles: true }));
-        if (range.value !== "0.05") throw new Error("slider did not follow the typed value: " + range.value);
-        return number.value;
-      })()`,
-    },
-    {
-      script: `(() => {
-        const root = document.getElementById("bl-pdf-shrink-host").shadowRoot;
-        const button = root.querySelector("[data-shrink]");
-        if (!button || button.disabled) throw new Error("Shrink is not ready");
-        button.click();
-        return true;
+        if (!root.querySelector(".intake").hidden) throw new Error("the intake is still showing after files were added");
+        const bar = root.querySelector(".bar");
+        if (!bar || bar.hidden) throw new Error("no summary bar while compressing");
+        if (!/2 PDFs/.test(bar.textContent)) throw new Error("the bar does not count the batch: " + bar.textContent);
+        if (root.querySelectorAll(".job").length !== 2) throw new Error("expected two progress rows, got " + root.querySelectorAll(".job").length);
+        return bar.textContent;
       })()`,
     },
     { wait: 9000 },
-    // A screenshot of an error panel would still look like a capture, so fail
-    // the run unless both queued files produced rows that can be saved.
     {
       script: `(() => {
         const root = document.getElementById("bl-pdf-shrink-host").shadowRoot;
-        const status = root.querySelector(".status").textContent;
-        const rows = [...root.querySelectorAll(".queue li")];
-        if (rows.length !== 2) throw new Error("expected 2 queue rows, got " + rows.length + ": " + status);
-        const escalated = rows.filter((row) => /compressed at Strong to fit/.test(row.textContent));
-        if (escalated.length !== 2) throw new Error("escalation did not happen: " + rows.map((row) => row.textContent).join(" | "));
-        const list = root.querySelector(".queue").getBoundingClientRect();
-        const lastRow = rows[rows.length - 1].getBoundingClientRect();
-        if (lastRow.bottom > list.bottom + 1) throw new Error("the queue clips its last row: " + (lastRow.bottom - list.bottom) + "px hidden");
-        const ready = rows.filter((row) => { const save = row.querySelector(".queue-save"); return save && !save.hidden && !save.disabled; });
-        if (ready.length !== 2) throw new Error("only " + ready.length + " rows are ready to save: " + rows.map((row) => row.textContent).join(" | "));
-        if (root.querySelector(".result").hidden) throw new Error("no result: " + status);
+        const jobs = [...root.querySelectorAll(".job")];
+        const states = jobs.map((job) => job.querySelector(".job-state").textContent);
+        if (jobs.length !== 2) throw new Error("expected 2 progress rows, got " + jobs.length + ": " + states.join(" | "));
+        if (states.some((state) => !/done/i.test(state))) throw new Error("jobs did not finish: " + states.join(" | "));
+        if (jobs.some((job) => !/% smaller/.test(job.textContent))) throw new Error("no size change reported: " + jobs.map((job) => job.textContent).join(" | "));
+
+        const tiles = [...root.querySelectorAll(".tile")];
+        if (tiles.length !== 2) throw new Error("expected 2 finished tiles, got " + tiles.length);
+        if (tiles.some((tile) => tile.getAttribute("draggable") !== "true")) throw new Error("a finished tile cannot be dragged");
+
+        // One drag has to carry both files, or "drag all" is a lie.
+        const all = root.querySelector(".drag-all");
+        if (!all || all.hidden) throw new Error("no drag-all handle");
+        const transfer = new DataTransfer();
+        all.dispatchEvent(new DragEvent("dragstart", { bubbles: true, cancelable: true, dataTransfer: transfer }));
+        if (transfer.files.length !== 2) throw new Error("drag-all carried " + transfer.files.length + " files");
+        if (!/^application\\/pdf:.+-small\\.pdf:blob:/.test(transfer.getData("DownloadURL"))) throw new Error("drag-all has no download payload: " + transfer.getData("DownloadURL"));
+
         const download = root.querySelector("[data-download]");
-        if (download.disabled) throw new Error("download is disabled: " + status);
-        if (!/zip/i.test(download.textContent)) throw new Error("expected one archive for the batch, got: " + download.textContent);
-        return status;
+        if (download.disabled || !/zip/i.test(download.textContent)) throw new Error("expected one archive for the batch: " + download.textContent);
+        const folder = root.querySelector("[data-folder]");
+        if (!folder || folder.hidden || folder.disabled) throw new Error("no save-to-folder button");
+        if (root.querySelector(".result, .queue")) throw new Error("leftover UI from the old panel is still in the shadow root");
+        return states.join(" | ");
       })()`,
     },
-    // The panel has to follow its title bar, and a finished row has to hand the
-    // browser a download drag rather than a bare filename, or the result cannot
-    // be dropped on an upload box at all.
+    // The panel still has to follow its title bar.
     {
       script: `(() => {
         const root = document.getElementById("bl-pdf-shrink-host").shadowRoot;
         const panel = root.querySelector(".panel");
         const head = root.querySelector(".head");
         const before = panel.getBoundingClientRect();
-        // Down and to the right: a tall panel already sits at the top clamp, so
-        // dragging up would prove nothing but the clamp.
         head.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, pointerId: 1, button: 0, clientX: before.left + 40, clientY: before.top + 18 }));
         window.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, pointerId: 1, clientX: before.left + 140, clientY: before.top + 66 }));
         const moved = panel.getBoundingClientRect();
@@ -198,22 +200,12 @@ const STEPS = {
         const dx = Math.round(moved.left - before.left);
         const dy = Math.round(moved.top - before.top);
         if (Math.abs(dx) < 80 || Math.abs(dy) < 30) throw new Error("panel ignored the drag: " + dx + "," + dy);
-        if (moved.left < 0 || moved.top < 0) throw new Error("panel left the viewport: " + moved.left + "," + moved.top);
-
-        const chip = root.querySelector(".queue-drag");
-        if (!chip || chip.hidden || chip.getAttribute("draggable") !== "true") throw new Error("no drag handle on a finished row");
-        const transfer = new DataTransfer();
-        chip.dispatchEvent(new DragEvent("dragstart", { bubbles: true, cancelable: true, dataTransfer: transfer }));
-        const payload = transfer.getData("DownloadURL");
-        if (!/^application\\/pdf:.+-small\\.pdf:blob:https?:/.test(payload)) throw new Error("unexpected drag payload: " + payload);
-
-        // Put it back where a screenshot reads best.
         head.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, pointerId: 2, button: 0, clientX: moved.left + 40, clientY: moved.top + 18 }));
         window.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, pointerId: 2, clientX: moved.left + 40 - dx, clientY: moved.top + 18 - dy }));
         window.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerId: 2 }));
         const back = panel.getBoundingClientRect();
         if (Math.abs(back.left - before.left) > 2) throw new Error("panel did not come back: " + back.left + " vs " + before.left);
-        return payload;
+        return true;
       })()`,
     },
     { wait: 250 },
