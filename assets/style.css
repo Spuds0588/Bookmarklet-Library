@@ -1122,3 +1122,16 @@ body.has-detail { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* A status, not a capability: the tool works, but it has not been run against
+ * the real service end to end yet. */
+.trait-testing { border-style: dashed; }
+
+.static-testing {
+  font: 9.5px/1.4 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 4px;
+  border: 1px dashed currentColor;
+  white-space: nowrap;
+}

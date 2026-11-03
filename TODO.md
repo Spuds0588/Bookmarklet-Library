@@ -52,6 +52,16 @@
 - [ ] The phase 2 document's runtime builder/registry idea was not adopted: these tools configure in their own panel or exchange JSON, because the catalog has no build-at-runtime step. Revisit only if a builder earns its keep.
 - [ ] The URL chat depends on the public PeerJS broker and CDN. If that service is unavailable, the hosted page says so; there is no fallback signalling server.
 
+## Export chat to Markdown (2026-11-03)
+
+- [x] **💬 Export chat to Markdown** finds the messages on ChatGPT, Claude and Gemini, converts the rendered HTML to Markdown and saves one dated `.md` file.
+- [x] The converter is inline. Turndown from unpkg would be blocked by those sites' CSP rules, needs the network, and would make the tool dependent on a CDN staying up.
+- [x] Container fallback with a confirmation panel, then click-to-select with hover highlighting and `Esc`. The picker climbs from the clicked paragraph to a block with enough text, instead of exporting the `<span>` under the cursor.
+- [x] `tests/chat-to-markdown.test.mjs` covers platform detection, title cleaning, filename slugs and whitespace tidying; the capture drives the real export on injected ChatGPT-shaped markup.
+- [ ] The Claude and Gemini role selectors are written from their DOM but were only exercised against the generic shape in the capture. Both need a pass on the live sites.
+- [ ] Lazy-loaded history: a chat that pages in earlier messages exports only what is in the DOM. Scroll to the top first.
+- [ ] Gemini's `user-query` element wraps some UI labels along with the question; check whether those need stripping.
+
 ## Send PDF to DocuSign (2026-11-03)
 
 - [x] **🚀 Send PDF to DocuSign** finds the PDF in the tab (a `.pdf` URL, a `blob:`, `data:application/pdf`, or an embed/object/iframe in the page), or takes one from a file picker, and creates a draft envelope with the bytes base64-encoded.
@@ -59,7 +69,7 @@
 - [x] Handoff uses `POST .../views/sender` and opens the returned URL; a blocked pop-up becomes an in-panel link. 401 and 403 are explained in the panel.
 - [x] `tests/send-to-docusign.test.mjs` covers PDF detection, name cleaning, envelope body shape, `%PDF` sniffing and credential shape checks; the capture uses a real 655-byte PDF fixture.
 - [ ] No OAuth flow: a static bookmarklet cannot receive a redirect, so the token is pasted by hand. A refresh path needs a token endpoint somewhere.
-- [ ] No live account has been used. The API call is exercised against stubs; a demo account with a real token is still the missing test.
+- [ ] **Get a DocuSign developer account** (free at developers.docusign.com), supply a demo-account token, and run a real create-envelope + sender-view pass, then refine what the live API complains about. Set as a reminder on 2026-11-03.
 - [ ] A `file://` PDF cannot be read by the bookmarklet; the picker is the fallback.
 
 ## Preview downloads (2026-11-03)

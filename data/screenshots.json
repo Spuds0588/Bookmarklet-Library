@@ -142,6 +142,10 @@
       "changed": false,
       "reason": "download"
     },
+    "chat-to-markdown": {
+      "file": "screenshots/chat-to-markdown.png",
+      "changed": true
+    },
     "unzip": {
       "file": "screenshots/unzip.png",
       "changed": true,

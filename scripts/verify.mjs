@@ -51,6 +51,7 @@ for (const item of catalog.items) {
   if (item.traits?.includes("web-app") && !item.traits?.includes("network")) {
     problems.push(`${item.slug}: loads a web app without the network trait`);
   }
+  if (typeof item.testing !== "boolean") problems.push(`${item.slug}: testing is not a boolean`);
   if (Boolean(item.author) !== Boolean(item.credit)) {
     problems.push(`${item.slug}: author and credit must be present together`);
   }

@@ -91,6 +91,12 @@ function parseSource(slug, file, text) {
     throw new Error(`${file}: a tool that loads a web app also needs the network trait`);
   }
 
+  // A status, not a capability: "testing" means the tool works but has not
+  // been run against the real service yet.
+  if (meta.testing !== undefined && !["true", "false"].includes(meta.testing.trim())) {
+    throw new Error(`${file}: @testing must be true or false`);
+  }
+
   const author = (meta.author ?? "").trim();
   const credit = (meta.credit ?? "").trim();
   if (Boolean(author) !== Boolean(credit)) {
@@ -107,6 +113,7 @@ function parseSource(slug, file, text) {
     traits,
     added: meta.added,
     featured: meta.featured === "true",
+    testing: meta.testing?.trim() === "true",
     author,
     credit,
     bytes: Buffer.byteLength(code),
@@ -176,7 +183,8 @@ function toolsBlock(items, categories) {
             ? ` <span class="static-credit">By <a href="${escapeHtml(item.credit)}">${escapeHtml(item.author)}</a></span>`
             : "";
           const needs = `<span class="static-traits">${item.traits.map(traitShort).map(escapeHtml).join(" · ")}</span>`;
-          return `            <li><strong>${escapeHtml(item.name)}</strong> — ${escapeHtml(item.description)}${by} ${needs}</li>`;
+          const state = item.testing ? ' <span class="static-testing">In testing</span>' : "";
+          return `            <li><strong>${escapeHtml(item.name)}</strong> — ${escapeHtml(item.description)}${by} ${needs}${state}</li>`;
         })
         .join("\n");
       return `        <section class="static-group">

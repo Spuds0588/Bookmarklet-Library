@@ -6,6 +6,7 @@
  * @traits network, self-contained
  * @added 2026-11-03
  * @featured false
+ * @testing true
  */
 (() => {
   const KEY = "bl:docusign";

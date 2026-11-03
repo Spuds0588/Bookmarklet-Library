@@ -84,7 +84,12 @@ const traitBadges = (item) =>
       const trait = traitOf(id);
       return trait ? `<span class="trait" title="${esc(trait.help)}">${esc(trait.short)}</span>` : "";
     })
-    .join("");
+    .join("") +
+  // A status rather than a capability: it works, but nobody has run it against
+  // the real service yet.
+  (item.testing
+    ? '<span class="trait trait-testing" title="Does its job, but has not been run against the real service end to end yet.">In testing</span>'
+    : "");
 
 // Tools whose work never reaches the page get no screenshot. The reason says
 // what happened instead, so a blank tile is an answer rather than a gap.
@@ -140,7 +145,7 @@ function visibleItems() {
         return trait ? `${id} ${trait.short} ${trait.label}` : id;
       })
       .join(" ");
-    const haystack = [item.name, item.description, item.tags.join(" "), labelFor(item.category), needs]
+    const haystack = [item.name, item.description, item.tags.join(" "), labelFor(item.category), needs, item.testing ? "in testing" : ""]
       .join(" ")
       .toLowerCase();
     return tokens.every((token) => haystack.includes(token));

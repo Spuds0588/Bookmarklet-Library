@@ -4,7 +4,7 @@
 
 A searchable catalog of small browser tools. Find one that does the job, drag it to your bookmarks bar, click it on any page. Nothing to install, no accounts, no extensions.
 
-122 bookmarklets across eight categories: capture, annotate, text, files, dev tools, view, games and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site. Four tools use a hosted helper page: the URL chat loads PeerJS from a CDN, Doom loads its own WebAssembly engine and shareware WAD from this site, the QR reader decodes screen captures locally, and the WebMCP hub runs the local agent window.
+125 bookmarklets across eight categories: capture, annotate, text, files, dev tools, view, games and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site. Four tools use a hosted helper page: the URL chat loads PeerJS from a CDN, Doom loads its own WebAssembly engine and shareware WAD from this site, the QR reader decodes screen captures locally, and the WebMCP hub runs the local agent window.
 
 ## Use it
 
@@ -25,7 +25,7 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 | Capture | Tab screenshot, OCR a screen region, record tab/camera/audio, Loom links |
 | Annotate | Screenshot markup (arrows, boxes, numbered steps), freehand draw |
 | Text | Advanced find, find and replace on inputs, page to Markdown, read aloud, extract emails, table to CSV/Markdown, text-fragment citations, password generation, QR codes |
-| Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, ZIP create/extract, Word/HTML/RTF/TXT/Markdown and Excel/CSV conversion both ways, OpenDocument `.odt`/`.ods` conversion both ways, HTML snippet saver, Loom export, send a PDF to DocuSign |
+| Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, ZIP create/extract, Word/HTML/RTF/TXT/Markdown and Excel/CSV conversion both ways, OpenDocument `.odt`/`.ods` conversion both ways, HTML snippet saver, Loom export, send a PDF to DocuSign, export a whole chat to Markdown |
 | Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder, layout and accessibility overlays, environment switcher, form harvester/stamper, webhook dispatcher, a local AI agent that drives the page |
 | View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, sticky-header removal, link highlighting, dark mode, force scroll, presenter spotlight, Jitsi meeting, URL chat, voice commands, preview downloads |
 | Games | Doom, Neon Hell |
@@ -43,6 +43,8 @@ Every card carries a few small badges saying what the tool needs, and the full p
 | **3rd-party** | Uses a library or engine somebody else wrote, bundled into the file or fetched from a CDN. |
 | **Web app** | Opens a hosted page or another site's app — the QR reader, the chat, Doom, Jitsi, Excalidraw, the Markdown scratchpad. |
 | **CORS-free** | Its job never needs a cross-origin response, so a site without CORS headers is no obstacle. |
+
+One badge is not a trait. **In testing** marks a tool that does its job but has not been run against the real service yet, and it comes from `@testing true` in the source. The DocuSign tool carries it until a developer account proves an upload end to end.
 | **Sensitive-safe** | Sends nothing from the page off your device and loads no third-party code into it, so it is the shortlist for a page with private data. |
 
 Most of the catalog is offline, self-contained and safe for sensitive pages. The exceptions are honest ones: the CDN-backed tools (markup, OCR, pixelate, the Markdown readers) need a connection and drop **Sensitive-safe** because remote code runs in the page; the media downloaders need the network and drop **CORS-free** because a file served without CORS headers cannot be read; the webhook dispatcher posts the page somewhere by design; and the hosted helpers listed under **Web app** need a connection for their page.
@@ -124,6 +126,16 @@ The PDF writer uses the Helvetica family, Latin-1 text, the DOCX page size and m
 ## Bulk media downloads
 
 **🖼️ Download all images**, **🎬 Download all videos**, **🎧 Download all audio** and **📥 Download all linked files** open a panel that lists what the page already loads. The image tool reads `img` and `picture` sources, `srcset`, the usual lazy-load attributes and social preview tags; the video and audio tools read the elements and their `source` fallbacks; the file tool reads anchors that carry `download` or point at a file extension. **Save all to folder** asks for a folder with the File System Access API and writes every file there, numbering names that already exist instead of overwriting them. **Download each** uses the browser's downloads folder when it cannot pick one. Each file is fetched from its own URL, so a file served without CORS headers is marked blocked and gets an **Open** link rather than a quiet failure. HLS and DASH playlists (`.m3u8`, `.mpd`) are listed but skipped, as is any single file over 600 MB. Nothing is uploaded and nothing is decrypted or re-encoded: a canvas, a CSS background, an encrypted stream or a player fed by JavaScript is not a file this can read.
+
+## Export a chat to Markdown
+
+**💬 Export chat to Markdown** saves the whole conversation as one `.md` file, so a long thread can be handed to another model or a colleague without the clipboard cutting it short at the first thousand words.
+
+It reads the page rather than asking a service for a transcript. On ChatGPT, Claude and Gemini it finds the messages themselves and writes them in order with `## You` and `## Assistant` headings, converting the rendered HTML to Markdown as it goes: headings, lists, fenced code with its language, tables, quotes, links and emphasis. Everything else runs a container fallback: a page with something that looks like a conversation gets a panel saying what was found and how many characters it holds, with **Save this area** and **Pick an area**. If nothing is recognisable at all, the click-to-select mode opens straight away: hover to see what each block holds, click the one you want, `Esc` to back out.
+
+No CDN, no Turndown, no network. The conversion is a few hundred lines in the bookmarklet, which matters because ChatGPT, Claude and Gemini all serve their pages under a content security policy that would block a script pulled from unpkg in the first place.
+
+Limits worth knowing: a conversation that loads older messages lazily only exports what is in the page, so scroll up before exporting; and the role selectors are written against those three sites, so a custom AI studio lands on the picker instead.
 
 ## Send to DocuSign
 

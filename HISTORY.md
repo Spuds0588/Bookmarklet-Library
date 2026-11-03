@@ -2,6 +2,25 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Export chat to Markdown, and an "In testing" badge
+
+**Changed**
+
+- Added **💬 Export chat to Markdown** under Files. It reads the conversation out of the page and saves one dated `.md` file: message by message on ChatGPT, Claude and Gemini, in a container with a confirmation panel otherwise, and through click-to-select when nothing is recognisable.
+- The snippet this started from loaded Turndown from unpkg. That would be blocked by the CSP on all three chat sites, needs the network, and would put a CDN between a person and their own transcript. The converter is inline now, and covers headings, lists, fenced code with language, tables, quotes, links, images and emphasis.
+- Role-aware extraction is the difference between a transcript and a wall of text: messages become `## You` and `## Assistant` in order instead of one anonymous blob of HTML.
+- The picker does not save `event.target`. A click lands on a paragraph or a `<span>`, so it climbs to the block with enough text, highlights on hover (the overlay steps aside for `elementFromPoint`), and `Esc` cancels.
+- Added `@testing true` as metadata: build writes it to the catalog, verify checks it is a boolean, and the card shows an **In testing** badge. **🚀 Send PDF to DocuSign** carries it until a developer account proves the upload.
+
+**Verified**
+
+- `npm test`: 93 pass, including platform detection, title cleaning, filename slugs and whitespace tidying.
+- `verify` and `build --check` clean on 125 tools. The capture drives a real export on injected ChatGPT-shaped markup and shows the toast naming the file.
+
+**Limit**
+
+- The Claude and Gemini selectors have not been run against those live sites, and a lazily loaded history exports only what the DOM holds.
+
 ## 2026-11-03 — Send PDF to DocuSign
 
 **Changed**

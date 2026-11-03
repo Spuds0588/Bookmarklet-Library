@@ -213,6 +213,17 @@ const PREP = {
     `localStorage.setItem("bl:docusign", JSON.stringify({env:"demo",accountId:"4f2a9d1e-6c31-4a07-9b55-1d8e2c7a3b60",email:"dana@northwind.example",subject:"Please sign this document",rememberToken:true,token:"eyJhbGciOiJSUzI1NiJ9.ZGVtby1zZWVk.c2ln"}))`,
     `(() => { const embed = document.createElement("embed"); embed.type = "application/pdf"; embed.src = "/sample.pdf"; embed.style.cssText = "position:fixed;left:-20px;top:-20px;width:1px;height:1px"; document.body.append(embed); return true; })()`,
   ],
+  // Two messages in the shape ChatGPT uses, so the exporter recognises a
+  // transcript and saves it without needing the picker. The file really is
+  // written; the capture shows the toast that names it.
+  "chat-to-markdown": [
+    `document.title = "Retention plan — ChatGPT"`,
+    `(() => {
+      const main = document.querySelector("main");
+      main.insertAdjacentHTML("afterbegin", '<div data-message-author-role="user"><div class="md"><p>Can you turn the field guide into a retention plan?</p></div></div><div data-message-author-role="assistant"><div class="md"><p>Yes. Three steps, in order.</p><ul><li>Keep the demo route open for a week.</li><li>Send the notes to Dana on Monday.</li><li>Drop the print run until the new rate sheet lands.</li></ul></div></div>');
+      return true;
+    })()`,
+  ],
   "video-pip": ["document.querySelector('video').play()"],
   "audio-pip": ["document.querySelector('audio').play()"],
   // The stamper reads the harvester's saved payload; seed a realistic one so
