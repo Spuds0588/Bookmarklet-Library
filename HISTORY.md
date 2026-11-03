@@ -2,6 +2,26 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Drive this page, and the page's own tools
+
+**Changed**
+
+- Renamed the bridge to **🤖 Drive this page**, so the label says what it does rather than which protocol it speaks. The file, `webmcp/`, the `#t/webmcp-bridge` anchor and the capture keep the slug, so existing links and the screenshot manifest stay valid.
+- A page that publishes WebMCP tools is now driven through them. During the handshake the bookmarklet reads `document.modelContext.getTools()` (falling back to `navigator.modelContext`) and sends up to 12 names, descriptions, trimmed JSON schemas and the `readOnlyHint`/`consequentialHint`/`untrustedContentHint` annotations. `EXEC_TOOL`/`TOOL_RESULT` run a named tool through `executeTool()`, cap the reply at 600 characters, and are refused once Kill is on.
+- `protocol.js` accepts `{"action":"tool","name":…,"args":{…}}` ahead of any control-id check: the name must look like a tool name, arguments must be a JSON object, and the pair is capped at 600 characters. When tools exist the hub lists them instead of the control map, the prompt offers them and drops the map, and the system prompt teaches the form. Pages without tools behave exactly as before.
+- Hub title, heading, install link and meta label carry the new name, along with the README and AGENTS copy.
+
+**Verified**
+
+- `npm test`: 78 pass. The new cases cover tool-call validation (name, object arguments, the length cap), tools replacing the control map in the prompt, and the bookmarklet answering the handshake with the page's tools, running one through a fake `modelContext.executeTool`, refusing an unknown name and refusing again after `HALT`.
+- `node scripts/build.mjs --check`, `node scripts/compose.mjs --check` and `node scripts/verify.mjs` pass on 122 tools. The catalog carries the new name and the install URL is 18 KB encoded, well under Firefox's 64 KB bookmark limit.
+- `node scripts/shots.mjs webmcp-bridge --force` recaptured the hub window under the new name and rewrote its manifest entry.
+
+**Limit**
+
+- The verification Chrome exposes neither `document.modelContext` nor `navigator.modelContext` — WebMCP sits behind its own flag — so the tools path could not be run against a real page here. It rests on the Node suite and the fake API inside it; a page that registers a tool still needs a browser pass.
+- The control map is unchanged and remains what those browsers get, which the same run confirmed with 19 indexed controls on the fixture page.
+
 ## 2026-11-03 — The hub names the flags that turn Gemini Nano on
 
 **Changed**

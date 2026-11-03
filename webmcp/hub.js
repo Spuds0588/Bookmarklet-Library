@@ -81,9 +81,19 @@ function updateRun() {
 
 function renderMap() {
   const map = session?.domMap ?? [];
-  ui.mapCount.textContent = String(map.length);
-  ui.mapSummary.textContent = map.length ? `${map.length} controls` : "none yet";
-  ui.map.textContent = map.length ? JSON.stringify(map, null, 1) : "No map yet.";
+  const tools = session?.tools ?? [];
+  // Tools speak for the page, so they take the panel when a page has them.
+  ui.mapCount.textContent = String(tools.length || map.length);
+  ui.mapSummary.textContent = tools.length
+    ? `${tools.length} page tools`
+    : map.length
+      ? `${map.length} controls`
+      : "none yet";
+  ui.map.textContent = tools.length
+    ? JSON.stringify(tools, null, 1)
+    : map.length
+      ? JSON.stringify(map, null, 1)
+      : "No map yet.";
 }
 
 function cleanMap(input) {
@@ -103,6 +113,22 @@ function cleanMap(input) {
     map.push(entry);
   }
   return map;
+}
+
+function cleanTools(input) {
+  if (!Array.isArray(input)) return [];
+  const tools = [];
+  for (const raw of input.slice(0, LIMITS.tools)) {
+    if (!raw || typeof raw.name !== "string" || !raw.name.trim()) continue;
+    const entry = { name: raw.name.trim().slice(0, 64) };
+    if (typeof raw.description === "string") entry.description = raw.description.slice(0, 140);
+    if (typeof raw.schema === "string") entry.schema = raw.schema.slice(0, 400);
+    if (raw.readOnly) entry.readOnly = true;
+    if (raw.consequential) entry.consequential = true;
+    if (raw.untrusted) entry.untrusted = true;
+    tools.push(entry);
+  }
+  return tools;
 }
 
 function send(type, data = {}) {
@@ -193,6 +219,7 @@ function beginHandshake(reconnect = false) {
     title: "",
     url: "",
     domMap: [],
+    tools: [],
   };
   handshakeStarted = Date.now();
   showActive();
@@ -395,6 +422,7 @@ async function ensureEngine() {
 }
 
 function describe(decision, map) {
+  if (decision.action === "tool") return `Run ${decision.name}`;
   const control = map.find((entry) => entry.id === decision.id);
   const label = control?.label ? `“${control.label}”` : `control ${decision.id}`;
   if (decision.action === "click") return `Click ${label}`;
@@ -415,6 +443,22 @@ function sendAction(decision) {
       targetId: decision.id,
       value: decision.value,
     });
+    if (!sent) {
+      resolvePending(null);
+      resolve(null);
+    }
+  });
+}
+
+function sendTool(decision) {
+  return new Promise((resolve) => {
+    resolvePending(null);
+    const timer = setTimeout(() => {
+      if (pending?.timer === timer) pending = null;
+      resolve(null);
+    }, LIMITS.actionWaitMs);
+    pending = { timer, resolve };
+    const sent = send("EXEC_TOOL", { name: decision.name, args: decision.args ?? {} });
     if (!sent) {
       resolvePending(null);
       resolve(null);
@@ -505,8 +549,10 @@ async function runTask() {
         break;
       }
 
-      log(`Step ${step}: ${describe(decision, map)}`, "out");
-      const marker = `${decision.action}:${decision.id}:${decision.value ?? ""}`;
+      const marker =
+        decision.action === "tool"
+          ? `tool:${decision.name}:${JSON.stringify(decision.args ?? {})}`
+          : `${decision.action}:${decision.id}:${decision.value ?? ""}`;
       if (marker === previous) repeats++;
       else {
         previous = marker;
@@ -517,6 +563,26 @@ async function runTask() {
         break;
       }
 
+      if (decision.action === "tool") {
+        log(`Step ${step}: call ${decision.name}`, "out");
+        const toolReply = await sendTool(decision);
+        if (halted || id !== runToken) return;
+        if (!toolReply) {
+          log("The page did not answer the tool call within six seconds.", "error");
+          break;
+        }
+        session.domMap = cleanMap(toolReply.domMap);
+        map = session.domMap;
+        if (!toolReply.result?.ok) {
+          log(`The page refused it: ${toolReply.result?.error || "unknown error"}`, "error");
+          break;
+        }
+        log(`${decision.name}: ${toolReply.result.text || "(no output)"}`, "in");
+        history.push(`tool ${decision.name} -> ok`);
+        continue;
+      }
+
+      log(`Step ${step}: ${describe(decision, map)}`, "out");
       const reply = await sendAction(decision);
       if (halted || id !== runToken) return;
       if (!reply) {
@@ -591,13 +657,18 @@ window.addEventListener("message", (event) => {
     session.title = typeof data.title === "string" ? data.title.slice(0, 160) : event.origin;
     session.url = typeof data.url === "string" ? data.url.slice(0, 500) : "";
     session.domMap = cleanMap(data.domMap);
+    session.tools = cleanTools(data.tools);
     ui.targetTitle.textContent = session.title || event.origin;
     ui.targetTitle.title = session.url;
     setBadge("live", "Connected");
     ui.retry.hidden = true;
     renderMap();
     log(`Connected to ${session.title || "the target"} (${event.origin}).`, "ok");
-    log(`${session.domMap.length} visible controls indexed.`);
+    log(
+      session.tools.length
+        ? `${session.tools.length} page tools available — these are called by name.`
+        : `${session.domMap.length} visible controls indexed.`,
+    );
     send("HANDSHAKE_OK");
     void prepareEngine();
     return;
@@ -605,6 +676,12 @@ window.addEventListener("message", (event) => {
 
   if (!session.origin || event.origin !== session.origin) return;
 
+  if (data.type === "TOOL_RESULT") {
+    session.domMap = cleanMap(data.domMap);
+    renderMap();
+    resolvePending({ result: data.result, domMap: session.domMap });
+    return;
+  }
   if (data.type === "ACTION_RESULT") {
     session.domMap = cleanMap(data.domMap);
     renderMap();

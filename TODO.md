@@ -83,7 +83,7 @@
 - [ ] HLS/DASH, encrypted media, canvas drawings, CSS background images and players fed by JavaScript are out of scope; the panel says so rather than guessing at segments.
 - [ ] No physical test of a site with dozens of images or a Content-Disposition filename that disagrees with the URL name; the URL name wins.
 
-## WebMCP bridge (2026-11-02)
+## Drive this page (WebMCP bridge, 2026-11-02)
 
 - [x] **🕸️ WebMCP bridge** opens a hosted companion hub, connects to the page that opened it, indexes up to 30 visible controls and drives clicks, typing and selects from validated JSON actions. Password and file inputs are excluded.
 - [x] The target checks the hub origin and its popup source; the hub checks `window.opener`; every later message carries a 128-bit token. `HALT`/`ARM` implement Kill, `TARGET_HELLO` reclaims a named hub after a reload, and closing the hub re-arms on the next click.
@@ -94,6 +94,9 @@
 - [ ] Load a real local model and run a task end to end. The verification browser exposed no built-in model and no WebGPU adapter; Chrome 156 on localhost reported Gemini Nano downloadable during the capture, but its weights were not downloaded, and the flags were never turned on.
 - [x] Handshake with the deployed cross-origin hub from a normal page: a `127.0.0.1:4173` page connected to `spuds0588.github.io/Bookmarklet-Library/webmcp/`, logged the connection, and delivered its 20-control map with the password field excluded. Closing the hub cleared the session and its IDs, and the next click reconnected with a fresh hub.
 - [x] The hub pop-up itself was attached with the DevTools pipe and driven from a scripted engine: `live` badge, 19 controls, one real `type` step that changed the mapped input and fired a single `input` event, then `done`. Kill mid-run set `halted`, delivered exactly one `HALT`, and the next action was refused with “The hub's kill switch is on.”
+- [x] Renamed to **🤖 Drive this page** so the label says what it does. The file, hub directory and capture keep the `webmcp-bridge` slug.
+- [x] A page that publishes WebMCP tools is now driven through them: the handshake carries up to 12 tool names, schemas and annotations, and `EXEC_TOOL` runs one through `document.modelContext.executeTool()`. Pages without tools keep the scraped control map.
+- [ ] No page in the fixtures publishes WebMCP tools, so the tools path is covered by the Node suite and one switch-on browser run, not by a committed capture. Add a fixture that registers a tool if this path grows.
 - [ ] A COOP-isolated page and a page that blocks the pop-up are still untested; the harness ran with `--disable-popup-blocking` and Chrome opened the hub without a click gesture, so that branch never ran.
 - [ ] The harness that attached to the pop-up lives in `/tmp` and is not committed. If this check earns its keep, teach `scripts/shots.mjs` a probe mode for it rather than adding a second browser driver.
 - [ ] Exercise a select, a checkbox and a React/Vue-controlled form. Typing was verified against the demo form's native input event.

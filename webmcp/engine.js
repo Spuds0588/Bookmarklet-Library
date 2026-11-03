@@ -11,8 +11,9 @@ Answer with exactly one JSON object in one line: no prose, no markdown, no code 
 Click: {"action":"click","id":3}
 Type: {"action":"type","id":0,"value":"search text"}
 Choose: {"action":"select","id":2,"value":"option label"}
+Run a page tool: {"action":"tool","name":"tool_name","args":{}}
 Finish: {"action":"done","summary":"what changed"}
-Rules: one action per turn. Use only ids from Controls. Never invent ids, selectors, URLs or code. Match the control whose label fits the task. If the task is already done, or cannot be done with these controls, use done. Do not repeat a move that already failed.`;
+Rules: when page tools are listed, call those by name instead of clicking controls; never call a tool that is not listed; match the arguments to its schema. One action per turn. Use only ids from Controls. Never invent ids, selectors, URLs or code. Match the control whose label fits the task. If the task is already done, or cannot be done with these controls, use done. Do not repeat a move that already failed.`;
 
 const clean = (value, limit) => String(value ?? "").replace(/\s+/g, " ").trim().slice(0, limit);
 
@@ -26,13 +27,17 @@ function pathOf(url) {
 
 // The prompt is deliberately small: the map is already bounded by the
 // injector, and only the last few moves are repeated back to the model.
-export function buildPrompt({ task, title, url, domMap, step, maxSteps, history = [], correction = "" }) {
+export function buildPrompt({ task, title, url, domMap, tools = [], step, maxSteps, history = [], correction = "" }) {
   const controls = Array.isArray(domMap) ? domMap : [];
+  const pageTools = Array.isArray(tools) ? tools : [];
   const lines = [
     `Task: ${clean(task, 320)}`,
     `Page: ${clean(title, 80)} — ${pathOf(url)}`,
     `Step: ${step} of ${maxSteps}`,
-    `Controls: ${JSON.stringify(controls)}`,
+    // Tools speak for the page; the control map stays for pages without them.
+    pageTools.length
+      ? `Page tools (call these instead of clicking): ${JSON.stringify(pageTools)}`
+      : `Controls: ${JSON.stringify(controls)}`,
   ];
   if (history.length) lines.push(`Recent moves: ${history.slice(-4).join(" | ")}`);
   if (correction) lines.push(`Your last reply was rejected: ${clean(correction, 120)}. Fix it.`);

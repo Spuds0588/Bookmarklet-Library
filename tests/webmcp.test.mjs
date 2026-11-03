@@ -108,6 +108,34 @@ test("engine detection finds the Prompt API, the legacy namespace and WebGPU", a
   );
 });
 
+test("a tool call names a listed tool and takes a bounded JSON object", () => {
+  assert.deepEqual(parseDecision('{"action":"tool","name":"addTodo","args":{"text":"milk"}}', 0), {
+    ok: true,
+    decision: { action: "tool", name: "addTodo", args: { text: "milk" } },
+  });
+  assert.deepEqual(parseDecision('{"action":"tool","name":"addTodo"}', 0).decision.args, {});
+  assert.equal(parseDecision('{"action":"tool","args":{}}', 0).ok, false);
+  assert.equal(parseDecision('{"action":"tool","name":"../etc/passwd","args":{}}', 0).ok, false);
+  assert.equal(parseDecision('{"action":"tool","name":"addTodo","args":[1]}', 0).ok, false);
+  assert.equal(parseDecision(`{"action":"tool","name":"addTodo","args":{"q":"${"y".repeat(700)}"}}`, 0).ok, false);
+});
+
+test("a page's own tools replace the control map in the prompt", () => {
+  const prompt = buildPrompt({
+    task: "Add milk",
+    title: "Todos",
+    url: "https://todos.example.com/list",
+    domMap: [{ id: 0, tag: "button", label: "Add" }],
+    tools: [{ name: "addTodo", description: "Add a to-do", schema: '{"type":"object"}' }],
+    step: 1,
+    maxSteps: 3,
+  });
+  assert.match(prompt, /Page tools \(call these instead of clicking\)/);
+  assert.match(prompt, /addTodo/);
+  assert.doesNotMatch(prompt, /Controls: \[/);
+  assert.ok(SYSTEM_PROMPT.includes('"action":"tool"'));
+});
+
 test("a missing Prompt API names the Chrome flags that turn it on", () => {
   const missing = modelSetup({ builtIn: false, webgpu: false });
   assert.equal(missing.needed, true);
@@ -187,8 +215,27 @@ test("the bookmarklet only answers its hub, needs the token, and obeys HALT", as
   const text = makeNode({ tag: "INPUT", type: "text", value: "draft" });
   const nodes = [button, password, upload, invisible, disabled, link, select, text];
 
+  const pageTools = [
+    {
+      name: "addTodo",
+      description: "Add a to-do item",
+      inputSchema: { type: "object", properties: { text: { type: "string" } } },
+      annotations: { readOnlyHint: true },
+      executed: 0,
+    },
+  ];
+  const modelContextFake = {
+    async getTools() {
+      return pageTools;
+    },
+    async executeTool(tool, args) {
+      tool.executed++;
+      return `Added ${args.text}`;
+    },
+  };
   const documentFake = {
     title: "Field guide",
+    modelContext: modelContextFake,
     querySelectorAll(selector) {
       if (selector === "[data-webmcp-id]") return [];
       return nodes;
@@ -267,13 +314,27 @@ test("the bookmarklet only answers its hub, needs the token, and obeys HALT", as
     message({ type: "INIT_HANDSHAKE", token }, HUB_ORIGIN, {});
     assert.equal(popup.messages.length, 0);
 
-    message({ type: "INIT_HANDSHAKE", token });
+    await message({ type: "INIT_HANDSHAKE", token });
     const ack = popup.messages.at(-1);
     assert.equal(ack.origin, HUB_ORIGIN);
     assert.equal(ack.message.type, "HANDSHAKE_ACK");
     assert.equal(ack.message.token, token);
     assert.equal(ack.message.title, "Field guide");
     assert.equal(ack.message.domMap.length, 4);
+    assert.equal(ack.message.tools.length, 1);
+    assert.equal(ack.message.tools[0].name, "addTodo");
+    assert.equal(ack.message.tools[0].readOnly, true);
+
+    // A page tool is called by name and still validates its own arguments.
+    await message({ type: "EXEC_TOOL", token, name: "addTodo", args: { text: "milk" } });
+    const toolResult = popup.messages.at(-1).message;
+    assert.equal(toolResult.type, "TOOL_RESULT");
+    assert.equal(toolResult.result.ok, true);
+    assert.match(toolResult.result.text, /Added milk/);
+    assert.equal(pageTools[0].executed, 1);
+
+    await message({ type: "EXEC_TOOL", token, name: "missing", args: {} });
+    assert.equal(popup.messages.at(-1).message.result.ok, false);
 
     const before = popup.messages.length;
     message({ type: "EXEC_ACTION", token: "b".repeat(32), action: "click", targetId: 0 });
@@ -292,6 +353,10 @@ test("the bookmarklet only answers its hub, needs the token, and obeys HALT", as
     assert.equal(halted.result.ok, false);
     assert.match(halted.result.error, /kill switch/);
     assert.equal(button.clicks, 2);
+
+    await message({ type: "EXEC_TOOL", token, name: "addTodo", args: { text: "late" } });
+    assert.match(popup.messages.at(-1).message.result.error, /kill switch/);
+    assert.equal(pageTools[0].executed, 1);
 
     core.cleanup();
     assert.equal(windowFake.__WEBMCP_ACTIVE__, undefined);

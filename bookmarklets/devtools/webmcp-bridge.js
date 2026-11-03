@@ -1,8 +1,8 @@
 /**
- * @name 🕸️ WebMCP bridge
+ * @name 🤖 Drive this page
  * @category devtools
- * @description Open a local-model companion window that can read and operate the current page's visible controls.
- * @tags ai, agent, automation, mcp, local, dom
+ * @description Run a local AI model that clicks, types and selects on this page for you.
+ * @tags ai, agent, automation, webmcp, mcp, local, dom
  * @traits network, web-app, third-party, no-cors
  * @added 2026-11-02
  * @featured false
@@ -13,10 +13,63 @@
   let token = null;
   let halted = false;
   let map = [];
+  let tools = new Map();
   let knock = 0;
   let timer = 0;
   let knocks = 0;
   let popup = null;
+
+  // A page that publishes WebMCP tools knows its own jobs better than a list of
+  // its buttons does, and it validates its own arguments. Read those first.
+  function context() {
+    return document.modelContext ?? globalThis.navigator?.modelContext ?? null;
+  }
+
+  async function readTools() {
+    const api = context();
+    tools = new Map();
+    if (!api || typeof api.getTools !== "function") return [];
+    try {
+      const listed = await api.getTools();
+      for (const tool of Array.isArray(listed) ? listed : []) {
+        if (tools.size >= 12) break;
+        const name = String(tool?.name || "").trim().slice(0, 48);
+        if (!name || tools.has(name)) continue;
+        tools.set(name, tool);
+      }
+    } catch {
+      tools = new Map();
+      return [];
+    }
+    return [...tools].map(([name, tool]) => {
+      const entry = { name, description: String(tool.description || "").replace(/\s+/g, " ").slice(0, 140) };
+      try {
+        entry.schema = JSON.stringify(tool.inputSchema ?? {}).slice(0, 400);
+      } catch {}
+      const hints = tool.annotations || {};
+      if (hints.readOnlyHint) entry.readOnly = true;
+      if (hints.consequentialHint) entry.consequential = true;
+      if (hints.untrustedContentHint) entry.untrusted = true;
+      return entry;
+    });
+  }
+
+  async function runTool(name, args) {
+    const api = context();
+    const tool = tools.get(String(name));
+    if (!tool) return { ok: false, error: `This page has no tool named ${String(name).slice(0, 48)}.` };
+    if (!api || typeof api.executeTool !== "function") {
+      return { ok: false, error: "This page cannot run its own tools." };
+    }
+    try {
+      const input = args && typeof args === "object" && !Array.isArray(args) ? args : {};
+      const output = await api.executeTool(tool, input);
+      const text = typeof output === "string" ? output : JSON.stringify(output ?? "");
+      return { ok: true, text: text.replace(/\s+/g, " ").slice(0, 600) };
+    } catch (error) {
+      return { ok: false, error: String(error?.message || error).slice(0, 200) };
+    }
+  }
 
   function build() {
     document.querySelectorAll("[data-webmcp-id]").forEach((el) => el.removeAttribute("data-webmcp-id"));
@@ -123,8 +176,10 @@
       halted = false;
       clearInterval(knock);
       knock = 0;
-      tell("HANDSHAKE_ACK", { title: document.title, url: location.href, domMap: build() });
-      return;
+      // Reading the page's tools is async, so the map goes out with the answer.
+      return readTools().then((pageTools) => {
+        tell("HANDSHAKE_ACK", { title: document.title, url: location.href, domMap: build(), tools: pageTools });
+      });
     }
     if (!token || data.token !== token) return;
     if (data.type === "HANDSHAKE_OK") {
@@ -138,6 +193,14 @@
     if (data.type === "ARM") {
       halted = false;
       return;
+    }
+    if (data.type === "EXEC_TOOL") {
+      const name = data.name;
+      if (halted) {
+        tell("TOOL_RESULT", { name, result: { ok: false, error: "The hub's kill switch is on." } });
+        return;
+      }
+      return runTool(name, data.args).then((result) => tell("TOOL_RESULT", { name, result, domMap: build() }));
     }
     if (data.type === "EXEC_ACTION") {
       if (halted) {
@@ -166,7 +229,9 @@
     delete window.__WEBMCP_STOP__;
   }
 
-  if (globalThis.__BL_TEST__) globalThis.__BL_TEST__.webmcp = { build, act, onMessage, cleanup };
+  if (globalThis.__BL_TEST__) {
+    globalThis.__BL_TEST__.webmcp = { build, act, onMessage, cleanup, readTools, runTool };
+  }
 
   if (window.__WEBMCP_ACTIVE__) {
     const open = window.__WEBMCP_POPUP__;

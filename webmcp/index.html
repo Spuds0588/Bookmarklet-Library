@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <meta name="color-scheme" content="light dark">
-<title>WebMCP Bridge — Bookmarklet Library</title>
+<title>Drive this page — Bookmarklet Library</title>
 <link rel="stylesheet" href="hub.css">
 </head>
 <body>
@@ -13,7 +13,7 @@
   <header class="head">
     <div>
       <p class="kicker">Local browser agent</p>
-      <h1>WebMCP <span>Bridge</span></h1>
+      <h1>Drive this <span>page</span></h1>
     </div>
     <span class="badge" id="badge" data-state="idle">Waiting</span>
   </header>
@@ -22,7 +22,7 @@
     <div class="install">
       <p class="kicker">Install</p>
       <p class="lead">Drag the button to your bookmarks bar.</p>
-      <a class="install-link" id="install-link" href="#" draggable="true">🕸️ WebMCP bridge</a>
+      <a class="install-link" id="install-link" href="#" draggable="true">🤖 Drive this page</a>
       <p class="note" id="install-note" aria-live="polite">Loading the bookmarklet…</p>
     </div>
 
@@ -41,7 +41,7 @@
 
     <div class="panel">
       <p class="kicker">What runs where</p>
-      <p>The page sends a compact map of its visible controls to this window. The map and the model's replies stay in these two tabs. Nothing from the page is uploaded.</p>
+      <p>The page sends a compact map of its visible controls to this window. A page that publishes its own WebMCP tools sends those instead, and they are called by name. The map and the model's replies stay in these two tabs. Nothing from the page is uploaded.</p>
       <p class="note">Chrome's built-in model needs no download. The WebLLM fallback downloads model weights once from Hugging Face when you choose it; the page's content is never part of that request.</p>
     </div>
 
@@ -56,7 +56,7 @@
     <div class="meta">
       <div><span>Engine</span><b id="engine-name">Detecting…</b></div>
       <div><span>Target</span><b id="target-title">Waiting…</b></div>
-      <div><span>Controls</span><b id="map-count">0</b></div>
+      <div><span>Tools / controls</span><b id="map-count">0</b></div>
     </div>
 
     <div class="engine">

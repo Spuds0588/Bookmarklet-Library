@@ -377,12 +377,6 @@
       "file": "screenshots/wireframe-outline.png",
       "changed": true
     },
-    "webmcp-bridge": {
-      "file": "screenshots/webmcp-bridge.png",
-      "changed": true,
-      "popup": true,
-      "steps": 2
-    },
     "console-monitor": {
       "file": "screenshots/console-monitor.png",
       "changed": true
@@ -399,6 +393,12 @@
     "site-map-csv": {
       "changed": false,
       "reason": "download"
+    },
+    "webmcp-bridge": {
+      "file": "screenshots/webmcp-bridge.png",
+      "changed": true,
+      "popup": true,
+      "steps": 2
     },
     "peek-html": {
       "file": "screenshots/peek-html.png",

@@ -7,12 +7,14 @@ export const LIMITS = Object.freeze({
   summary: 240,
   steps: 5,
   maxSteps: 12,
+  tools: 12,
+  toolArgs: 600,
   actionWaitMs: 6000,
   handshakeMs: 15000,
   logEntries: 200,
 });
 
-export const ACTIONS = Object.freeze(["click", "type", "select", "done"]);
+export const ACTIONS = Object.freeze(["click", "type", "select", "tool", "done"]);
 
 export const DECISION_SCHEMA = Object.freeze({
   type: "object",
@@ -20,6 +22,8 @@ export const DECISION_SCHEMA = Object.freeze({
     action: { type: "string", enum: ACTIONS },
     id: { type: "integer", minimum: 0 },
     value: { type: "string" },
+    name: { type: "string" },
+    args: { type: "object" },
     summary: { type: "string" },
   },
   required: ["action"],
@@ -57,6 +61,22 @@ export function parseDecision(raw, mapLength) {
   if (action === "done") {
     const summary = String(data.summary ?? "").trim().replace(/\s+/g, " ").slice(0, LIMITS.summary);
     return { ok: true, decision: { action, summary: summary || "Task finished." } };
+  }
+  // A page that publishes WebMCP tools gets called by name instead of by id, so
+  // this branch runs before any control id is checked against the map.
+  if (action === "tool") {
+    const name = String(data.name ?? "").trim();
+    if (!/^[A-Za-z0-9_.-]{1,64}$/.test(name)) {
+      return { ok: false, error: "tool needs the exact name of a listed tool." };
+    }
+    if (data.args !== undefined && (typeof data.args !== "object" || data.args === null || Array.isArray(data.args))) {
+      return { ok: false, error: "tool args must be a JSON object." };
+    }
+    const args = data.args ?? {};
+    if (JSON.stringify(args).length > LIMITS.toolArgs) {
+      return { ok: false, error: `tool args are longer than ${LIMITS.toolArgs} characters.` };
+    }
+    return { ok: true, decision: { action, name, args } };
   }
   const id = Number(data.id);
   if (!Number.isInteger(id) || id < 0 || id >= mapLength) {
