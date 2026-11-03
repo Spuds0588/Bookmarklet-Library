@@ -697,8 +697,8 @@
       text-transform: uppercase; color: #666; }
     .close { padding: 4px 8px; border: 1px solid #111; background: transparent; color: #111;
       font: 600 10px/1 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
-    .body { display: flex; flex-direction: column; gap: 12px; padding: 14px; overflow: auto; }
-    .drop { display: flex; flex-direction: column; gap: 3px; padding: 18px 12px; text-align: center;
+    .body { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; overflow: auto; }
+    .drop { display: flex; flex-direction: column; gap: 3px; padding: 14px 12px; text-align: center;
       border: 1px dashed #111; background: #fff; cursor: pointer; }
     .drop b { font-size: 13px; }
     .drop span { font-size: 11.5px; color: #666; }
@@ -893,7 +893,7 @@
     const status = make("p", { class: "status" }, "Ready. Pick one or more PDFs, then press Shrink.");
     const result = make("div", { class: "result" });
     result.hidden = true;
-    const hint = make("p", { class: "hint" }, "Pages, links and text are kept; images are re-encoded until the file is under the maximum size, and anything larger is split into parts that fit. Drag the title bar to move the panel, or a finished row onto an upload box that accepts drops (Chromium).");
+    const hint = make("p", { class: "hint" }, "Pages, links and text are kept; images are re-encoded to fit. Drag the title bar to move the panel, or a finished row onto an upload box.");
 
     const queue = make("ul", { class: "queue", "aria-label": "Files to shrink", "data-queue": "" });
     body.append(drop, queue, presets, maxBlock, status, result, hint);
