@@ -2,6 +2,21 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Synthetic full-page scans at 150, 200 and 300 dpi
+
+**How they were made**
+
+- One dense document page (letterhead, justified body, results table, footnotes, signature) rendered in Chromium at 816×1056 CSS px, then captured at 1.5625×, 2.0833× and 3.125× device scale: 1275×1650, 1700×2200 and 2550×3300.
+- Each capture got 0.28° of skew, light sensor noise, a Gaussian softening pass and JPEG quality 82, then was wrapped as a single-image PDF — the shape a desktop scanner produces.
+- Each went through the shipped tool at Strong, then original and rebuild were rendered at 200 dpi and OCR'd with tesseract, comparing word sets rather than word order.
+
+**Result**
+
+- 150 dpi: 0.39 MB → 0.18 MB (−53%). Image stays 1275×1650, so no resampling at all. Coverage 99.6%.
+- 200 dpi: 0.58 MB → 0.21 MB (−64%). Image resampled 1700×2200 → 1391×1800. Coverage 99.6%.
+- 300 dpi: 1.04 MB → 0.22 MB (−79%). Image resampled 2550×3300 → 1391×1800. Coverage 99.6%.
+- The one differing token per page is OCR noise — a fraction, a table digit, a ligature — while body text, table values, footnotes and the signature line all match. A 300 dpi page lands at about 163 dpi equivalent for letter, above the real 150 dpi scanner sample.
+
 ## 2026-11-03 — Full-page image scans: what a real 150 dpi scanner actually does
 
 **Found**

@@ -59,6 +59,7 @@
 - [x] Skips anything it cannot do safely: `/SMask`, `/Mask`, `/ImageMask`, CCITT/JBIG2, CMYK, indexed colour, predictors, and encrypted files. Output is only offered when it is smaller.
 - [x] `tests/pdf-shrink.test.mjs` covers object scanning, indirect `/Length`, revision replacement, xref offsets round-tripping through the parser, eligibility rules and dictionary rewriting. The capture processes a generated 124 KB scan.
 - [x] Ran 30 files (15 public PDFs plus 15 generated 2400×3200 scans) through the real browser pipeline. Scans: 184 KB → 60 KB, 1.17 MB → 149 KB (87%), 5.70 MB → 1.27 MB, 6.88 MB → 1.43 MB. Page counts match `pdfinfo`, image object counts are unchanged, and page content streams hash identical.
+- [x] **Synthetic scans at 150/200/300 dpi** (screenshot of a rendered page, skewed, noisy, JPEG, wrapped as a one-page PDF): 0.39→0.18 MB, 0.58→0.21 MB and 1.04→0.22 MB at Strong, word coverage 99.6% on all three, 300 dpi resampled to 1391×1800.
 - [x] **A real 150 dpi scanner capture was converted and checked**: 2.02 MB → 1.52 MB, word coverage 98.9% / 100% / 100%, no resampling because 1275×1650 is under the 1800 px ceiling.
 - [ ] CCITT and JBIG2 scans are skipped, so fax-compressed scans gain nothing; handling them (or saying so in the panel) is still open.
 - [x] **Sizes in MB only**, two decimals under 10 MB, and the split ceiling defaults to 20 MB. A single-part result is still rejected when it would not be smaller.

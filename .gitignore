@@ -7,3 +7,7 @@ bookmarks*.html
 
 # Generated readability comparison (see HISTORY, 2026-11-03)
 scripts/pdfs/readability/
+
+# Synthetic scan corpus and its page source (generated, not shipped)
+scripts/pdfs/synth-*.pdf
+scripts/pdfs/scan-page.html
