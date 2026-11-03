@@ -266,7 +266,7 @@ test("parts travel in a stored ZIP with a correct table of contents", () => {
 });
 
 test("presets and page counts are read from the file, not guessed", () => {
-  assert.deepEqual(presetFor("strong"), { label: "Strong", edge: 1200, quality: 0.55, note: "Smallest, softest" });
+  assert.deepEqual(presetFor("strong"), { label: "Strong", edge: 1800, quality: 0.62, note: "Fits tight limits, keeps text crisp" });
   assert.equal(presetFor("nonsense").label, "Balanced");
   const objects = new Map([
     [1, { num: 1, dict: "<< /Type /Page /Contents 2 0 R >>", stream: null }],

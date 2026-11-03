@@ -12,7 +12,7 @@
   const PRESETS = {
     light: { label: "Light", edge: 2400, quality: 0.82, note: "Keeps the most detail" },
     balanced: { label: "Balanced", edge: 1800, quality: 0.7, note: "Good for scans" },
-    strong: { label: "Strong", edge: 1200, quality: 0.55, note: "Smallest, softest" },
+    strong: { label: "Strong", edge: 1800, quality: 0.62, note: "Fits tight limits, keeps text crisp" },
   };
   const MESSAGES = {
     pdf: "That does not look like a PDF. Choose a .pdf file.",

@@ -66,6 +66,7 @@
 - [ ] Widen the corpus past 30 files, especially JBIG2/CCITT scans, PDFs over 40 MB, and Word/Chrome exports with object streams.
 - [ ] Text-only PDFs cannot get smaller by recompression. The rebuild can still shrink them by dropping superseded objects, but that is the path under investigation above.
 - [x] **Max file size (MB)** slider plus number input, default 20. Parts that do not fit are rebuilt at the next stronger preset (up to Strong) before anything is reported as impossible.
+- [x] **Strong was verified for readable text**: page renders at 200 dpi, OCR with tesseract, word-for-word comparison. Body text is identical or within OCR noise; the only deltas are small diagram labels, checked by eye. Strong keeps 1800px and cuts quality instead of resolution.
 - [ ] A page that even Strong leaves over the ceiling could try a lower JPEG quality for that page alone instead of stopping at the preset.
 
 ## Export chat to Markdown (2026-11-03)

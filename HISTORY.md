@@ -2,6 +2,25 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Strong is checked for readable text, and its resolution stays up
+
+**Changed**
+
+- Strong was re-encoding at 1200px on the long edge, which is a 45% cut for a letter page scanned at 200 dpi. On a tracemonkey scan that lost an author name in the small print, so the preset now holds the page at 1800px and drops JPEG quality to 0.62 instead. It still lands well below Balanced, because text legibility is mostly resolution.
+- The preset note follows: `Fits tight limits, keeps text crisp` rather than `Smallest, softest`.
+
+**How it was verified**
+
+- Built two scan-style fixtures by rendering real text pages at 200 dpi, saving them as JPEGs and wrapping each page as a single image in a PDF: the tracemonkey paper (3 pages) and the BERT paper (2 pages). Rendered `scripts/fixtures/scanned.pdf` and the vector originals were checked too.
+- Ran each through the real tool in headless Chrome at Strong, then rendered both original and rebuild at 200 dpi and ran tesseract 5.5 over every page. Compared normalised word streams with a similarity ratio and listed every word of five letters or more that disappeared.
+- BERT scan: 0.9996 and 1.0, no words missing. Tracemonkey scan: 0.9972 / 0.9706 / 0.5829 with 2, 7 and 0 words missing. The 0.58 page is a reading-order change with no words missing at all.
+- The seven words on tracemonkey page 2 are labels inside a state diagram (`Ready`, `Finish`, `Interpreting`, `blacklisted`). Rendering the page at full size shows all of them plainly readable in the Strong rebuild, so the difference is tesseract on small diagram labels, not lost text. At the old 1200px preset the same page lost body-copy words as well.
+- The vector originals keep their text layer untouched: `pdftotext` output is identical, and `pdftoppm` renders hash identical.
+
+**Verified**
+
+- `npm test`: 111 pass.
+
 ## 2026-11-03 — A maximum size, not just a splitting point
 
 **Changed**
