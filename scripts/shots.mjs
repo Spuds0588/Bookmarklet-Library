@@ -168,6 +168,9 @@ const STEPS = {
         if (rows.length !== 2) throw new Error("expected 2 queue rows, got " + rows.length + ": " + status);
         const escalated = rows.filter((row) => /compressed at Strong to fit/.test(row.textContent));
         if (escalated.length !== 2) throw new Error("escalation did not happen: " + rows.map((row) => row.textContent).join(" | "));
+        const list = root.querySelector(".queue").getBoundingClientRect();
+        const lastRow = rows[rows.length - 1].getBoundingClientRect();
+        if (lastRow.bottom > list.bottom + 1) throw new Error("the queue clips its last row: " + (lastRow.bottom - list.bottom) + "px hidden");
         const ready = rows.filter((row) => { const save = row.querySelector(".queue-save"); return save && !save.hidden && !save.disabled; });
         if (ready.length !== 2) throw new Error("only " + ready.length + " rows are ready to save: " + rows.map((row) => row.textContent).join(" | "));
         if (root.querySelector(".result").hidden) throw new Error("no result: " + status);

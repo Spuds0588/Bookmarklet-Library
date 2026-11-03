@@ -726,8 +726,8 @@
       font: 600 10px/1 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
     .foot .primary { background: #111; color: #fbfaf8; }
     .foot .primary:disabled { opacity: .4; cursor: default; }
-    .queue { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; border: 1px solid #111;
-      background: #fff; max-height: 190px; overflow: auto; }
+    .queue { display: flex; flex-direction: column; flex: none; margin: 0; padding: 0; list-style: none;
+      border: 1px solid #111; background: #fff; max-height: 190px; overflow: auto; }
     .queue:empty { display: none; }
     .queue li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 10px; padding: 8px 10px;
       border-bottom: 1px solid #ddd; }
