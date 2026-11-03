@@ -185,6 +185,14 @@
 - [ ] Validate the structured data with Google's Rich Results test and the Open Graph card with each network's debugger once the site is live.
 - [ ] Include `AGENTS.md` guidance in the rendered page as a "how to add a tool" link for contributors.
 
+## Add Page to Tasks (started 2026-11-03)
+
+- [x] **📝 Add page to a task** ships the keyless destinations: Trello's add-card window, Linear's `linear.new`, GitHub and GitLab issues when the page is already in that repository, and Things through its URL scheme. The form is ours because every destination refuses a frame; **Float** floats the form; the service opens in a window we own.
+- [ ] **Jira needs a site and a project id** before it can be offered: `/secure/CreateIssueDetails!init.jspa` requires `pid` and `issuetype`, which are per-instance. Either ask for them once per site or drop Jira from the list.
+- [ ] **Token destinations do not belong in this tool.** Todoist (`POST https://api.todoist.com/api/v1/tasks`), ClickUp, Asana and Notion all answer CORS preflights from a foreign origin, but `localStorage` is per-origin, so a token saved on one site is invisible on the next. Bake the token into a generated bookmarklet the way the webhook builder does.
+
+- [ ] **Microsoft To Do and Outlook tasks need an Azure app registration.** Neither has a URL or API a page can use directly: both are Microsoft Graph (`POST /me/todo/lists/{id}/tasks`, `POST /me/outlook/tasks`) behind an OAuth 2.0 flow that requires an app registration in Entra ID, a redirect URI, and a token exchange that cannot happen in a bookmarklet. Set up an app registration (and, if the token has to be exchanged server-side, a small web app) before either destination can be offered.
+
 ## Housekeeping
 
 - [ ] Re-check the export parser against a future Chrome bookmark export, since the importer script was a one-off and is not kept in the repo.

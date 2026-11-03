@@ -167,6 +167,12 @@ Framing can fail without saying so: a site whose CSP has no `frame-src` for `emb
 
 Both follow the same order as the PDF editor: the modal frame first, then a floating window, then a popup. Photopea is the only photo editor that can be framed without credentials: Pixlr's embeddable editor needs a server-signed token from a client secret, and Canva's embed shows a finished design rather than editing one.
 
+## File the page you are on as a task
+
+**📝 Add page to a task** takes the page's title, its URL and any text you have selected, and offers the places that accept them without a key: Trello's add-card window, Linear's new issue, a GitHub or GitLab issue when you are already inside that repository, and Things on a Mac. **Float** puts the form in a picture-in-picture window, so you can keep selecting text on the page underneath while it stays on top.
+
+None of those services can be framed — Trello sends `X-Frame-Options: DENY`, GitHub `deny`, Linear, GitLab and Notion `SAMEORIGIN` — so the destination opens in a window the tool owns, where your existing session counts. Nothing is stored and no token is involved: the tool builds the service's own prefilled link and hands it over.
+
 ## Edit a PDF in SimplePDF
 
 **📝 Open in SimplePDF** finds the PDF this tab already has — the document itself, the file behind a pdf.js viewer, or an embed, object or link on the page — and redirects the same window to `https://simplepdf.com/editor?open=…`, so editing starts without downloading the file and picking it again (both that address and `embed.simplepdf.com` accept `open`). A `#page=4` on the original address is carried over as the editor's `page` parameter, and a presigned S3 or Azure URL keeps its query string.

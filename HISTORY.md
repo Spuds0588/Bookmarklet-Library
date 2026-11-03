@@ -2,6 +2,12 @@
 
 What has been done, in order. Newest entries first.
 
+## A page becomes a task without a key
+
+- **📝 Add page to a task** (`devtools`) prefills Trello's add-card window, Linear's `linear.new`, a GitHub or GitLab issue in the repository the page is already in, or a `things:///add` task, from the page title, its URL and the selection.
+- Each destination was measured before it was offered: Trello answers `X-Frame-Options: DENY`, GitHub `deny`, Linear, GitLab, Asana and Notion `SAMEORIGIN`, ClickUp a `frame-ancestors` list. So the modal is the tool's own form, **Float** floats that form, and the service opens in a window we own.
+- Tokens were left out on purpose: `localStorage` is per-origin, so a token saved on one site cannot be read on the next.
+
 ## The fallback surfaces get a harness
 
 - **`npm run fallbacks`** (`scripts/fallbacks.mjs`) runs each framed editor in headed Chrome over the DevTools pipe, on a page carrying `frame-src 'self'` and on a plain control page, and reports one line per surface.

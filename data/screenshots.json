@@ -398,6 +398,10 @@
       "changed": true,
       "popup": true
     },
+    "add-page-to-task": {
+      "file": "screenshots/add-page-to-task.png",
+      "changed": true
+    },
     "webhook-dispatch": {
       "file": "screenshots/webhook-dispatch.png",
       "changed": true,
