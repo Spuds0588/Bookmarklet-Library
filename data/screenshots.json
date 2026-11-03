@@ -309,6 +309,10 @@
       "file": "screenshots/media-files.png",
       "changed": true
     },
+    "photo-editor-local": {
+      "changed": false,
+      "reason": "dialog"
+    },
     "lock-pdf": {
       "changed": false,
       "reason": "download"
@@ -374,6 +378,11 @@
     "hex-eyedropper": {
       "changed": false,
       "reason": "dialog"
+    },
+    "code-editor-local": {
+      "file": "screenshots/code-editor-local.png",
+      "changed": true,
+      "steps": 1
     },
     "url-parameter-report": {
       "file": "screenshots/url-parameter-report.png",

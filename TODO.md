@@ -190,6 +190,16 @@
 - [ ] Re-check the export parser against a future Chrome bookmark export, since the importer script was a one-off and is not kept in the repo.
 - [ ] When tools get meaningfully changed, use `@added` for the newest tool and keep the featured flag on the one worth showing off.
 
+## Edit a photo or the page's code on the page (2026-11-03)
+
+- [x] **📷 Edit photo on Page** frames Photopea, hands it a local image as an `ArrayBuffer` and saves `saveToOE("png")` back as `<name>-edited.png`; **💻 Edit code on Page** frames OneCompiler and populates it with the page's HTML or the selection.
+- [x] Both use the surface order the PDF editor established: modal, then document picture-in-picture, then a popup, with `FRAME_MS` bounding the silent-CSP case.
+- [x] Frameable-or-not was checked in Chrome against a `vscode.dev` control rather than read from documentation.
+- [ ] **Photopea's ready ping has not been seen from a real page.** In a harness served over `http://127.0.0.1` the frame loaded but never posted `"done"`, with and without a full referrer; Photopea's author documents that a frame whose `document.referrer` is empty is refused. Run the tool once on an https page and drop `@testing` if the handshake lands.
+- [ ] **OneCompiler's `populateCode` from a foreign origin** is documented but unconfirmed, and the editor never announces readiness, so a refused handoff cannot be told apart from a slow one. Confirm from an https page that the editor fills, and that **Copy code** is what appears when it does not.
+- [ ] The **Popup** and **Float** surfaces of both tools have not been exercised by an automated test; the PDF editor's equivalents were clicked by hand once.
+- [ ] The photo tool has no capture: it opens a file picker before it shows anything, which is declared as a browser prompt.
+
 ## SimplePDF handoff
 
 - [ ] Decide whether a page with several PDFs should offer a choice instead of taking the first one found.

@@ -159,6 +159,14 @@ The editor never announces that it is ready, so the bridge asks for its field li
 
 Framing can fail without saying so: a site whose CSP has no `frame-src` for `embed.simplepdf.com` raises no error and sends no message, so the modal attempt is bounded at twelve seconds and then falls through to the two surfaces that own their document and therefore escape the page's CSP. Document picture-in-picture gives a floating, always-on-top editor window; a popup is the floor when the browser has neither. Picture-in-picture needs a live user gesture, which a timeout no longer has, so **Float** and **Popup** are buttons in the bar as well as an automatic fallback, and a browser that offers neither still gets the editor's own picker and drag-and-drop to fall back on.
 
+## Edit a photo, or the page's own markup, on the page
+
+**📷 Edit photo on Page** picks a photo from disk and opens it in Photopea's editor: in a modal over the page you are on, or in a floating picture-in-picture window or a popup if that page will not allow the frame. **Save PNG** brings the edited image back and downloads it as `<name>-edited.png`. The file reaches the editor as bytes over its messaging API, so nothing is uploaded and no account or key is involved.
+
+**💻 Edit code on Page** opens a runnable code editor over the page, preloaded with the page's own HTML — or with your selection, when you have picked a block worth editing. It is OneCompiler's embeddable editor, so the code runs; **Copy code** covers the case where the editor refuses the handoff.
+
+Both follow the same order as the PDF editor: the modal frame first, then a floating window, then a popup. Photopea is the only photo editor that can be framed without credentials: Pixlr's embeddable editor needs a server-signed token from a client secret, and Canva's embed shows a finished design rather than editing one.
+
 ## Edit a PDF in SimplePDF
 
 **📝 Open in SimplePDF** finds the PDF this tab already has — the document itself, the file behind a pdf.js viewer, or an embed, object or link on the page — and redirects the same window to `https://simplepdf.com/editor?open=…`, so editing starts without downloading the file and picking it again (both that address and `embed.simplepdf.com` accept `open`). A `#page=4` on the original address is carried over as the editor's `page` parameter, and a presigned S3 or Azure URL keeps its query string.

@@ -2,6 +2,19 @@
 
 What has been done, in order. Newest entries first.
 
+## A photo, and the page's own markup, edit in the same three surfaces
+
+- **📷 Edit photo on Page** (`files`) picks an image from disk and opens Photopea in the modal, handing it the bytes as an `ArrayBuffer` over Photopea's Live Messaging API; **Save PNG** asks for `saveToOE("png")` and the edited image comes straight back for download. Nothing is uploaded.
+- Photopea is the editor built to be framed — no `X-Frame-Options`, no CSP — and its API is free and keyless. Pixlr only embeds through an SDK that wants a server-minted JWT signed with a client secret, and Canva's embed is a read-only slideshow of a design that already lives in a Canva account.
+- **💻 Edit code on Page** (`devtools`) opens OneCompiler's embeddable editor with the page's own HTML, or with the selection when one is worth editing, sent as its documented `populateCode` event; **Copy code** is the path when the handoff is refused.
+- Both run the surface order **Edit PDF on Page** established: the modal frame first, bounded at `FRAME_MS`, then document picture-in-picture, then a popup, with **Float** and **Popup** in the bar because a timeout no longer holds the user gesture those calls need.
+
+**Verified**
+
+- A throwaway harness in Chrome framed every candidate with `vscode.dev` as a control: vscode.dev (`frame-ancestors 'none'`) and `www.canva.com` were refused with the expected console error, while Photopea, `pixlr.com/editor/`, the Canva design embed, CodePen `/embed/`, CodeSandbox `/embed/`, StackBlitz `?embed=1`, OneCompiler `/embed/` and Excalidraw loaded without one.
+- Node tests cover the picker filter and saved name, the surface order, the `size:` echo that proves the file arrived rather than just that the app booted, the `populateCode` shape, the clipping notice and the selection rule.
+- Neither tool's live handshake is proven yet: Photopea's ready `"done"` ping did not arrive from a harness served over `http://127.0.0.1`, with or without a full referrer, and its author documents a referrer requirement for framed use. Both keep `@testing true` until a real page settles it.
+
 ## A local PDF edits in a modal, then floats, then falls back to a popup
 
 - **📝 Edit PDF on Page** no longer takes over the window. The editor loads in a modal card over the page — file name, status line, **Float**, **Popup**, **Close** — so the site behind it survives the edit and `Esc` dismisses it.

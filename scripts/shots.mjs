@@ -87,6 +87,9 @@ const STEPS = {
   // redaction toast up for a few seconds: drag a region before it fades.
   "pixelate-section": [{ wait: 2400 }, { drag: [280, 320, 780, 580] }, { wait: 250 }],
   "generate-password": [{ wait: 300 }],
+  // The editor is a live cross-origin app that has to paint before it looks
+  // like an editor rather than an empty frame.
+  "code-editor-local": [{ wait: 6000 }],
   // Give the QR panel a short, meaningful URL and a custom palette, so the
   // capture shows the colour controls rather than a default black-and-white code.
   "qr-code": [
@@ -433,6 +436,9 @@ const REASONS = {
   "simplepdf-open": "external",
   // Opens a full-window embed of the editor, so the page it runs on is covered.
   "simplepdf-local": "external",
+  // It opens a file picker before it can show anything, and the editor behind
+  // that picker is a hosted app: there is no page state to photograph.
+  "photo-editor-local": "dialog",
   "tab-screenshot": "download",
   "website-to-markdown": "download",
   "selection-to-markdown": "download",
