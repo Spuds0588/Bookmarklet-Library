@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Retention plan — ChatGPT</title>
+<!-- Google AI Studio serves its pages with Trusted Types enforced, which makes
+     any DOM markup sink throw instead of accepting a string. This page does the
+     same, so the chat exporter can be exercised against the document that broke
+     it: no messages are tagged here, so the confirmation panel is what opens. -->
+<meta http-equiv="Content-Security-Policy" content="require-trusted-types-for 'script'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { margin: 0; padding: 40px; max-width: 720px; font: 16px/1.65 system-ui, sans-serif; color: #1a1a1a; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 16px; margin: 28px 0 6px; text-transform: uppercase; letter-spacing: .08em; }
+  p { margin: 0 0 12px; }
+  .meta { color: #666; font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Retention plan</h1>
+  <p class="meta">Draft · owner Dana Whitfield · reviewed with the field team</p>
+
+  <p>The demo route stays open for one more week so the crew can finish the handoff without cutting a visit short. Every visit ends with notes written the same day, and the notes go to Dana on Monday morning rather than sitting in a phone until the next shift.</p>
+
+  <p>We keep the current print run for two more weeks. The rate sheet lands on Friday, and printing before it arrives means paying for a price list that will be wrong by the time it reaches a customer. Once the new sheet is in hand, the print order goes out with the corrected figures and the old stock is recycled.</p>
+
+  <h2>What changes</h2>
+  <p>The weekly call moves from Friday afternoon to Thursday morning, because half the team is on the road by Friday lunchtime and the call kept getting postponed. The agenda is three lines: what shipped, what is blocked, and who needs help. Anything longer becomes a document.</p>
+
+  <p>Every crew gets a shared folder with the route map, the current rate sheet and the notes template. The folder is the source of truth; a copy in a message thread is a snapshot and should be treated as one. If a document matters next month, it goes in the folder.</p>
+
+  <h2>What we are not doing</h2>
+  <p>No new dashboard this quarter. The numbers the team actually uses fit in one table, and a second place to look at them would split attention rather than save time. If the table stops being enough, that is the signal to revisit it, not a deadline.</p>
+</main>
+<!-- Loaded as a page script so the unmodified bookmarklet file runs on a page
+     that enforces Trusted Types. Automation cannot go through a javascript:
+     URL or the Function constructor here: both are TrustedScript sinks. This
+     page exists to prove the tool opens its panel without an HTML assignment. -->
+<script src="/bookmarklets/files/chat-to-markdown.js" defer></script>
+</body>
+</html>

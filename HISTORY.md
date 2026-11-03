@@ -2,6 +2,23 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Chat export survives Trusted Types
+
+**Changed**
+
+- The exporter did nothing on Google AI Studio. Its console said why: `This document requires 'TrustedHTML' assignment. The action has been blocked.` at `openPanel`. The tool had fallen through to the panel — no message selectors matched there — and the panel assigned an HTML string to a shadow root, which AI Studio blocks. The exception killed `run` before anything could be saved.
+- Every panel, picker and toast is now assembled with `createElement` and `textContent`, and the CSS goes in through a `<style>` element's text. A test reads the source and fails if `innerHTML`, `insertAdjacentHTML`, `outerHTML` or `document.write` returns.
+- Added Google AI Studio as a platform. It gives one element per turn and puts "user" or "model" on a child's class rather than in an attribute, so `turnRole` reads those class names instead of matching a selector.
+
+**Verified**
+
+- `npm test`: 95 pass, including role-from-class and the HTML-sink guard. `verify` and `build --check` clean at 125 tools; the exporter capture re-ran unchanged.
+- Ran the unmodified tool file on `scripts/fixtures/trusted-types.html`, a page that enforces `require-trusted-types-for 'script'`: the confirmation panel builds with its three buttons and character count, the picker opens with its tip, `Esc` closes it, and the console logs no assignment error. On that same page the old approach still throws `This document requires 'TrustedHTML' assignment`, so the fixture does reproduce the original failure.
+
+**Limit**
+
+- The AI Studio turn selectors have not been checked against a signed-in page from here. If they miss, the tool now shows its confirmation panel instead of throwing, which is what it should have done in the first place.
+
 ## 2026-11-03 — Export chat to Markdown, and an "In testing" badge
 
 **Changed**

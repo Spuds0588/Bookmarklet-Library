@@ -131,11 +131,13 @@ The PDF writer uses the Helvetica family, Latin-1 text, the DOCX page size and m
 
 **💬 Export chat to Markdown** saves the whole conversation as one `.md` file, so a long thread can be handed to another model or a colleague without the clipboard cutting it short at the first thousand words.
 
-It reads the page rather than asking a service for a transcript. On ChatGPT, Claude and Gemini it finds the messages themselves and writes them in order with `## You` and `## Assistant` headings, converting the rendered HTML to Markdown as it goes: headings, lists, fenced code with its language, tables, quotes, links and emphasis. Everything else runs a container fallback: a page with something that looks like a conversation gets a panel saying what was found and how many characters it holds, with **Save this area** and **Pick an area**. If nothing is recognisable at all, the click-to-select mode opens straight away: hover to see what each block holds, click the one you want, `Esc` to back out.
+It reads the page rather than asking a service for a transcript. On ChatGPT, Claude, Gemini and Google AI Studio it finds the messages themselves and writes them in order with `## You` and `## Assistant` headings, converting the rendered HTML to Markdown as it goes: headings, lists, fenced code with its language, tables, quotes, links and emphasis. Everything else runs a container fallback: a page with something that looks like a conversation gets a panel saying what was found and how many characters it holds, with **Save this area** and **Pick an area**. If nothing is recognisable at all, the click-to-select mode opens straight away: hover to see what each block holds, click the one you want, `Esc` to back out.
 
 No CDN, no Turndown, no network. The conversion is a few hundred lines in the bookmarklet, which matters because ChatGPT, Claude and Gemini all serve their pages under a content security policy that would block a script pulled from unpkg in the first place.
 
-Limits worth knowing: a conversation that loads older messages lazily only exports what is in the page, so scroll up before exporting; and the role selectors are written against those three sites, so a custom AI studio lands on the picker instead.
+Google AI Studio goes further and enforces Trusted Types, which blocks the usual habit of assigning a panel's HTML to a shadow root. Every panel, picker and toast here is built node by node instead, and a test reads the source and fails if an HTML sink creeps back in. The page in `scripts/fixtures/trusted-types.html` enforces the same rule, so the exporter can be run against it: the panel and the picker both open there without an HTML assignment.
+
+Limits worth knowing: a conversation that loads older messages lazily only exports what is in the page, so scroll up before exporting. The role selectors are written against those four sites; AI Studio's turn markup is best effort, and a custom studio lands on the confirmation panel or the picker instead.
 
 ## Send to DocuSign
 

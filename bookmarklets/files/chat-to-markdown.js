@@ -2,7 +2,7 @@
  * @name 💬 Export chat to Markdown
  * @category files
  * @description Save a whole LLM conversation as one Markdown file, found automatically or picked by clicking the chat yourself.
- * @tags chatgpt, claude, gemini, markdown, export, conversation, transcript, llm
+ * @tags chatgpt, claude, gemini, aistudio, markdown, export, conversation, transcript, llm
  * @traits self-contained, offline
  * @added 2026-11-03
  * @featured false
@@ -18,7 +18,7 @@
   ]);
   const CONTENT_SELECTORS = [
     ".markdown", "[class*='markdown']", ".font-claude-message",
-    "[data-message-content]", ".whitespace-pre-wrap", ".prose",
+    "[data-message-content]", ".whitespace-pre-wrap", ".prose", "ms-cmark-node",
   ];
   const GENERIC_USER = [
     '[data-message-author-role="user"]', '[data-testid="user-message"]',
@@ -54,6 +54,15 @@
       host: /(^|\.)gemini\.google\.com$/i,
       user: ["user-query"],
       assistant: ["model-response"],
+    },
+    {
+      // AI Studio renders a whole turn as one element that says whose it is in
+      // a child's class, not in an attribute, so the role comes from a lookup.
+      name: "AI Studio",
+      host: /(^|\.)(aistudio\.google\.com|makersuite\.google\.com)$/i,
+      user: [],
+      assistant: [],
+      turns: ["ms-chat-turn", "[class*='chat-turn']"],
     },
   ];
 
@@ -100,6 +109,24 @@
     b { flex: none; font: 600 10px/1 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
     span { overflow-wrap: anywhere; }
   `;
+
+  // Trusted Types sites (Google AI Studio among them) refuse a string at any
+  // DOM markup sink, so every piece of UI here is built node by node.
+  function make(tag, attrs = {}, text = "") {
+    const element = document.createElement(tag);
+    for (const [name, value] of Object.entries(attrs)) {
+      if (name === "class") element.className = value;
+      else element.setAttribute(name, value);
+    }
+    if (text) element.textContent = text;
+    return element;
+  }
+
+  function withStyle(root, css) {
+    const style = document.createElement("style");
+    style.textContent = css;
+    root.append(style);
+  }
 
   /* Markdown conversion --------------------------------------------------- */
 
@@ -273,6 +300,23 @@
     return PLATFORMS.find((spec) => spec.host.test(host))?.name || "";
   }
 
+  function platformSpec() {
+    const host = String(location.hostname || "");
+    return PLATFORMS.find((entry) => entry.host.test(host)) || null;
+  }
+
+  // One element per turn, with "user" or "model" sitting on the container
+  // inside it rather than on the turn itself.
+  function turnRole(node) {
+    const probes = [node, node.firstElementChild, node.firstElementChild?.firstElementChild].filter(Boolean);
+    for (const element of probes) {
+      const cls = ` ${element.getAttribute("class") || ""} `;
+      if (/(^|\s)user(\s|$)/i.test(cls)) return "user";
+      if (/(^|\s)(model|assistant|bot|response)(\s|$)/i.test(cls)) return "assistant";
+    }
+    return "";
+  }
+
   // Role detection degrades gracefully: the platform's own selectors first,
   // then the attributes several tools share.
   function chatSelectors() {
@@ -314,11 +358,25 @@
   }
 
   function chatMessages() {
-    const selectors = chatSelectors();
-    const messages = [
-      ...collect(selectors.user).map((node) => ({ node, role: "user" })),
-      ...collect(selectors.assistant).map((node) => ({ node, role: "assistant" })),
-    ].sort((a, b) => (a.node.compareDocumentPosition(b.node) & 4 ? -1 : 1));
+    const spec = platformSpec();
+    const messages = [];
+
+    if (spec?.turns) {
+      for (const node of collect(spec.turns)) {
+        const role = turnRole(node);
+        if (role) messages.push({ node, role });
+      }
+    }
+
+    if (!messages.length) {
+      const selectors = chatSelectors();
+      messages.push(
+        ...collect(selectors.user).map((node) => ({ node, role: "user" })),
+        ...collect(selectors.assistant).map((node) => ({ node, role: "assistant" })),
+      );
+    }
+
+    messages.sort((a, b) => (a.node.compareDocumentPosition(b.node) & 4 ? -1 : 1));
 
     // A transcript needs both sides; three user bubbles alone are a search page.
     if (!messages.some((message) => message.role === "assistant")) return [];
@@ -404,8 +462,10 @@
     const host = document.createElement("div");
     host.id = "bl-chat-export-toast";
     const root = host.attachShadow({ mode: "open" });
-    root.innerHTML = `<style>:host{all:initial}${TOAST_CSS}</style><div class="toast" role="status"><b>Saved</b><span></span></div>`;
-    root.querySelector("span").textContent = message;
+    withStyle(root, `:host{all:initial}${TOAST_CSS}`);
+    const box = make("div", { class: "toast", role: "status" });
+    box.append(make("b", {}, "Saved"), make("span", {}, message));
+    root.append(box);
     document.body.append(host);
     setTimeout(() => host.remove(), 7000);
   }
@@ -440,32 +500,45 @@
 
   /* Fallbacks ------------------------------------------------------------- */
 
-  function openPanel(node) {
+  function openPanel(target) {
     document.getElementById("bl-chat-export-host")?.remove();
     const host = document.createElement("div");
     host.id = "bl-chat-export-host";
     const root = host.attachShadow({ mode: "open" });
-    root.innerHTML = `<style>:host{all:initial}${CSS}</style>
-      <div class="wrap"><section class="panel" role="dialog" aria-modal="true" aria-label="Export chat to Markdown">
-        <header class="head">
-          <div><h2 class="title">Export chat to Markdown</h2><p class="meta">No transcript found automatically</p></div>
-          <button class="close" type="button" data-close>Close</button>
-        </header>
-        <div class="body">
-          <p class="status"></p>
-          <p class="hint">One .md file, written straight to your downloads. No clipboard, so nothing is truncated.</p>
-        </div>
-        <footer class="foot">
-          <button type="button" data-pick>Pick an area</button>
-          <button type="button" class="primary" data-save>Save this area</button>
-        </footer>
-      </section></div>`;
+    withStyle(root, `:host{all:initial}${CSS}`);
 
-    const wrap = root.querySelector(".wrap");
-    const status = root.querySelector(".status");
-    const text = node.innerText.trim();
-    status.textContent = `This page looks like it holds a conversation: ${text.length.toLocaleString()} characters, ${node.querySelectorAll("p").length} paragraphs. Nothing was recognised as a message, so the structure will be plain.`;
-    root.querySelector(".meta").textContent = platformFor(location.hostname) || location.hostname;
+    const wrap = make("div", { class: "wrap" });
+    const panel = make("section", {
+      class: "panel", role: "dialog", "aria-modal": "true", "aria-label": "Export chat to Markdown",
+    });
+
+    const head = make("header", { class: "head" });
+    const copy = make("div");
+    copy.append(
+      make("h2", { class: "title" }, "Export chat to Markdown"),
+      make("p", { class: "meta" }, platformFor(location.hostname) || location.hostname),
+    );
+    head.append(copy, make("button", { class: "close", type: "button" }, "Close"));
+
+    const body = make("div", { class: "body" });
+    const text = target.innerText.trim();
+    body.append(
+      make(
+        "p",
+        { class: "status" },
+        `This page looks like it holds a conversation: ${text.length.toLocaleString()} characters, ${target.querySelectorAll("p").length} paragraphs. No messages could be told apart, so the file will be one block.`,
+      ),
+      make("p", { class: "hint" }, "One .md file, written straight to your downloads. No clipboard, so nothing is truncated."),
+    );
+
+    const foot = make("footer", { class: "foot" });
+    const pick = make("button", { type: "button" }, "Pick an area");
+    const save = make("button", { type: "button", class: "primary" }, "Save this area");
+    foot.append(pick, save);
+
+    panel.append(head, body, foot);
+    wrap.append(panel);
+    root.append(wrap);
 
     const close = () => {
       window.removeEventListener("keydown", onKey, true);
@@ -478,15 +551,15 @@
       }
     };
     window.addEventListener("keydown", onKey, true);
-    root.querySelector("[data-close]").addEventListener("click", close);
+    head.querySelector(".close").addEventListener("click", close);
     wrap.addEventListener("click", (event) => {
       if (event.target === wrap) close();
     });
-    root.querySelector("[data-save]").addEventListener("click", () => {
+    save.addEventListener("click", () => {
       close();
-      saveArea(node);
+      saveArea(target);
     });
-    root.querySelector("[data-pick]").addEventListener("click", () => {
+    pick.addEventListener("click", () => {
       close();
       startPicker();
     });
@@ -509,12 +582,13 @@
     const host = document.createElement("div");
     host.id = "bl-chat-export-picker";
     const root = host.attachShadow({ mode: "open" });
-    root.innerHTML = `<style>:host{all:initial}${PICKER_CSS}</style>
-      <div class="scrim"></div><div class="box"></div>
-      <div class="tip"><b>Export chat</b><span>Click the conversation</span><em>Esc cancels</em></div>`;
-    const scrim = root.querySelector(".scrim");
-    const box = root.querySelector(".box");
-    const tip = root.querySelector(".tip span");
+    withStyle(root, `:host{all:initial}${PICKER_CSS}`);
+    const scrim = make("div", { class: "scrim" });
+    const box = make("div", { class: "box" });
+    const label = make("span", {}, "Click the conversation");
+    const tip = make("div", { class: "tip" });
+    tip.append(make("b", {}, "Export chat"), label, make("em", {}, "Esc cancels"));
+    root.append(scrim, box, tip);
     document.body.append(host);
 
     let current = null;
@@ -537,7 +611,8 @@
       scrim.style.pointerEvents = "none";
       const under = document.elementFromPoint(event.clientX, event.clientY);
       scrim.style.pointerEvents = "";
-      if (!under || host.contains(under) || under === document.documentElement) return;
+      const inPanel = under ? under.getRootNode?.() === root : false;
+      if (!under || inPanel || under === document.documentElement) return;
       current = under;
       const rect = under.getBoundingClientRect();
       box.style.display = rect.width > 0 ? "block" : "none";
@@ -545,9 +620,8 @@
       box.style.top = `${Math.round(rect.top)}px`;
       box.style.width = `${Math.round(rect.width)}px`;
       box.style.height = `${Math.round(rect.height)}px`;
-      const label = under.tagName.toLowerCase();
       const size = Math.round(under.textContent.trim().length).toLocaleString();
-      tip.textContent = `<${label}> · ${size} characters`;
+      label.textContent = `<${under.tagName.toLowerCase()}> · ${size} characters`;
     };
     const onMove = (event) => hover(event);
     const onClick = (event) => {
@@ -562,7 +636,7 @@
     document.addEventListener("mousemove", onMove, true);
     document.addEventListener("click", onClick, true);
     document.addEventListener("keydown", onKey, true);
-    tip.textContent = "Click the conversation";
+    label.textContent = "Click the conversation";
   }
 
   function run() {
@@ -583,7 +657,7 @@
   }
 
   if (globalThis.__BL_TEST__) {
-    globalThis.__BL_TEST__.chatExport = { platformFor, fileNameForChat, chatTitle, tidyMarkdown };
+    globalThis.__BL_TEST__.chatExport = { platformFor, fileNameForChat, chatTitle, tidyMarkdown, turnRole };
   } else if (document?.body) {
     run();
   }

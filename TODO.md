@@ -61,6 +61,9 @@
 - [ ] The Claude and Gemini role selectors are written from their DOM but were only exercised against the generic shape in the capture. Both need a pass on the live sites.
 - [ ] Lazy-loaded history: a chat that pages in earlier messages exports only what is in the DOM. Scroll to the top first.
 - [ ] Gemini's `user-query` element wraps some UI labels along with the question; check whether those need stripping.
+- [x] Google AI Studio: the panel is built node by node, because AI Studio enforces Trusted Types and blocks `innerHTML` with "This document requires 'TrustedHTML' assignment". A test fails if an HTML sink comes back.
+- [x] Checked on a page that really enforces Trusted Types (`scripts/fixtures/trusted-types.html`): panel and picker both open, `Esc` closes the picker, nothing logs an assignment error. The fixture still throws on the old HTML-string approach.
+- [ ] AI Studio's turn structure (`ms-chat-turn`, with `.user` or `.model` inside) is best effort and has not been checked against a signed-in page. Confirm, and confirm the fallback panel is what appears if it misses.
 
 ## Send PDF to DocuSign (2026-11-03)
 

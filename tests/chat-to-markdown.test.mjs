@@ -10,7 +10,7 @@ globalThis.location = { href: "https://chatgpt.com/c/abc", hostname: "chatgpt.co
 globalThis.document = { title: "Retention plan — ChatGPT" };
 globalThis.__BL_TEST__ = {};
 new Function(await readFile(path.join(root, "bookmarklets", "files", "chat-to-markdown.js"), "utf8"))();
-const { platformFor, fileNameForChat, chatTitle, tidyMarkdown } = globalThis.__BL_TEST__.chatExport;
+const { platformFor, fileNameForChat, chatTitle, tidyMarkdown, turnRole } = globalThis.__BL_TEST__.chatExport;
 delete globalThis.__BL_TEST__;
 
 test("known chat hosts are named, everything else is not", () => {
@@ -39,6 +39,26 @@ test("the file name is dated, slugged and safe on every platform", () => {
   assert.equal(fileNameForChat("  A/B: test?! ", "claude.ai", date), "chat-a-b-test-2026-11-03-1405.md");
   assert.equal(fileNameForChat("", "claude.ai", date), "chat-claude-ai-2026-11-03-1405.md");
   assert.equal(fileNameForChat("x".repeat(90), "chatgpt.com", date).length, "chat-".length + 48 + "-2026-11-03-1405.md".length);
+});
+
+test("AI Studio turns say their role in a class, not an attribute", () => {
+  assert.equal(platformFor("aistudio.google.com"), "AI Studio");
+  assert.equal(platformFor("makersuite.google.com"), "AI Studio");
+  const turn = (cls) => ({ getAttribute: () => cls, firstElementChild: null });
+  assert.equal(turnRole(turn("chat-turn-container user")), "user");
+  assert.equal(turnRole(turn("chat-turn-container model")), "assistant");
+  assert.equal(turnRole(turn("chat-turn-container")), "");
+  // The role marker often sits one level down rather than on the turn itself.
+  assert.equal(turnRole({ getAttribute: () => "", firstElementChild: turn("container model") }), "assistant");
+});
+
+// Google AI Studio enforces Trusted Types: an HTML string assigned to a shadow
+// root is blocked outright, which is how the first version died there.
+test("no HTML sink is left for Trusted Types to block", async () => {
+  const source = await readFile(path.join(root, "bookmarklets", "files", "chat-to-markdown.js"), "utf8");
+  for (const sink of [".innerHTML", "insertAdjacentHTML", "outerHTML", "document.write"]) {
+    assert.equal(source.includes(sink), false, `${sink} is an HTML sink`);
+  }
 });
 
 test("converted blocks collapse the blank lines a DOM leaves behind", () => {
