@@ -3,6 +3,7 @@
  * @category capture
  * @description Record the tab with audio in up to 4K 60fps, saved to disk when finished.
  * @tags record, screen, video, mp4
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

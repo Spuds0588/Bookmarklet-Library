@@ -3,6 +3,7 @@
  * @category files
  * @description Download the clipboard text as a plain text file.
  * @tags clipboard, text, file
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

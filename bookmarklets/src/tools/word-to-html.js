@@ -3,6 +3,7 @@
  * @category files
  * @description Turn .docx files into standalone HTML, images included, one or many.
  * @tags word, docx, html, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-26
  * @featured false
  */

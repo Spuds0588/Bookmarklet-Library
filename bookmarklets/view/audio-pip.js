@@ -3,6 +3,7 @@
  * @category view
  * @description Move the page's audio player into a floating picture-in-picture window.
  * @tags audio, pip, player
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

@@ -3,6 +3,7 @@
  * @category devtools
  * @description Run snippets against the current page from a floating console.
  * @tags javascript, console, snippets
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

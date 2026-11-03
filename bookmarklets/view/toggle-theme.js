@@ -3,6 +3,7 @@
  * @category view
  * @description Force the page into the opposite color scheme.
  * @tags dark mode, theme, color scheme
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

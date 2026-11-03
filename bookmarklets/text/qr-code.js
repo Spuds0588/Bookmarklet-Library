@@ -3,6 +3,7 @@
  * @category text
  * @description Turn the page URL or any text into a QR code with custom colours and a transparent background, then download or copy it as a PNG or SVG.
  * @tags qr, qr code, barcode, url, share, png, svg, clipboard, color, transparent
+ * @traits offline, self-contained, third-party, no-cors, private-safe
  * @added 2026-10-28
  * @featured false
  */

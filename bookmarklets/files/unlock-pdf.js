@@ -3,6 +3,7 @@
  * @category files
  * @description Remove the password from a protected PDF and download an unlocked copy.
  * @tags pdf, password, unlock, decrypt, remove
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-26
  * @featured true
  */

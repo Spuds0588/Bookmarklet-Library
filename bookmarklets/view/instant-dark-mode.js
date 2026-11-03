@@ -3,6 +3,7 @@
  * @category view
  * @description Invert the whole page for a quick dark reading mode.
  * @tags dark mode, invert, night, reading
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  * @author Thomas Orlita

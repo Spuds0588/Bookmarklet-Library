@@ -3,6 +3,7 @@
  * @category privacy
  * @description Click elements to blur them; adjust the blur radius with the arrow keys.
  * @tags redact, blur, privacy
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

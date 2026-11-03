@@ -3,6 +3,7 @@
  * @category view
  * @description Swap ad slots for neutral gray blocks so screenshots look clean.
  * @tags ads, screenshot, clean
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

@@ -3,6 +3,7 @@
  * @category devtools
  * @description Record clicks and inputs as selectors you can replay or paste into a test.
  * @tags automation, selectors, record
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

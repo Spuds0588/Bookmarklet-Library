@@ -3,6 +3,7 @@
  * @category files
  * @description Drop files and folders, or pick them, and download one standard ZIP.
  * @tags zip, archive, compress, files, folder, drop
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-26
  * @featured false
  */

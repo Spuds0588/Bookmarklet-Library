@@ -3,6 +3,7 @@
  * @category files
  * @description Export .xlsx sheets to CSV or TSV, with dates and quoting handled.
  * @tags excel, xlsx, csv, tsv, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-26
  * @featured false
  */

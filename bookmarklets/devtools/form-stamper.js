@@ -3,6 +3,7 @@
  * @category devtools
  * @description Fill a form from the Form Harvester's JSON, with editable values and native input events for React and Vue.
  * @tags forms, stamp, fill, data entry, demo, automation, react
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-28
  * @featured false
  */

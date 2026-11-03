@@ -3,6 +3,7 @@
  * @category privacy
  * @description Make the page's text editable so you can overwrite details before a screenshot.
  * @tags edit, page, text, designmode, redact, privacy
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  * @author OpenReplay

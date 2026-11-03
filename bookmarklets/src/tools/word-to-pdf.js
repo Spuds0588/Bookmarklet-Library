@@ -3,6 +3,7 @@
  * @category files
  * @description Turn .docx files into PDFs with text, tables and embedded images.
  * @tags word, docx, pdf, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-26
  * @featured false
  */

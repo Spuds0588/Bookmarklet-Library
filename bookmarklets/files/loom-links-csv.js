@@ -3,6 +3,7 @@
  * @category files
  * @description Export the title and URL of every Loom video loaded on the page.
  * @tags loom, csv, export, video
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

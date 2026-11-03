@@ -34,7 +34,24 @@ const CATEGORIES = [
 ];
 const categoryIndex = new Map(CATEGORIES.map(([id], i) => [id, i]));
 
-const FIELDS = ["name", "category", "description", "tags", "added", "featured"];
+const FIELDS = ["name", "category", "description", "tags", "traits", "added", "featured"];
+
+// Capability badges: what a tool needs and what it touches. The ids are the
+// only accepted values, and the pairs below cannot both be claimed.
+const TRAITS = [
+  ["offline", "Offline", "Works offline", "Runs with no network connection at all."],
+  ["network", "Online", "Needs a connection", "Loads code, data or a page over the network to do its job."],
+  ["self-contained", "Self-contained", "Self-contained", "Every line it runs is in the bookmarklet itself."],
+  ["third-party", "3rd-party", "Third-party code", "Uses a library or engine somebody else wrote, bundled or fetched."],
+  ["web-app", "Web app", "Loads a web app", "Opens a hosted page or another site's app to do its work."],
+  ["no-cors", "CORS-free", "No CORS needed", "Its job never depends on a cross-origin response, so a site without CORS headers is no obstacle."],
+  ["private-safe", "Sensitive-safe", "Safe for sensitive data", "Sends nothing from the page off your device, and loads no third-party code into it."],
+].map(([id, short, label, help]) => ({ id, short, label, help }));
+const TRAIT_IDS = new Set(TRAITS.map((trait) => trait.id));
+const TRAIT_EXCLUSIVE = [
+  ["offline", "network"],
+  ["self-contained", "web-app"],
+];
 
 // Install links are named after the tool, so a tool without an emoji stands out
 // as a mistake in the catalog rather than a deliberate plain label.
@@ -60,6 +77,20 @@ function parseSource(slug, file, text) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(meta.added)) throw new Error(`${file}: @added must be YYYY-MM-DD`);
   if (!EMOJI.test(meta.name)) throw new Error(`${file}: @name must start with an emoji or symbol`);
 
+  const traits = meta.traits.split(",").map((trait) => trait.trim()).filter(Boolean);
+  for (const trait of traits) {
+    if (!TRAIT_IDS.has(trait)) {
+      throw new Error(`${file}: unknown trait "${trait}" (known: ${[...TRAIT_IDS].join(", ")})`);
+    }
+  }
+  if (new Set(traits).size !== traits.length) throw new Error(`${file}: duplicate trait`);
+  for (const [a, b] of TRAIT_EXCLUSIVE) {
+    if (traits.includes(a) && traits.includes(b)) throw new Error(`${file}: @traits cannot be both ${a} and ${b}`);
+  }
+  if (traits.includes("web-app") && !traits.includes("network")) {
+    throw new Error(`${file}: a tool that loads a web app also needs the network trait`);
+  }
+
   const author = (meta.author ?? "").trim();
   const credit = (meta.credit ?? "").trim();
   if (Boolean(author) !== Boolean(credit)) {
@@ -73,6 +104,7 @@ function parseSource(slug, file, text) {
     category: meta.category,
     description: meta.description,
     tags: meta.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+    traits,
     added: meta.added,
     featured: meta.featured === "true",
     author,
@@ -118,6 +150,7 @@ const catalog = {
   updated: items.map((item) => item.added).sort().at(-1),
   total: items.length,
   categories,
+  traits: TRAITS,
   items,
 };
 
@@ -130,6 +163,8 @@ const escapeHtml = (value) =>
 
 // The page fills its grid with fetch() and JavaScript. This list is what a
 // crawler, a reader mode or a browser with scripts blocked sees instead.
+const traitShort = (id) => TRAITS.find((trait) => trait.id === id)?.short ?? id;
+
 function toolsBlock(items, categories) {
   const groups = categories
     .map((category) => {
@@ -140,7 +175,8 @@ function toolsBlock(items, categories) {
           const by = item.author
             ? ` <span class="static-credit">By <a href="${escapeHtml(item.credit)}">${escapeHtml(item.author)}</a></span>`
             : "";
-          return `            <li><strong>${escapeHtml(item.name)}</strong> — ${escapeHtml(item.description)}${by}</li>`;
+          const needs = `<span class="static-traits">${item.traits.map(traitShort).map(escapeHtml).join(" · ")}</span>`;
+          return `            <li><strong>${escapeHtml(item.name)}</strong> — ${escapeHtml(item.description)}${by} ${needs}</li>`;
         })
         .join("\n");
       return `        <section class="static-group">

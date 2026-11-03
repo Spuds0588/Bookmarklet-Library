@@ -3,6 +3,7 @@
  * @category files
  * @description Make .docx files from plain text, one paragraph per line.
  * @tags txt, text, word, docx, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-26
  * @featured false
  */

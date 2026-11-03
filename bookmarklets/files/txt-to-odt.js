@@ -3,6 +3,7 @@
  * @category files
  * @description Make .odt documents from plain text, one paragraph per line.
  * @tags txt, text, odt, libreoffice, opendocument, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  */

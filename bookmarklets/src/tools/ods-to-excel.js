@@ -3,6 +3,7 @@
  * @category files
  * @description Open .ods spreadsheets as .xlsx workbooks, one sheet each.
  * @tags ods, libreoffice, opendocument, excel, xlsx, spreadsheet, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  */

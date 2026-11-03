@@ -3,6 +3,7 @@
  * @category files
  * @description Open a fresh collaborative Excalidraw canvas in a new tab.
  * @tags excalidraw, whiteboard, diagram
+ * @traits network, web-app, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

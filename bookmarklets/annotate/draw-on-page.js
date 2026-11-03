@@ -3,6 +3,7 @@
  * @category annotate
  * @description Draw freehand on a transparent layer over the page; press Escape to clear.
  * @tags draw, canvas, annotate
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

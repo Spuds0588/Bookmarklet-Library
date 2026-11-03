@@ -3,6 +3,7 @@
  * @category view
  * @description Show the current page inside a phone-sized frame.
  * @tags responsive, mobile, preview
+ * @traits network, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

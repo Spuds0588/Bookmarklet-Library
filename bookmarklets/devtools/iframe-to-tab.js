@@ -3,6 +3,7 @@
  * @category devtools
  * @description Open the page's iframe source in a new tab.
  * @tags iframe, tab, open
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

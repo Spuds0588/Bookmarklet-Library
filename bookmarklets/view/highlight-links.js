@@ -3,6 +3,7 @@
  * @category view
  * @description Give every hyperlink a yellow background so un-styled links stand out.
  * @tags links, highlight, accessibility, navigation
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  * @author Learn JavaScript

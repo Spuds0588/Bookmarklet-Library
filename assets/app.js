@@ -5,6 +5,7 @@ const STORAGE = { picks: "bl:picks", theme: "bl:theme", stars: "bl:stars" };
 const state = {
   items: [],
   categories: [],
+  traits: [],
   query: "",
   category: "all",
   picks: new Set(read(STORAGE.picks, [])),
@@ -34,6 +35,7 @@ const nodes = {
   detailDesc: $("#detail-desc"),
   detailShot: $("#detail-shot"),
   detailInstall: $("#detail-install"),
+  detailTraits: $("#detail-traits"),
   detailTags: $("#detail-tags"),
   detailMeta: $("#detail-meta"),
   detailHow: $("#detail-how"),
@@ -75,6 +77,14 @@ const badgeFor = (id) => {
   return category ? `${category.emoji} ${category.label}` : id;
 };
 const shotFor = (item) => state.shots.tools[item.slug];
+const traitOf = (id) => state.traits.find((trait) => trait.id === id);
+const traitBadges = (item) =>
+  (item.traits ?? [])
+    .map((id) => {
+      const trait = traitOf(id);
+      return trait ? `<span class="trait" title="${esc(trait.help)}">${esc(trait.short)}</span>` : "";
+    })
+    .join("");
 
 // Tools whose work never reaches the page get no screenshot. The reason says
 // what happened instead, so a blank tile is an answer rather than a gap.
@@ -124,7 +134,13 @@ function visibleItems() {
   const items = state.items.filter((item) => {
     if (state.category !== "all" && item.category !== state.category) return false;
     if (!tokens.length) return true;
-    const haystack = [item.name, item.description, item.tags.join(" "), labelFor(item.category)]
+    const needs = (item.traits ?? [])
+      .map((id) => {
+        const trait = traitOf(id);
+        return trait ? `${id} ${trait.short} ${trait.label}` : id;
+      })
+      .join(" ");
+    const haystack = [item.name, item.description, item.tags.join(" "), labelFor(item.category), needs]
       .join(" ")
       .toLowerCase();
     return tokens.every((token) => haystack.includes(token));
@@ -214,6 +230,7 @@ function card(item) {
       <h3 class="card-title">${esc(item.name)}</h3>
       ${item.author ? `<p class="card-credit">By <a href="${esc(item.credit)}" target="_blank" rel="noopener" title="Original source: ${esc(item.author)}">${esc(item.author)}</a></p>` : ""}
       ${shot?.file ? `<p class="card-desc">${esc(item.description)}</p>` : ""}
+      <p class="card-traits">${traitBadges(item)}</p>
       ${
         shot?.file
           ? `<button class="card-shot" type="button" data-open="${esc(item.slug)}" aria-label="See ${esc(item.name)} at work">
@@ -395,6 +412,12 @@ function fillDetail(item) {
   nodes.detailInstall.setAttribute("href", item.href);
   nodes.detailInstall.setAttribute("title", `Drag “${item.name}” onto your bookmarks bar`);
   nodes.detailInstall.innerHTML = `${bookmarkIcon}<span>${esc(item.name)}</span>`;
+  nodes.detailTraits.innerHTML = (item.traits ?? [])
+    .map((id) => {
+      const trait = traitOf(id);
+      return trait ? `<span class="trait" title="${esc(trait.help)}">${esc(trait.label)}</span>` : "";
+    })
+    .join("");
   nodes.detailTags.innerHTML = item.tags.map((tag) => `<span class="tag">#${esc(tag)}</span>`).join("");
   nodes.detailMeta.innerHTML = `
     <div><dt>Category</dt><dd>${esc(badgeFor(item.category))}</dd></div>
@@ -734,6 +757,7 @@ async function init() {
     ]);
     state.items = catalog.items;
     state.categories = catalog.categories;
+    state.traits = catalog.traits ?? [];
     if (shots?.tools) state.shots = shots;
     // ?q= is the search target the structured data advertises.
     const shared = new URLSearchParams(location.search).get("q")?.trim();

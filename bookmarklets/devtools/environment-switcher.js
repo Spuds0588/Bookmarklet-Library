@@ -3,6 +3,7 @@
  * @category devtools
  * @description Jump between the same route on production, staging and localhost while keeping the path, query and hash.
  * @tags environment, staging, localhost, route, switch, qa, dev
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-28
  * @featured false
  */

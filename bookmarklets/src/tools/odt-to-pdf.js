@@ -3,6 +3,7 @@
  * @category files
  * @description Turn .odt documents into PDFs with text, tables and embedded images.
  * @tags odt, libreoffice, opendocument, pdf, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  */

@@ -3,6 +3,7 @@
  * @category devtools
  * @description POST the page URL, title and selected text to a webhook, with a clipboard fallback when CORS or CSP blocks it.
  * @tags webhook, zapier, make, slack, integration, automation, post, json
+ * @traits network, self-contained
  * @added 2026-10-28
  * @featured false
  */

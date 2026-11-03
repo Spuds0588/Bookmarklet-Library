@@ -3,6 +3,7 @@
  * @category files
  * @description Open RTF files as .odt, keeping formatting, tables and PNG or JPEG images.
  * @tags rtf, odt, libreoffice, opendocument, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  */

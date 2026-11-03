@@ -3,6 +3,7 @@
  * @category files
  * @description Turn CSV or TSV files into .ods spreadsheets, with numbers kept as numbers.
  * @tags csv, tsv, ods, libreoffice, opendocument, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  */

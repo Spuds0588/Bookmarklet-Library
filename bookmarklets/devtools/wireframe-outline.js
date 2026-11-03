@@ -3,6 +3,7 @@
  * @category devtools
  * @description Draw a red outline around every element to expose the page's box model.
  * @tags layout, outline, wireframe, css, inspect
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  * @author Addy Osmani

@@ -3,6 +3,7 @@
  * @category files
  * @description Turn Markdown into .odt documents with headings, lists, tables and links.
  * @tags markdown, md, odt, libreoffice, opendocument, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  */

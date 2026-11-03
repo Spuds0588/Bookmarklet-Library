@@ -3,6 +3,7 @@
  * @category capture
  * @description Record narration from a PiP window and save it as an M4A file.
  * @tags record, audio, narration, m4a
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

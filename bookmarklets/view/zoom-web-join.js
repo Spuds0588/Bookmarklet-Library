@@ -3,6 +3,7 @@
  * @category view
  * @description Turn a Zoom meeting link into a browser join URL.
  * @tags zoom, meeting, join
+ * @traits network, web-app, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

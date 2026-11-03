@@ -3,6 +3,7 @@
  * @category text
  * @description Render the page's Markdown source with GitHub styling.
  * @tags markdown, reader, render
+ * @traits network, self-contained, third-party, no-cors
  * @added 2026-10-17
  * @featured false
  */

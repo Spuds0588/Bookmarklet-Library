@@ -3,6 +3,7 @@
  * @category devtools
  * @description Export every internal link on the page to a CSV.
  * @tags links, csv, crawl, seo
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

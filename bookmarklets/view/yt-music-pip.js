@@ -3,6 +3,7 @@
  * @category view
  * @description Control YouTube Music from a compact picture-in-picture player.
  * @tags youtube music, pip, player
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

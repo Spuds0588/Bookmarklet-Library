@@ -3,6 +3,7 @@
  * @category files
  * @description Open .odt documents as .docx, keeping headings, lists, tables and images.
  * @tags odt, libreoffice, opendocument, word, docx, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  */

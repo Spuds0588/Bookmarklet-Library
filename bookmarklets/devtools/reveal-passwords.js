@@ -3,6 +3,7 @@
  * @category devtools
  * @description Turn password fields into plain text so you can check what you typed.
  * @tags password, forms, reveal, login
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  * @author Hongkiat

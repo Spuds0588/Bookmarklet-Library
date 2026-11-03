@@ -3,6 +3,7 @@
  * @category view
  * @description Preview how this page's Open Graph card looks when shared.
  * @tags open graph, social, preview
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

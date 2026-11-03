@@ -3,6 +3,7 @@
  * @category files
  * @description Open a ZIP, download files individually, or extract the whole folder; folder writing needs Chrome or Edge.
  * @tags zip, unzip, extract, browse, folder, download
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-26
  * @featured false
  */

@@ -3,6 +3,7 @@
  * @category files
  * @description Save every file a page links to into a folder you choose, keeping readable names.
  * @tags links, files, download, bulk, save, folder, pdf, zip, documents
+ * @traits network, self-contained
  * @added 2026-11-01
  * @featured false
  */

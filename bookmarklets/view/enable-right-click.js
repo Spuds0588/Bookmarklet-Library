@@ -3,6 +3,7 @@
  * @category view
  * @description Clear the handlers and styles that block right-clicking, selecting and dragging.
  * @tags right click, copy, select, context menu, portal
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  * @author Hongkiat

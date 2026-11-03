@@ -3,6 +3,7 @@
  * @category text
  * @description Generate a four-word passphrase and copy it to the clipboard.
  * @tags passphrase, security, generate
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

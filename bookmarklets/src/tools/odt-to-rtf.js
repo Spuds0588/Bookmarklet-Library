@@ -3,6 +3,7 @@
  * @category files
  * @description Convert .odt documents to RTF with formatting, tables, links and images.
  * @tags odt, libreoffice, opendocument, rtf, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  */

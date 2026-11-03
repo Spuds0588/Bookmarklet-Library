@@ -3,6 +3,7 @@
  * @category files
  * @description Paste an HTML snippet into a modal and download it as a file.
  * @tags html, snippet, file
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

@@ -3,6 +3,7 @@
  * @category text
  * @description Convert the page content to Markdown and download it.
  * @tags markdown, convert, export
+ * @traits network, self-contained, third-party, no-cors
  * @added 2026-10-17
  * @featured false
  */

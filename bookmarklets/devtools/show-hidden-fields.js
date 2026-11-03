@@ -3,6 +3,7 @@
  * @category devtools
  * @description Turn hidden inputs into visible, red-outlined text fields so you can inspect what a form sends.
  * @tags forms, hidden, inputs, debug, csrf
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  * @author being-frank

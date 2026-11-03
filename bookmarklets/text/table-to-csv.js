@@ -3,6 +3,7 @@
  * @category text
  * @description Pick a table on the page and copy it as clean CSV or a Markdown table.
  * @tags table, csv, markdown, extract, clipboard, spreadsheet
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-28
  * @featured false
  */

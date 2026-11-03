@@ -3,6 +3,7 @@
  * @category capture
  * @description Drag a box around a QR code on screen, then open the link, open it in a new tab or copy the text.
  * @tags qr, qr code, scan, reader, screen, link, clipboard
+ * @traits network, web-app, third-party, no-cors, private-safe
  * @added 2026-10-28
  * @featured false
  */

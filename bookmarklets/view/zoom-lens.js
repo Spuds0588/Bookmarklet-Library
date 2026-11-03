@@ -3,6 +3,7 @@
  * @category view
  * @description Magnify a region of the page in place while you move the pointer.
  * @tags zoom, magnify, accessibility
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

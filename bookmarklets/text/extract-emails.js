@@ -3,6 +3,7 @@
  * @category text
  * @description Collect every email address on the page and show the unique ones in a copyable prompt.
  * @tags email, extract, scrape, regex, copy
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  * @author Community snippet

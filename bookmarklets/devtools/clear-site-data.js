@@ -3,6 +3,7 @@
  * @category devtools
  * @description Clear local storage, cookies and cache for this site, then reload.
  * @tags cookies, cache, reset, storage
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

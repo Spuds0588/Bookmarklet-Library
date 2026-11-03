@@ -3,6 +3,7 @@
  * @category devtools
  * @description Open a scratch tab that lists and tests the current URL's parameters.
  * @tags url, query string, test
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

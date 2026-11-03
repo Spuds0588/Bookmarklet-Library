@@ -3,6 +3,7 @@
  * @category files
  * @description Pull the text out of .odt documents; tables become tab-separated rows.
  * @tags odt, libreoffice, opendocument, txt, text, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  */

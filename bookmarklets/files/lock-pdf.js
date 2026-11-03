@@ -3,6 +3,7 @@
  * @category files
  * @description Add an AES-256 password to a PDF and download the protected copy.
  * @tags pdf, password, lock, encrypt, aes
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-26
  * @featured false
  */

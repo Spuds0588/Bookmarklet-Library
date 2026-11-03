@@ -3,6 +3,7 @@
  * @category capture
  * @description Drag over part of the screen to OCR it and copy the text to the clipboard.
  * @tags ocr, text, copy, screenshot
+ * @traits network, self-contained, third-party, no-cors
  * @added 2026-10-17
  * @featured false
  */

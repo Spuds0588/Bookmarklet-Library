@@ -3,6 +3,7 @@
  * @category files
  * @description Pull the text out of .docx files; tables become tab-separated rows.
  * @tags word, docx, txt, text, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-26
  * @featured false
  */

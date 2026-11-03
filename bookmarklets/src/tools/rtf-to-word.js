@@ -3,6 +3,7 @@
  * @category files
  * @description Open RTF files as .docx, keeping formatting, tables and PNG or JPEG images.
  * @tags rtf, word, docx, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-26
  * @featured false
  */

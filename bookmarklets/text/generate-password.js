@@ -3,6 +3,7 @@
  * @category text
  * @description Generate a strong password and copy it to the clipboard.
  * @tags password, security, generate
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

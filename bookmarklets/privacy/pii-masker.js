@@ -3,6 +3,7 @@
  * @category privacy
  * @description Replace names, terms and email addresses on the page with dummy text, with an optional blur and one-click restore.
  * @tags pii, privacy, redact, mask, demo, blur, email
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-28
  * @featured false
  */

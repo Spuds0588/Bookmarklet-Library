@@ -3,6 +3,7 @@
  * @category devtools
  * @description Load any URL in an iframe overlay to test embedding.
  * @tags iframe, embed, test
+ * @traits network, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

@@ -2,6 +2,21 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Every tool says what it needs
+
+**Changed**
+
+- Added `@traits` to all 122 bookmarklets and their 30 composer sources: one of `offline` / `network`, one of `self-contained` / `web-app`, then any of `third-party`, `no-cors`, `private-safe`. `build.mjs` refuses an unknown id, a duplicate, both halves of a pair, and `web-app` without `network`; `verify.mjs` re-checks the built catalog for the same rules.
+- The catalog carries the vocabulary once (`catalog.traits`) with a short badge, a long label and a one-line explanation, so the wording lives in `build.mjs` only. `app.js` renders the short badges on every card, the long labels as chips on the full page with the explanation as a tooltip, and includes them in search.
+- The crawlable `<noscript>` list now names each tool's badges too, and the catalog hint says what the badges mean.
+- Result: 97 offline / 25 online, 112 self-contained / 10 web apps, 12 third-party, 116 without a CORS dependency and 104 safe for sensitive pages. The CDN-backed tools, the media downloaders, the webhook dispatcher, read-aloud, voice commands, the chat and the mailto rewriters are the ones missing a badge, each for a reason.
+- README gains a badge table and the exceptions behind it; AGENTS documents the field and how to tag a tool honestly; the metadata examples carry the new line.
+
+**Verified**
+
+- `npm test` (75 tests), `node scripts/compose.mjs --check`, `node scripts/build.mjs --check` and `node scripts/verify.mjs` all pass on 122 bookmarklets.
+- Local page on port 4173: 122 cards each render a badge row, `sensitive-safe` finds 104 tools, `offline` 97 and `cors` 117; `#t/qr-code` shows five chips, offline first, with its explanation on hover. No console messages.
+
 ## 2026-11-02 — WebMCP bridge gives a local model a page to drive
 
 **Changed**

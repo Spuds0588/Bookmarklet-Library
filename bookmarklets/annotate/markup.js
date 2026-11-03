@@ -3,6 +3,7 @@
  * @category annotate
  * @description Capture the tab, then crop and mark it up with arrows, boxes, numbers and labels before saving.
  * @tags screenshot, annotate, arrows, steps
+ * @traits network, self-contained, third-party, no-cors
  * @added 2026-10-17
  * @featured false
  */

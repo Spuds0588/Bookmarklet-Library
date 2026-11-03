@@ -3,6 +3,7 @@
  * @category capture
  * @description Record your camera from a floating picture-in-picture window.
  * @tags record, camera, video
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

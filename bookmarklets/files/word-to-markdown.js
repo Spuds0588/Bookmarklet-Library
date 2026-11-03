@@ -3,6 +3,7 @@
  * @category files
  * @description Convert .docx files to Markdown with headings, lists, tables and images.
  * @tags word, docx, markdown, md, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-26
  * @featured false
  */

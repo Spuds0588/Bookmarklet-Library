@@ -3,6 +3,7 @@
  * @category devtools
  * @description Export every form field's label, binding and element ID as a Markdown table.
  * @tags forms, audit, markdown
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

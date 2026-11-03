@@ -3,6 +3,7 @@
  * @category text
  * @description Find and replace text inside the page's inputs and textareas.
  * @tags find, replace, forms
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

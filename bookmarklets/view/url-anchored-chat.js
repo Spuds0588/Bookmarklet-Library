@@ -3,6 +3,7 @@
  * @category view
  * @description Open an ephemeral PeerJS chat shared by everyone on this exact page URL.
  * @tags chat, peerjs, webrtc, url, secret, room, p2p
+ * @traits network, web-app, third-party, no-cors
  * @added 2026-10-28
  * @featured false
  */

@@ -3,6 +3,7 @@
  * @category games
  * @description Open actual shareware Doom, Episode 1, in a window with a real WAD and WebAssembly engine.
  * @tags doom, game, wasm, shareware, fun, easter egg
+ * @traits network, web-app, third-party, no-cors, private-safe
  * @added 2026-10-28
  * @featured false
  */

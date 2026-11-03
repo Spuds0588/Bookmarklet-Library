@@ -3,6 +3,7 @@
  * @category text
  * @description Open a floating find bar that highlights every match on the page.
  * @tags find, search, highlight
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

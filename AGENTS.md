@@ -58,6 +58,7 @@ Metadata fields, all required:
  * @category capture
  * @description Capture the visible tab and download it as a PNG named after the page.
  * @tags screenshot, png, tab
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */
@@ -68,6 +69,7 @@ Metadata fields, all required:
 - Exactly one file may set `@featured true`; that tool gets the highlighted panel at the top of the page.
 - The description is the card copy. One sentence, concrete, no marketing.
 - Tags are searchable, so include the words people would type.
+- `@traits` says what a tool needs, from a fixed vocabulary, and the page shows it as badges on the card and the full page. Pick one of `offline` / `network`, one of `self-contained` / `web-app`, then any of `third-party`, `no-cors`, `private-safe`. `build.mjs` refuses an unknown id, a duplicate, both halves of a pair, and `web-app` without `network`; `verify.mjs` checks the built catalog for the same things. Tag the code, not the impression: `offline` means no network at all, `self-contained` means every line it runs is in the bookmarklet (a CDN script is not), `third-party` includes bundled code such as the QR encoder, `no-cors` means its job never depends on a cross-origin response (the media downloaders and the webhook dispatcher do), and `private-safe` means nothing from the page leaves the device and no third-party code runs in it — so a CDN library or a hosted helper page takes that badge away. When a tool's behaviour changes, change its traits with it; `TRAITS` in `build.mjs` is the only place the wording lives.
 - One tool per job. If two files do the same thing, keep the better one and delete the other — a second name for one job is a second thing to maintain and a second card worth ignoring.
 - `@author` and `@credit` are optional and go together. Add both when a tool comes from another developer: keep that developer's name for the card, link to the original page in `@credit`, and keep the original tool name after its emoji. `build.mjs` refuses one without the other, a non-http credit, or a name without an emoji.
 

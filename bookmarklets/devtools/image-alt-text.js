@@ -3,6 +3,7 @@
  * @category devtools
  * @description Print each image's alt text above it so missing or weak descriptions are obvious.
  * @tags images, alt, accessibility, a11y, audit
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  * @author Team A11Y Collective

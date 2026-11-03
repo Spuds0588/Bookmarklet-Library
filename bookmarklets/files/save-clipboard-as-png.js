@@ -3,6 +3,7 @@
  * @category files
  * @description Download the image on your clipboard as a PNG file.
  * @tags clipboard, image, png, file
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

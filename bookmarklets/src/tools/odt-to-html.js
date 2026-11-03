@@ -3,6 +3,7 @@
  * @category files
  * @description Turn .odt documents into standalone HTML, images included, one or many.
  * @tags odt, libreoffice, opendocument, html, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  */

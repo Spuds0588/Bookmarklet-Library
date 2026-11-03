@@ -3,6 +3,7 @@
  * @category view
  * @description Listen for spoken page commands such as scroll, submit, clear and refresh, with a small status badge.
  * @tags voice, speech, commands, accessibility, scroll, submit
+ * @traits network, self-contained, no-cors
  * @added 2026-10-28
  * @featured false
  */

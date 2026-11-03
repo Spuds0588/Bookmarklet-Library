@@ -3,6 +3,7 @@
  * @category privacy
  * @description Redact every email address on the page for screenshots.
  * @tags redact, email, privacy
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

@@ -3,6 +3,7 @@
  * @category games
  * @description Play a Geometry Wars inspired neon arena shooter entirely contained in one bookmarklet.
  * @tags game, arcade, shooter, twin-stick, bullet hell, geometry wars, canvas, neon, fun
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-28
  * @featured false
  */

@@ -3,6 +3,7 @@
  * @category devtools
  * @description Copy a form's field names, labels and values as JSON for the Form Stamper to replay.
  * @tags forms, harvest, data entry, json, demo, automation
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-28
  * @featured false
  */

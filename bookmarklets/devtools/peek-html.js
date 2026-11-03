@@ -3,6 +3,7 @@
  * @category devtools
  * @description Render the HTML on your clipboard in a sandboxed overlay.
  * @tags html, preview, sandbox
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

@@ -3,6 +3,7 @@
  * @category text
  * @description Make mailto links open a Gmail compose window instead.
  * @tags email, gmail, mailto
+ * @traits network, web-app, no-cors
  * @added 2026-10-17
  * @featured false
  */

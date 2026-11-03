@@ -3,6 +3,7 @@
  * @category view
  * @description Remove overflow locks so pages with frozen scroll can move again.
  * @tags scroll, overflow, unlock
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

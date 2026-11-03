@@ -3,6 +3,7 @@
  * @category devtools
  * @description Collect browser, screen and device details into a copyable support report.
  * @tags support, diagnostics, system
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

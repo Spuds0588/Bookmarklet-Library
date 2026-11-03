@@ -3,6 +3,7 @@
  * @category files
  * @description Turn .xlsx workbooks into .ods spreadsheets, one sheet each.
  * @tags excel, xlsx, ods, libreoffice, opendocument, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  */

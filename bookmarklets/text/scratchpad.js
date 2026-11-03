@@ -3,6 +3,7 @@
  * @category text
  * @description Open a scratchpad with Markdown preview in a new tab.
  * @tags notes, markdown, scratchpad
+ * @traits network, web-app, third-party, no-cors
  * @added 2026-10-17
  * @featured false
  */

@@ -3,6 +3,7 @@
  * @category files
  * @description Escape clipboard text and copy a styled, collapsible code block back to the clipboard.
  * @tags code, html, clipboard
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

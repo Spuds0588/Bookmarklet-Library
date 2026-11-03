@@ -3,6 +3,7 @@
  * @category files
  * @description Save every audio file the page loads into a folder you choose, with streams flagged.
  * @tags audio, download, bulk, save, folder, media, mp3, wav
+ * @traits network, self-contained
  * @added 2026-11-01
  * @featured false
  */

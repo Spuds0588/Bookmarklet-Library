@@ -3,6 +3,7 @@
  * @category text
  * @description Read the page aloud with adjustable voice, pitch and speed.
  * @tags text to speech, read, audio
+ * @traits network, self-contained
  * @added 2026-10-17
  * @featured false
  */

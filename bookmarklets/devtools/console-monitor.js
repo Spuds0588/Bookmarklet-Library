@@ -3,6 +3,7 @@
  * @category devtools
  * @description Show console logs in a floating panel without opening DevTools.
  * @tags console, logs, debug
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

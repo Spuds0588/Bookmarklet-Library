@@ -3,6 +3,7 @@
  * @category files
  * @description Export .ods sheets to CSV or TSV, with dates and quoting handled.
  * @tags ods, libreoffice, opendocument, spreadsheet, csv, tsv, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  */

@@ -3,6 +3,7 @@
  * @category view
  * @description Dim the page except a circle that follows the pointer; right-click toggles the dimming and Esc exits.
  * @tags presenter, spotlight, focus, demo, screen, pointer
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-28
  * @featured false
  */

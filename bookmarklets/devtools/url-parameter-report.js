@@ -3,6 +3,7 @@
  * @category devtools
  * @description Break the current URL's query string into a readable table.
  * @tags url, query string, params
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

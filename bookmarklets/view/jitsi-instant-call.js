@@ -3,6 +3,7 @@
  * @category view
  * @description Open a fresh Jitsi room in a compact pop-up and copy the join link for the other people.
  * @tags jitsi, meeting, video, call, room, meet
+ * @traits network, web-app, no-cors, private-safe
  * @added 2026-10-28
  * @featured false
  */

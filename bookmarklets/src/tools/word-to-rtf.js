@@ -3,6 +3,7 @@
  * @category files
  * @description Convert .docx files to RTF with formatting, tables, links and images.
  * @tags word, docx, rtf, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-26
  * @featured false
  */

@@ -3,6 +3,7 @@
  * @category text
  * @description Make mailto links open an Outlook compose window instead.
  * @tags email, outlook, mailto
+ * @traits network, web-app, no-cors
  * @added 2026-10-17
  * @featured false
  */

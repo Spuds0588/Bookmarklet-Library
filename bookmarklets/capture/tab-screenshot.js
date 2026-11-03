@@ -3,6 +3,7 @@
  * @category capture
  * @description Capture the visible tab and download it as a PNG named after the page.
  * @tags screenshot, png, tab
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

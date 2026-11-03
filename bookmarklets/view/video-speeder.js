@@ -3,6 +3,7 @@
  * @category view
  * @description Set every video on the page to play at 2× speed.
  * @tags video, speed, playback, training
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  * @author Community snippet

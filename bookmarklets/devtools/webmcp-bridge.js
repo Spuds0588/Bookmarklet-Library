@@ -3,6 +3,7 @@
  * @category devtools
  * @description Open a local-model companion window that can read and operate the current page's visible controls.
  * @tags ai, agent, automation, mcp, local, dom
+ * @traits network, web-app, third-party, no-cors
  * @added 2026-11-02
  * @featured false
  */

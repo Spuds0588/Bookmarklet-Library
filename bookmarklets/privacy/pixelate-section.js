@@ -3,6 +3,7 @@
  * @category privacy
  * @description Drag over a region to pixelate it and copy the redacted image.
  * @tags redact, pixelate, privacy, screenshot
+ * @traits network, self-contained, third-party, no-cors
  * @added 2026-10-17
  * @featured false
  */

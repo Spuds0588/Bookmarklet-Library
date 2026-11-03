@@ -3,6 +3,7 @@
  * @category view
  * @description Send the page's first video into a floating window.
  * @tags video, pip, picture in picture
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

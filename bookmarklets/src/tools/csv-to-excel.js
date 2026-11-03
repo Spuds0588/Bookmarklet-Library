@@ -3,6 +3,7 @@
  * @category files
  * @description Turn CSV or TSV files into .xlsx workbooks, with numbers kept as numbers.
  * @tags csv, tsv, excel, xlsx, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-26
  * @featured false
  */

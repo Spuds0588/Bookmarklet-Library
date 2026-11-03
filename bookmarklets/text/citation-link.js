@@ -3,6 +3,7 @@
  * @category text
  * @description Copy the selected passage as a Markdown citation with a text-fragment link and today's date.
  * @tags citation, quote, text fragment, markdown, research, link
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-28
  * @featured false
  */

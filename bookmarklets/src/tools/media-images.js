@@ -3,6 +3,7 @@
  * @category files
  * @description Save every image the page loads into a folder you choose, without leaving the tab.
  * @tags images, download, bulk, save, folder, media, png, jpg
+ * @traits network, self-contained
  * @added 2026-11-01
  * @featured false
  */

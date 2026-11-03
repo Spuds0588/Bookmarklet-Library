@@ -3,6 +3,7 @@
  * @category view
  * @description Replace ad slots with background-colored blocks that match the page.
  * @tags ads, declutter, screenshot
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

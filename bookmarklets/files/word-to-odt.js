@@ -3,6 +3,7 @@
  * @category files
  * @description Turn .docx files into OpenDocument text that LibreOffice and Writer open.
  * @tags word, docx, odt, libreoffice, opendocument, convert, office, batch
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-27
  * @featured false
  */

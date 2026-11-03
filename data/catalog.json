@@ -59,6 +59,50 @@
       "count": 6
     }
   ],
+  "traits": [
+    {
+      "id": "offline",
+      "short": "Offline",
+      "label": "Works offline",
+      "help": "Runs with no network connection at all."
+    },
+    {
+      "id": "network",
+      "short": "Online",
+      "label": "Needs a connection",
+      "help": "Loads code, data or a page over the network to do its job."
+    },
+    {
+      "id": "self-contained",
+      "short": "Self-contained",
+      "label": "Self-contained",
+      "help": "Every line it runs is in the bookmarklet itself."
+    },
+    {
+      "id": "third-party",
+      "short": "3rd-party",
+      "label": "Third-party code",
+      "help": "Uses a library or engine somebody else wrote, bundled or fetched."
+    },
+    {
+      "id": "web-app",
+      "short": "Web app",
+      "label": "Loads a web app",
+      "help": "Opens a hosted page or another site's app to do its work."
+    },
+    {
+      "id": "no-cors",
+      "short": "CORS-free",
+      "label": "No CORS needed",
+      "help": "Its job never depends on a cross-origin response, so a site without CORS headers is no obstacle."
+    },
+    {
+      "id": "private-safe",
+      "short": "Sensitive-safe",
+      "label": "Safe for sensitive data",
+      "help": "Sends nothing from the page off your device, and loads no third-party code into it."
+    }
+  ],
   "items": [
     {
       "slug": "record-audio",
@@ -70,6 +114,12 @@
         "audio",
         "narration",
         "m4a"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -90,6 +140,12 @@
         "camera",
         "video"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -107,6 +163,12 @@
         "record",
         "camera",
         "video"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -127,6 +189,12 @@
         "video",
         "mp4"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -146,6 +214,12 @@
         "copy",
         "screenshot"
       ],
+      "traits": [
+        "network",
+        "self-contained",
+        "third-party",
+        "no-cors"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -163,6 +237,12 @@
         "screenshot",
         "png",
         "tab"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -186,6 +266,13 @@
         "link",
         "clipboard"
       ],
+      "traits": [
+        "network",
+        "web-app",
+        "third-party",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-28",
       "featured": false,
       "author": "",
@@ -203,6 +290,12 @@
         "draw",
         "canvas",
         "annotate"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -223,6 +316,12 @@
         "arrows",
         "steps"
       ],
+      "traits": [
+        "network",
+        "self-contained",
+        "third-party",
+        "no-cors"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -240,6 +339,11 @@
         "email",
         "gmail",
         "mailto"
+      ],
+      "traits": [
+        "network",
+        "web-app",
+        "no-cors"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -262,6 +366,12 @@
         "clipboard",
         "spreadsheet"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-28",
       "featured": false,
       "author": "",
@@ -280,6 +390,12 @@
         "reader",
         "render"
       ],
+      "traits": [
+        "network",
+        "self-contained",
+        "third-party",
+        "no-cors"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -297,6 +413,12 @@
         "markdown",
         "convert",
         "export"
+      ],
+      "traits": [
+        "network",
+        "self-contained",
+        "third-party",
+        "no-cors"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -318,6 +440,12 @@
         "regex",
         "copy"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "Community snippet",
@@ -335,6 +463,11 @@
         "email",
         "outlook",
         "mailto"
+      ],
+      "traits": [
+        "network",
+        "web-app",
+        "no-cors"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -354,6 +487,12 @@
         "replace",
         "forms"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -371,6 +510,10 @@
         "text to speech",
         "read",
         "audio"
+      ],
+      "traits": [
+        "network",
+        "self-contained"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -390,6 +533,12 @@
         "search",
         "highlight"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -408,6 +557,12 @@
         "security",
         "generate"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -425,6 +580,12 @@
         "passphrase",
         "security",
         "generate"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -446,6 +607,12 @@
         "markdown",
         "research",
         "link"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-28",
       "featured": false,
@@ -472,6 +639,13 @@
         "color",
         "transparent"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "third-party",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-28",
       "featured": false,
       "author": "",
@@ -489,6 +663,12 @@
         "notes",
         "markdown",
         "scratchpad"
+      ],
+      "traits": [
+        "network",
+        "web-app",
+        "third-party",
+        "no-cors"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -508,6 +688,12 @@
         "convert",
         "element"
       ],
+      "traits": [
+        "network",
+        "self-contained",
+        "third-party",
+        "no-cors"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -525,6 +711,12 @@
         "clipboard",
         "html",
         "file"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -544,6 +736,12 @@
         "csv",
         "export",
         "video"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -568,6 +766,10 @@
         "mp3",
         "wav"
       ],
+      "traits": [
+        "network",
+        "self-contained"
+      ],
       "added": "2026-11-01",
       "featured": false,
       "author": "",
@@ -585,6 +787,12 @@
         "excalidraw",
         "whiteboard",
         "diagram"
+      ],
+      "traits": [
+        "network",
+        "web-app",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -609,6 +817,10 @@
         "mp4",
         "webm"
       ],
+      "traits": [
+        "network",
+        "self-contained"
+      ],
       "added": "2026-11-01",
       "featured": false,
       "author": "",
@@ -628,6 +840,12 @@
         "png",
         "file"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -645,6 +863,12 @@
         "clipboard",
         "css",
         "file"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -667,6 +891,12 @@
         "folder",
         "download"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-26",
       "featured": false,
       "author": "",
@@ -684,6 +914,12 @@
         "clipboard",
         "text",
         "file"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -706,6 +942,12 @@
         "convert",
         "office",
         "batch"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-27",
       "featured": false,
@@ -730,6 +972,12 @@
         "office",
         "batch"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "",
@@ -752,6 +1000,12 @@
         "office",
         "batch"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "",
@@ -773,6 +1027,12 @@
         "convert",
         "office",
         "batch"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-27",
       "featured": false,
@@ -797,6 +1057,12 @@
         "office",
         "batch"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "",
@@ -820,6 +1086,12 @@
         "office",
         "batch"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "",
@@ -837,6 +1109,12 @@
         "clipboard",
         "markdown",
         "file"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -858,6 +1136,12 @@
         "convert",
         "office",
         "batch"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-26",
       "featured": false,
@@ -881,6 +1165,12 @@
         "office",
         "batch"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-26",
       "featured": false,
       "author": "",
@@ -902,6 +1192,12 @@
         "office",
         "batch"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-26",
       "featured": false,
       "author": "",
@@ -922,6 +1218,12 @@
         "convert",
         "office",
         "batch"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-26",
       "featured": false,
@@ -945,6 +1247,12 @@
         "office",
         "batch"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-26",
       "featured": false,
       "author": "",
@@ -966,6 +1274,12 @@
         "convert",
         "office",
         "batch"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-26",
       "featured": false,
@@ -990,6 +1304,12 @@
         "office",
         "batch"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "",
@@ -1011,6 +1331,12 @@
         "convert",
         "office",
         "batch"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-26",
       "featured": false,
@@ -1034,6 +1360,12 @@
         "convert",
         "office",
         "batch"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-27",
       "featured": false,
@@ -1059,6 +1391,12 @@
         "office",
         "batch"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "",
@@ -1083,6 +1421,12 @@
         "office",
         "batch"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "",
@@ -1100,6 +1444,12 @@
         "clipboard",
         "csv",
         "file"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -1123,6 +1473,12 @@
         "office",
         "batch"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "",
@@ -1143,6 +1499,12 @@
         "convert",
         "office",
         "batch"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-26",
       "featured": false,
@@ -1167,6 +1529,12 @@
         "office",
         "batch"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "",
@@ -1188,6 +1556,12 @@
         "convert",
         "office",
         "batch"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-26",
       "featured": false,
@@ -1211,6 +1585,12 @@
         "office",
         "batch"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "",
@@ -1231,6 +1611,12 @@
         "convert",
         "office",
         "batch"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-26",
       "featured": false,
@@ -1255,6 +1641,12 @@
         "office",
         "batch"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "",
@@ -1276,6 +1668,12 @@
         "convert",
         "office",
         "batch"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-26",
       "featured": false,
@@ -1299,6 +1697,12 @@
         "convert",
         "office",
         "batch"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-27",
       "featured": false,
@@ -1324,6 +1728,10 @@
         "zip",
         "documents"
       ],
+      "traits": [
+        "network",
+        "self-contained"
+      ],
       "added": "2026-11-01",
       "featured": false,
       "author": "",
@@ -1344,6 +1752,12 @@
         "encrypt",
         "aes"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-26",
       "featured": false,
       "author": "",
@@ -1363,6 +1777,12 @@
         "unlock",
         "decrypt",
         "remove"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-26",
       "featured": true,
@@ -1387,6 +1807,10 @@
         "png",
         "jpg"
       ],
+      "traits": [
+        "network",
+        "self-contained"
+      ],
       "added": "2026-11-01",
       "featured": false,
       "author": "",
@@ -1408,6 +1832,12 @@
         "folder",
         "drop"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-26",
       "featured": false,
       "author": "",
@@ -1425,6 +1855,12 @@
         "code",
         "html",
         "clipboard"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -1444,6 +1880,12 @@
         "snippet",
         "file"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -1461,6 +1903,12 @@
         "iframe",
         "tab",
         "open"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -1480,6 +1928,12 @@
         "selectors",
         "record"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -1497,6 +1951,12 @@
         "javascript",
         "console",
         "snippets"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -1520,6 +1980,12 @@
         "qa",
         "dev"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-28",
       "featured": false,
       "author": "",
@@ -1537,6 +2003,12 @@
         "forms",
         "audit",
         "markdown"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -1558,6 +2030,12 @@
         "debug",
         "csrf"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "being-frank",
@@ -1578,6 +2056,12 @@
         "hex",
         "picker"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "Thomas Orlita",
@@ -1595,6 +2079,12 @@
         "url",
         "query string",
         "params"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -1617,6 +2107,12 @@
         "demo",
         "automation"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-28",
       "featured": false,
       "author": "",
@@ -1634,6 +2130,12 @@
         "support",
         "diagnostics",
         "system"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -1658,6 +2160,10 @@
         "post",
         "json"
       ],
+      "traits": [
+        "network",
+        "self-contained"
+      ],
       "added": "2026-10-28",
       "featured": false,
       "author": "",
@@ -1676,6 +2182,12 @@
         "forms",
         "reveal",
         "login"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-27",
       "featured": false,
@@ -1696,6 +2208,12 @@
         "wireframe",
         "css",
         "inspect"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-27",
       "featured": false,
@@ -1718,6 +2236,12 @@
         "local",
         "dom"
       ],
+      "traits": [
+        "network",
+        "web-app",
+        "third-party",
+        "no-cors"
+      ],
       "added": "2026-11-02",
       "featured": false,
       "author": "",
@@ -1735,6 +2259,12 @@
         "console",
         "logs",
         "debug"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -1756,6 +2286,12 @@
         "a11y",
         "audit"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "Team A11Y Collective",
@@ -1773,6 +2309,12 @@
         "localstorage",
         "export",
         "debug"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -1793,6 +2335,12 @@
         "crawl",
         "seo"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -1810,6 +2358,12 @@
         "html",
         "preview",
         "sandbox"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -1829,6 +2383,12 @@
         "query string",
         "test"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -1846,6 +2406,12 @@
         "api",
         "docs",
         "export"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -1867,6 +2433,12 @@
         "css",
         "inspect"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "OpenReplay",
@@ -1885,6 +2457,12 @@
         "cache",
         "reset",
         "storage"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -1908,6 +2486,12 @@
         "automation",
         "react"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-28",
       "featured": false,
       "author": "",
@@ -1925,6 +2509,12 @@
         "iframe",
         "embed",
         "test"
+      ],
+      "traits": [
+        "network",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -1945,6 +2535,12 @@
         "playback",
         "training"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "Community snippet",
@@ -1962,6 +2558,12 @@
         "scroll",
         "overflow",
         "unlock"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -1981,6 +2583,12 @@
         "theme",
         "color scheme"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -1999,6 +2607,12 @@
         "invert",
         "night",
         "reading"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-27",
       "featured": false,
@@ -2021,6 +2635,11 @@
         "scroll",
         "submit"
       ],
+      "traits": [
+        "network",
+        "self-contained",
+        "no-cors"
+      ],
       "added": "2026-10-28",
       "featured": false,
       "author": "",
@@ -2038,6 +2657,12 @@
         "zoom",
         "meeting",
         "join"
+      ],
+      "traits": [
+        "network",
+        "web-app",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -2057,6 +2682,12 @@
         "pip",
         "player"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -2074,6 +2705,12 @@
         "youtube music",
         "pip",
         "player"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -2095,6 +2732,12 @@
         "reading",
         "declutter"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "Alisdair McDiarmid",
@@ -2112,6 +2755,12 @@
         "responsive",
         "mobile",
         "preview"
+      ],
+      "traits": [
+        "network",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -2134,6 +2783,12 @@
         "room",
         "meet"
       ],
+      "traits": [
+        "network",
+        "web-app",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-28",
       "featured": false,
       "author": "",
@@ -2151,6 +2806,12 @@
         "video",
         "pip",
         "picture in picture"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -2174,6 +2835,12 @@
         "room",
         "p2p"
       ],
+      "traits": [
+        "network",
+        "web-app",
+        "third-party",
+        "no-cors"
+      ],
       "added": "2026-10-28",
       "featured": false,
       "author": "",
@@ -2194,6 +2861,12 @@
         "context menu",
         "portal"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "Hongkiat",
@@ -2211,6 +2884,12 @@
         "open graph",
         "social",
         "preview"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -2233,6 +2912,12 @@
         "screen",
         "pointer"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-28",
       "featured": false,
       "author": "",
@@ -2251,6 +2936,12 @@
         "pip",
         "meetings"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -2268,6 +2959,12 @@
         "zoom",
         "magnify",
         "accessibility"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -2288,6 +2985,12 @@
         "accessibility",
         "navigation"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "Learn JavaScript",
@@ -2306,6 +3009,12 @@
         "screenshot",
         "clean"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -2323,6 +3032,12 @@
         "ads",
         "declutter",
         "screenshot"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -2348,6 +3063,12 @@
         "neon",
         "fun"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-28",
       "featured": false,
       "author": "",
@@ -2368,6 +3089,13 @@
         "shareware",
         "fun",
         "easter egg"
+      ],
+      "traits": [
+        "network",
+        "web-app",
+        "third-party",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-28",
       "featured": false,
@@ -2390,6 +3118,12 @@
         "redact",
         "privacy"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-27",
       "featured": false,
       "author": "OpenReplay",
@@ -2408,6 +3142,12 @@
         "blur",
         "privacy"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -2425,6 +3165,12 @@
         "notifications",
         "toast",
         "clean screenshot"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,
@@ -2448,6 +3194,12 @@
         "blur",
         "email"
       ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
+      ],
       "added": "2026-10-28",
       "featured": false,
       "author": "",
@@ -2467,6 +3219,12 @@
         "privacy",
         "screenshot"
       ],
+      "traits": [
+        "network",
+        "self-contained",
+        "third-party",
+        "no-cors"
+      ],
       "added": "2026-10-17",
       "featured": false,
       "author": "",
@@ -2484,6 +3242,12 @@
         "redact",
         "email",
         "privacy"
+      ],
+      "traits": [
+        "offline",
+        "self-contained",
+        "no-cors",
+        "private-safe"
       ],
       "added": "2026-10-17",
       "featured": false,

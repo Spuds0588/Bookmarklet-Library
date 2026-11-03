@@ -31,6 +31,24 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 | Games | Doom, Neon Hell |
 | Privacy | Redact page text, hide email addresses, blur elements, pixelate a region, hide notification toasts, PII masker |
 
+## What the badges mean
+
+Every card carries a few small badges saying what the tool needs, and the full page shows the same list. They come from each tool's `@traits` line and the build checks them, so a badge cannot quietly stop being true.
+
+| Badge | Means |
+| --- | --- |
+| **Offline** | Runs with no network connection at all. |
+| **Online** | Loads code, data or a page over the network to do its job. |
+| **Self-contained** | Every line it runs is in the bookmarklet itself. |
+| **3rd-party** | Uses a library or engine somebody else wrote, bundled into the file or fetched from a CDN. |
+| **Web app** | Opens a hosted page or another site's app — the QR reader, the chat, Doom, Jitsi, Excalidraw, the Markdown scratchpad. |
+| **CORS-free** | Its job never needs a cross-origin response, so a site without CORS headers is no obstacle. |
+| **Sensitive-safe** | Sends nothing from the page off your device and loads no third-party code into it, so it is the shortlist for a page with private data. |
+
+Most of the catalog is offline, self-contained and safe for sensitive pages. The exceptions are honest ones: the CDN-backed tools (markup, OCR, pixelate, the Markdown readers) need a connection and drop **Sensitive-safe** because remote code runs in the page; the media downloaders need the network and drop **CORS-free** because a file served without CORS headers cannot be read; the webhook dispatcher posts the page somewhere by design; and the hosted helpers listed under **Web app** need a connection for their page.
+
+A missing badge is information too: no **CORS-free** on a downloader means a cross-origin file may be marked blocked, and no **Sensitive-safe** on a converter means running it on a confidential page is a decision worth making deliberately.
+
 ## Community tools
 
 Thirteen cards are other developers' tools. Their names stay as the authors wrote them, with an emoji added for the bookmarks bar. Each card says **By …** and links that name to the original; the full page puts **Original source** beside **Source file**, so the borrowed work and this repository's readable copy are one click apart.
@@ -175,6 +193,7 @@ For a normal tool, create `bookmarklets/<category>/<slug>.js` with a metadata co
  * @category text
  * @description Convert the page content to Markdown and download it.
  * @tags markdown, convert, export
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

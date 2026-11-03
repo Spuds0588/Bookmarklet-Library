@@ -3,6 +3,7 @@
  * @category devtools
  * @description Dump every local storage key for this domain into a readable page.
  * @tags localstorage, export, debug
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

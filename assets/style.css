@@ -632,6 +632,14 @@ kbd {
 }
 .card-credit a:hover { color: var(--fg); border-bottom-color: currentColor; }
 
+.card-traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 12px 0 0;
+  flex: none;
+}
+
 .static-credit {
   font: 10px/1.4 var(--mono);
   color: var(--muted);
@@ -952,7 +960,33 @@ body.has-detail { overflow: hidden; }
 }
 .detail-install .install-hint { text-align: left; }
 
-.detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 24px; }
+.detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+.detail-traits { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 22px; }
+
+/* Capability badges: what a tool needs, not what it is about. */
+.trait {
+  padding: 3px 5px;
+  border: 1px solid var(--line);
+  font: 8.5px/1 var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.detail-traits .trait {
+  padding: 4px 7px;
+  font-size: 9.5px;
+  color: var(--fg);
+}
+
+.static-traits {
+  font: 9.5px/1.4 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
 
 .tag {
   padding: 4px 7px;

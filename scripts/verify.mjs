@@ -11,6 +11,11 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const catalog = JSON.parse(await readFile(path.join(root, "data", "catalog.json"), "utf8"));
 
 const FORBIDDEN = /arive|wizni|lender portal|freshdesk/i;
+const TRAIT_IDS = new Set((catalog.traits ?? []).map((trait) => trait.id));
+const TRAIT_EXCLUSIVE = [
+  ["offline", "network"],
+  ["self-contained", "web-app"],
+];
 const EMOJI = /^(?:\p{Extended_Pictographic}|[\u2190-\u21FF\u2300-\u27BF])/u;
 const problems = [];
 const seenNames = new Set();
@@ -33,6 +38,19 @@ for (const item of catalog.items) {
   }
   if (!item.description || item.description.length < 20) problems.push(`${item.slug}: description too short`);
   if (!item.tags.length) problems.push(`${item.slug}: no tags`);
+  if (!item.traits?.length) problems.push(`${item.slug}: no traits`);
+  for (const trait of item.traits ?? []) {
+    if (!TRAIT_IDS.has(trait)) problems.push(`${item.slug}: unknown trait "${trait}"`);
+  }
+  if (new Set(item.traits ?? []).size !== (item.traits ?? []).length) {
+    problems.push(`${item.slug}: duplicate trait`);
+  }
+  for (const [a, b] of TRAIT_EXCLUSIVE) {
+    if (item.traits?.includes(a) && item.traits?.includes(b)) problems.push(`${item.slug}: both ${a} and ${b}`);
+  }
+  if (item.traits?.includes("web-app") && !item.traits?.includes("network")) {
+    problems.push(`${item.slug}: loads a web app without the network trait`);
+  }
   if (Boolean(item.author) !== Boolean(item.credit)) {
     problems.push(`${item.slug}: author and credit must be present together`);
   }

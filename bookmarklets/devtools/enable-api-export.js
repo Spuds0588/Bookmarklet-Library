@@ -3,6 +3,7 @@
  * @category devtools
  * @description Unlock the export button in Stoplight API docs.
  * @tags api, docs, export
+ * @traits offline, self-contained, no-cors, private-safe
  * @added 2026-10-17
  * @featured false
  */

@@ -3,6 +3,7 @@
  * @category text
  * @description Click one element to convert just that element to Markdown.
  * @tags markdown, convert, element
+ * @traits network, self-contained, third-party, no-cors
  * @added 2026-10-17
  * @featured false
  */
