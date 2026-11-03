@@ -46,6 +46,16 @@
     return "";
   }
 
+  // Why a page has no handoff-able URL. A file on disk is out of reach for a
+  // web editor, and a blob belongs to this page's origin (an opaque one for
+  // file://), so neither can be sent as a URL.
+  function blockedReason({ href = "", embeds = [], objects = [], iframes = [], links = [] } = {}) {
+    if (/^file:/i.test(href)) return "local";
+    const framed = [href, ...embeds, ...objects, ...iframes, ...links].map((value) => String(value).trim());
+    if (framed.some((value) => /^(blob:|data:)/i.test(value))) return "blob";
+    return "none";
+  }
+
   function pageFrom(url = "") {
     const match = /#page=(\d+)/i.exec(url);
     return match ? Number(match[1]) : 0;
@@ -61,13 +71,27 @@
     return url.href;
   }
 
-  function toast(message) {
+  function toast(message, action) {
     const node = document.createElement("div");
-    node.textContent = message;
     node.style.cssText =
-      "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2147483647;max-width:min(440px,90vw);padding:12px 16px;border:1px solid #111;background:#fbfaf8;color:#111;font:13px/1.45 system-ui,-apple-system,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.25)";
+      "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2147483647;display:flex;gap:12px;align-items:center;max-width:min(460px,90vw);padding:12px 16px;border:1px solid #111;background:#fbfaf8;color:#111;font:13px/1.45 system-ui,-apple-system,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.25)";
+    const text = document.createElement("span");
+    text.textContent = message;
+    node.appendChild(text);
+    if (action) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = action.label;
+      button.style.cssText =
+        "flex:none;padding:6px 10px;border:1px solid #111;background:#111;color:#fbfaf8;font:inherit;cursor:pointer";
+      button.addEventListener("click", () => {
+        node.remove();
+        action.run();
+      });
+      node.appendChild(button);
+    }
     (document.body || document.documentElement).appendChild(node);
-    setTimeout(() => node.remove(), 4500);
+    setTimeout(() => node.remove(), action ? 12000 : 4500);
   }
 
   function collect() {
@@ -90,18 +114,24 @@
     const found = collect();
     const source = pdfUrlFrom(found);
     if (!source) {
-      toast(
-        /^application\/pdf/i.test(found.contentType)
-          ? "This PDF is a local blob, so SimplePDF cannot fetch it. Download it, then open SimplePDF directly."
-          : "No PDF on this page. Open the PDF, or a page that links it, then click this again.",
-      );
+      const reason = blockedReason(found);
+      if (reason === "local") {
+        toast("This PDF is a file on your disk, which a website cannot fetch. Open the editor, then drag the file in from your file manager.", {
+          label: "Open editor",
+          run: () => location.assign(EDITOR),
+        });
+      } else if (reason === "blob") {
+        toast("This PDF only exists inside the page, so the editor cannot fetch it. Download it first, then open the editor.");
+      } else {
+        toast("No PDF on this page. Open the PDF, or a page that links it, then click this again.");
+      }
       return;
     }
     location.assign(editorUrl(source, pageFrom(location.href)));
   }
 
   if (globalThis.__BL_TEST__) {
-    globalThis.__BL_TEST__.simplepdf = { pdfUrlFrom, pageFrom, editorUrl, absolute, looksLikePdf, EDITOR };
+    globalThis.__BL_TEST__.simplepdf = { pdfUrlFrom, blockedReason, pageFrom, editorUrl, absolute, looksLikePdf, EDITOR };
   } else if (document?.body) {
     start();
   }

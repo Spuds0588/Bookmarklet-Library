@@ -8,7 +8,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 globalThis.__BL_TEST__ = {};
 new Function(await readFile(path.join(root, "bookmarklets", "files", "simplepdf-open.js"), "utf8"))();
-const { pdfUrlFrom, pageFrom, editorUrl, looksLikePdf } = globalThis.__BL_TEST__.simplepdf;
+const { pdfUrlFrom, blockedReason, pageFrom, editorUrl, looksLikePdf } = globalThis.__BL_TEST__.simplepdf;
 delete globalThis.__BL_TEST__;
 
 test("a page that is the PDF hands over its own address", () => {
@@ -73,4 +73,27 @@ test("the editor link carries the PDF and the page it was on", () => {
   assert.equal(new URL(editorUrl("https://x.test/a.pdf")).searchParams.has("page"), false);
   assert.equal(pageFrom("https://x.test/a.pdf#page=12"), 12);
   assert.equal(pageFrom("https://x.test/a.pdf"), 0);
+});
+
+test("a file on disk is named as one, since no web editor can fetch it", () => {
+  // Chrome and Firefox both show a local PDF from this kind of address.
+  assert.equal(pdfUrlFrom({ href: "file:///home/me/Documents/report.pdf", contentType: "application/pdf" }), "");
+  assert.equal(blockedReason({ href: "file:///home/me/Documents/report.pdf", contentType: "application/pdf" }), "local");
+
+  // A page on disk that links a sibling PDF is still a local file.
+  assert.equal(pdfUrlFrom({ href: "file:///home/me/index.html", links: ["report.pdf"] }), "");
+  assert.equal(blockedReason({ href: "file:///home/me/index.html", links: ["report.pdf"] }), "local");
+});
+
+test("bytes that live inside the page are reported as such, not as a missing PDF", () => {
+  assert.equal(
+    blockedReason({ href: "https://app.test/view", embeds: ["blob:https://app.test/8f1c"] }),
+    "blob",
+  );
+  assert.equal(
+    blockedReason({ href: "data:application/pdf;base64,AAA", contentType: "application/pdf" }),
+    "blob",
+  );
+  assert.equal(blockedReason({ href: "https://example.com/guide" }), "none");
+  assert.equal(blockedReason({ href: "https://example.com/guide", links: ["/pricing"] }), "none");
 });
