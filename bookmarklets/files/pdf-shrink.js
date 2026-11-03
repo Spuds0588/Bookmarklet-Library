@@ -687,18 +687,19 @@
   // files. There is one compression setting, because the job is "as small as
   // this can get without making the words unreadable", not a slider to tune.
   const CSS = `
-    .wrap { position: fixed; inset: 0; z-index: 2147483647; background: rgba(0,0,0,.72);
+    /* No backdrop. The panel floats over the page and lets every pointer event
+       outside it reach the page underneath, so a file dragged from the results
+       onto the site's own upload box still lands there while this is open. */
+    .wrap { position: fixed; inset: 0; z-index: 2147483647; pointer-events: none;
       font: 14px/1.5 system-ui, -apple-system, sans-serif; color: #111; }
-    .panel { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex;
-      flex-direction: column; width: min(520px, 94vw); max-height: 90vh; background: #fbfaf8;
+    .panel { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: auto;
+      display: flex; flex-direction: column; width: min(520px, 94vw); max-height: 90vh; background: #fbfaf8;
       border: 1px solid #111; box-shadow: 0 24px 60px rgba(0,0,0,.45); }
     .panel[data-dragged] { transform: none; }
     .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px;
       border-bottom: 1px solid #111; cursor: grab; touch-action: none; user-select: none; }
     .panel.dragging .head { cursor: grabbing; }
     .title { margin: 0; font-size: 14px; font-weight: 600; }
-    .meta { margin: 2px 0 0; font: 600 9.5px/1.4 ui-monospace, monospace; letter-spacing: .08em;
-      text-transform: uppercase; color: #666; }
     .close { padding: 4px 8px; border: 1px solid #111; background: transparent; color: #111;
       font: 600 10px/1 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
     .body { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; overflow: auto; }
@@ -760,7 +761,6 @@
     .status { margin: 0; padding: 9px 10px; border: 1px solid #111; background: #fff; font-size: 12.5px;
       overflow-wrap: anywhere; }
     .status.error { border-style: dashed; }
-    .hint { margin: 0; font-size: 11.5px; color: #666; }
     .foot { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; padding: 10px 14px;
       border-top: 1px solid #111; }
     .foot button { padding: 6px 10px; border: 1px solid #111; background: transparent; color: #111;
@@ -878,7 +878,7 @@
     const panel = make("section", { class: "panel", role: "dialog", "aria-modal": "true", "aria-label": "Shrink PDFs" });
     const head = make("header", { class: "head" });
     const titles = make("div");
-    titles.append(make("h2", { class: "title" }, "Shrink PDFs"), make("p", { class: "meta" }, "Images only · pages and text stay"));
+    titles.append(make("h2", { class: "title" }, "Shrink PDFs"));
     const closeButton = make("button", { class: "close", type: "button" }, "Close");
     head.append(titles, closeButton);
 
@@ -887,7 +887,7 @@
     const intake = make("div", { class: "intake" });
     const drop = make("label", { class: "drop" });
     const dropTitle = make("b", {}, "Drop PDFs here");
-    const dropText = make("span", {}, "pick several at once · compression starts on its own");
+    const dropText = make("span", {}, "pick several at once");
     const input = make("input", { type: "file", accept: "application/pdf,.pdf", multiple: "" });
     drop.append(dropTitle, dropText, input);
     const maxRow = make("label", { class: "row" });
@@ -918,10 +918,9 @@
     const tiles = make("div", { class: "tiles", "data-tiles": "" });
     results.append(resultsHead, dragAll, tiles);
 
-    const status = make("p", { class: "status" }, "Drop PDFs and they start compressing. The finished files appear here to drag or save.");
-    const hint = make("p", { class: "hint" }, "Always the strongest setting: 1800 px long edge at JPEG 0.62, which held 99% of the words on scanned pages. Anything over the maximum size is split into parts that fit, and a page that cannot fit is reported instead of dropped.");
+    const status = make("p", { class: "status" }, "Drop PDFs to compress.");
 
-    body.append(intake, bar, jobs, results, status, hint);
+    body.append(intake, bar, jobs, results, status);
 
     const foot = make("footer", { class: "foot" });
     const folder = make("button", { type: "button", "data-folder": "" }, "Save all to folder");
@@ -948,9 +947,6 @@
     };
     window.addEventListener("keydown", onKey, true);
     closeButton.addEventListener("click", close);
-    wrap.addEventListener("click", (event) => {
-      if (event.target === wrap) close();
-    });
 
     maxRange.addEventListener("input", () => { maxInput.value = maxRange.value; });
     maxInput.addEventListener("input", () => {
@@ -1062,9 +1058,7 @@
 
     function showBar() {
       const total = items.reduce((sum, item) => sum + item.file.size, 0);
-      const ceiling = Number.parseFloat(maxInput.value);
-      const ceilingNote = Number.isFinite(ceiling) && ceiling > 0 ? ` · max ${mb(ceiling * 1024 * 1024)}` : "";
-      barText.textContent = `${items.length} PDF${items.length === 1 ? "" : "s"} · ${mb(total)}${ceilingNote}`;
+      barText.textContent = `${items.length} PDF${items.length === 1 ? "" : "s"} · ${mb(total)}`;
     }
 
     function showSummary() {
@@ -1082,9 +1076,8 @@
       }
       const before = done.reduce((sum, item) => sum + item.file.size, 0);
       const after = files.reduce((sum, file) => sum + file.bytes.length, 0);
-      const saved = before ? Math.round(((before - after) / before) * 100) : 0;
       resultsTitle.textContent = files.length === 1 ? "1 file ready" : `${files.length} files ready`;
-      const notes = [`${mb(before)} → ${mb(after)}`, saved > 0 ? `${saved}% smaller` : "no saving"];
+      const notes = [`${mb(before)} → ${mb(after)}`];
       if (none.length) notes.push(`${none.length} with no gain`);
       if (failed.length) notes.push(`${failed.length} failed`);
       resultsNote.textContent = notes.join(" · ");
@@ -1120,7 +1113,7 @@
       item.status = "working";
       item.row.classList.add("working");
       item.mark.textContent = "Working";
-      progress(item, 12, `${mb(item.file.size)} · reading`);
+      progress(item, 12, mb(item.file.size));
       setStatus(`Compressing ${item.file.name}…`);
       try {
         const bytes = new Uint8Array(await item.file.arrayBuffer());
@@ -1137,7 +1130,7 @@
           item.status = "none";
           item.row.classList.add("none");
           item.mark.textContent = "No gain";
-          progress(item, 100, `${mb(outcome.before)} · already tight, left as it was`);
+          progress(item, 100, "no change");
           return;
         }
 
@@ -1148,7 +1141,7 @@
           if (parts.some((part) => part.tooBig)) progress(item, 100, `${parts.length} parts · ${mb(total)} · a page will not fit under ${mb(target)}`);
         } else {
           item.result = [{ name: `${base}-small.pdf`, bytes: parts ? parts[0].bytes : outcome.bytes, type: "application/pdf" }];
-          progress(item, 100, `${mb(outcome.before)} → ${mb(total)} · ${Math.round((saved / outcome.before) * 100)}% smaller`);
+          progress(item, 100, `${mb(outcome.before)} → ${mb(total)}`);
           if (parts && parts[0] && parts[0].tooBig) progress(item, 100, `${mb(outcome.before)} → ${mb(total)} · still over ${mb(target)}`);
         }
         item.status = "done";
@@ -1181,14 +1174,8 @@
         const none = items.filter((item) => item.status === "none").length;
         const failed = items.filter((item) => item.status === "error").length;
         const left = items.length - done - none - failed;
-        if (left > 0) {
-          setStatus(`${done} ready, ${left} still to go. Add more or press Save.`, false);
-        } else {
-          setStatus(
-            `${done + none} file${done + none === 1 ? "" : "s"} finished${none ? `, ${none} already tight` : ""}${failed ? `, ${failed} failed` : ""}. Drag them onto the upload box, or save them.`,
-            done === 0,
-          );
-        }
+        if (left > 0) setStatus(`${left} still to compress.`);
+        else setStatus(`${done + none} file${done + none === 1 ? "" : "s"} ready.${failed ? ` ${failed} failed.` : ""}`, done === 0);
       }
     }
 
@@ -1207,7 +1194,7 @@
       bar.hidden = false;
       showBar();
       const waiting = items.filter((item) => item.status === "queued").length;
-      setStatus(`Compressing ${waiting} PDF${waiting === 1 ? "" : "s"}${skipped ? `, ${skipped} non-PDF ${skipped === 1 ? "file" : "files"} skipped` : ""}…`);
+      setStatus(`Compressing ${waiting} PDF${waiting === 1 ? "" : "s"}…`);
       void run();
     }
 
@@ -1228,7 +1215,7 @@
 
     addMore.addEventListener("click", () => {
       intake.hidden = false;
-      setStatus("Add more PDFs; they join the queue and start on their own.");
+      setStatus("Add more PDFs.");
     });
 
     folder.addEventListener("click", () => void saveAllToFolder());

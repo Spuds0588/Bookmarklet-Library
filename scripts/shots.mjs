@@ -164,7 +164,7 @@ const STEPS = {
         const states = jobs.map((job) => job.querySelector(".job-state").textContent);
         if (jobs.length !== 2) throw new Error("expected 2 progress rows, got " + jobs.length + ": " + states.join(" | "));
         if (states.some((state) => !/done/i.test(state))) throw new Error("jobs did not finish: " + states.join(" | "));
-        if (jobs.some((job) => !/% smaller/.test(job.textContent))) throw new Error("no size change reported: " + jobs.map((job) => job.textContent).join(" | "));
+        if (jobs.some((job) => !job.textContent.includes("\u2192"))) throw new Error("no size change reported: " + jobs.map((job) => job.textContent).join(" | "));
 
         const tiles = [...root.querySelectorAll(".tile")];
         if (tiles.length !== 2) throw new Error("expected 2 finished tiles, got " + tiles.length);
@@ -183,6 +183,14 @@ const STEPS = {
         const folder = root.querySelector("[data-folder]");
         if (!folder || folder.hidden || folder.disabled) throw new Error("no save-to-folder button");
         if (root.querySelector(".result, .queue")) throw new Error("leftover UI from the old panel is still in the shadow root");
+        // The overlay must not swallow pointer events: the whole point of dragging a
+        // result out is that the page's own upload box is under it.
+        const wrap = root.querySelector(".wrap");
+        if (getComputedStyle(wrap).pointerEvents !== "none") throw new Error("the overlay still captures clicks: " + getComputedStyle(wrap).pointerEvents);
+        if (getComputedStyle(root.querySelector(".panel")).pointerEvents !== "auto") throw new Error("the panel no longer takes clicks");
+        const backdrop = getComputedStyle(wrap).backgroundColor;
+        const alpha = backdrop.startsWith("rgba") ? Number(backdrop.split(",")[3].replace(")", "")) : backdrop === "transparent" ? 0 : 1;
+        if (alpha > 0) throw new Error("a backdrop is still painted over the page: " + backdrop);
         return states.join(" | ");
       })()`,
     },
