@@ -28,7 +28,7 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 | Annotate | Screenshot markup (arrows, boxes, numbered steps), freehand draw |
 | Text | Advanced find, find and replace on inputs, page to Markdown, read aloud, extract emails, table to CSV/Markdown, text-fragment citations, password generation, QR codes |
 | Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, ZIP create/extract, Word/HTML/RTF/TXT/Markdown and Excel/CSV conversion both ways, OpenDocument `.odt`/`.ods` conversion both ways, HTML snippet saver, Loom export, send a PDF to DocuSign, export a whole chat to Markdown, shrink a PDF |
-| Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder, layout and accessibility overlays, environment switcher, form harvester/stamper, webhook dispatcher, a local AI agent that drives the page |
+| Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder, layout and accessibility overlays, environment switcher, form harvester/stamper, a webhook bookmarklet builder, a local AI agent that drives the page |
 | View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, sticky-header removal, link highlighting, dark mode, force scroll, presenter spotlight, Jitsi meeting, URL chat, voice commands, preview downloads |
 | Games | Doom, Neon Hell |
 | Privacy | Redact page text, hide email addresses, blur elements, pixelate a region, hide notification toasts, PII masker |
@@ -49,7 +49,7 @@ Every card carries a few small badges saying what the tool needs, and the full p
 One badge is not a trait. **In testing** marks a tool that does its job but has not been run against the real service yet, and it comes from `@testing true` in the source. The DocuSign tool carries it until a developer account proves an upload end to end.
 | **Sensitive-safe** | Sends nothing from the page off your device and loads no third-party code into it, so it is the shortlist for a page with private data. |
 
-Most of the catalog is offline, self-contained and safe for sensitive pages. The exceptions are honest ones: the CDN-backed tools (markup, OCR, pixelate, the Markdown readers) need a connection and drop **Sensitive-safe** because remote code runs in the page; the media downloaders need the network and drop **CORS-free** because a file served without CORS headers cannot be read; the webhook dispatcher posts the page somewhere by design; and the hosted helpers listed under **Web app** need a connection for their page.
+Most of the catalog is offline, self-contained and safe for sensitive pages. The exceptions are honest ones: the CDN-backed tools (markup, OCR, pixelate, the Markdown readers) need a connection and drop **Sensitive-safe** because remote code runs in the page; the media downloaders need the network and drop **CORS-free** because a file served without CORS headers cannot be read; the webhook builder's output posts the page somewhere by design; and the hosted helpers listed under **Web app** need a connection for their page.
 
 A missing badge is information too: no **CORS-free** on a downloader means a cross-origin file may be marked blocked, and no **Sensitive-safe** on a converter means running it on a confidential page is a decision worth making deliberately.
 
@@ -193,7 +193,7 @@ It reads the file with `fetch` first, which is what makes the text preview and t
 
 **🏗️ Environment & Route Switcher** keeps the current path, query and hash while changing only the origin. Production, staging and local origins live in `localStorage` under `bl:envs`; each must be a valid http(s) origin before its **Go** link is enabled.
 
-**📮 Context Webhook Dispatcher** builds a small JSON body from the page URL, title, selected text and metadata, then POSTs it to a webhook. If the site's `connect-src` CSP or the endpoint's CORS policy blocks the request, it copies the same payload to the clipboard. The endpoint URL is stored under `bl:webhook`; nothing else is saved.
+**📮 Webhook Bookmarklet Builder** writes a bookmarklet for you instead of sending anything itself. Give it a webhook URL, a method and a JSON template with placeholders — `{{url}}`, `{{title}}`, `{{host}}`, `{{selection}}`, `{{time}}` — and it emits a `javascript:` bookmarklet with the endpoint and template baked in as literals. Clicking that bookmark on any page fills the placeholders from that page, sends the JSON, and shows a toast: green with the status that came back, red with the CORS refusal, CSP block or HTTP error that stopped it. Placeholder values are escaped the way JSON escapes them, so a quote or a newline in a page title cannot corrupt the payload. Because the endpoint sits inside the bookmark, treat the bookmark itself as the secret. The builder keeps only its draft, under `bl:webhook`.
 
 ## Drive this page
 

@@ -383,7 +383,8 @@
     },
     "webhook-dispatch": {
       "file": "screenshots/webhook-dispatch.png",
-      "changed": true
+      "changed": true,
+      "steps": 3
     },
     "reveal-passwords": {
       "file": "screenshots/reveal-passwords.png",

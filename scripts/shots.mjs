@@ -210,6 +210,38 @@ const STEPS = {
     },
     { wait: 250 },
   ],
+  // The builder has to produce a real bookmarklet with the endpoint baked in,
+  // or the capture is just a form.
+  "webhook-dispatch": [
+    { wait: 300 },
+    {
+      script: `(() => {
+        const root = document.getElementById("bl-webhook-host").shadowRoot;
+        const url = root.querySelector("#webhook-url");
+        url.value = "https://hooks.example.com/incoming/ABC123";
+        url.dispatchEvent(new Event("input", { bubbles: true }));
+        const template = root.querySelector("#webhook-template");
+        if (!template.value.includes("{{url}}")) throw new Error("the template lost its placeholders");
+        const preview = JSON.parse(root.querySelector("#webhook-preview").value);
+        if (!/^https?:/.test(preview.url || "") || !preview.host) throw new Error("the preview is not filled from this page: " + JSON.stringify(preview));
+        root.querySelector("#webhook-build").click();
+        const out = root.querySelector("#webhook-out");
+        const href = out.getAttribute("href");
+        if (!href || href.indexOf("javascript:") !== 0) throw new Error("no bookmarklet was built: " + href);
+        const code = decodeURIComponent(href.slice("javascript:".length));
+        if (!/hooks\\.example\\.com\\/incoming\\/ABC123/.test(code)) throw new Error("the endpoint is not baked in");
+        if (!/fetch\\(/.test(code)) throw new Error("the bookmarklet does not post");
+        if (!/Webhook sent/.test(code) || !/Webhook failed/.test(code)) throw new Error("the bookmarklet cannot report success or failure");
+        if (/localStorage/.test(code)) throw new Error("the output still reads its endpoint from storage");
+        new Function(code);
+        if (!/^javascript:/.test(root.querySelector("#webhook-code").value)) throw new Error("the code box is empty");
+        if (root.querySelector("#webhook-copy").disabled) throw new Error("copy is still disabled");
+        if (root.querySelector("#webhook-out-wrap").hidden) throw new Error("the output block is hidden");
+        return true;
+      })()`,
+    },
+    { wait: 300 },
+  ],
   // A console is only a console once something has been run in it.
   "js-runner": [
     { type: "document.querySelector('h1').textContent = 'JS Runner ran this line';", into: "#js-runner-container textarea" },

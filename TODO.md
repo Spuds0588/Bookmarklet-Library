@@ -166,6 +166,12 @@
 - [x] An entry can point at a bookmarklet hosted in another repository (`@external`), with the author and repo named on the card, no copy button, and a declared capture reason. **📊 Turnstone on any page** is the first.
 - [ ] Only one external entry so far. QuickRecord's recorder duplicates `record-tab`, and the ReferenceMaterials files are the origin of tools already here; revisit if either gains something the local version lacks.
 
+## Webhook builder (2026-11-03)
+
+- [x] The webhook tool builds a bookmarklet: endpoint, method and JSON template are baked in, placeholders are filled from the page it runs on, and a toast reports success or the failure reason.
+- [x] Placeholder values are JSON-escaped, so a quote or newline in a page title cannot corrupt the body.
+- [ ] CORS is still the endpoint's decision: a webhook that refuses preflight fails, now with a toast that says so. A no-cors fire-and-forget mode would appear to work but could never report success, so it was left out.
+
 ## Nice to have, only if it earns its place
 
 - [x] Shareable search: `?q=markdown` preselects the box, the target advertised in the `SearchAction` schema. Tool views deep-link as `#t/<slug>`.

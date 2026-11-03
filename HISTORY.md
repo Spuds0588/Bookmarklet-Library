@@ -2,6 +2,25 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — The webhook dispatcher becomes a builder
+
+**Why**
+
+- It asked for the endpoint on every page and sent from the page you happened to be on, so there was no reusable one-click action and no feedback beyond a status line that vanished with the page.
+
+**What changed**
+
+- The tool builds a bookmarklet instead of sending. Endpoint, method (POST, PUT, PATCH or GET) and a JSON template with `{{url}}`, `{{title}}`, `{{host}}`, `{{selection}}` and `{{time}}` are baked into the output as literals; nothing is read from storage when it runs.
+- Placeholder values are escaped with `JSON.stringify(value).slice(1, -1)`, so a quote, backslash or newline from a page title cannot break the JSON body.
+- The generated bookmarklet shows a toast — green `Webhook sent · 200`, red `Webhook failed · …` — because a bookmarklet that fails silently cannot be debugged.
+- The builder refuses to emit something broken: a non-http(s) endpoint, a method outside the four, an unknown placeholder, or a template that stops being valid JSON once filled, each with the reason.
+- `buildWebhookBookmarklet`, `fillWebhookTemplate`, `unresolvedTokens` and `isHttpUrl` are pure and exported for tests, which this tool did not have before.
+
+**Verified**
+
+- Seven new tests: URL rules, JSON escaping of placeholder values, unknown placeholders named, emitted code parses, the endpoint and method are literals, GET sends no body, and the three bad-input paths throw.
+- The capture fills the builder, presses Build, and requires a `javascript:` href whose decoded code contains the endpoint, a `fetch`, both toast strings, no `localStorage`, and parses as JavaScript; it also checks the preview is filled from the demo page.
+
 ## 2026-11-03 — Shrink PDF becomes a wizard
 
 **Why**
