@@ -685,10 +685,13 @@
   const CSS = `
     .wrap { position: fixed; inset: 0; z-index: 2147483647; display: flex; align-items: center; justify-content: center;
       background: rgba(0,0,0,.72); font: 14px/1.5 system-ui, -apple-system, sans-serif; color: #111; }
-    .panel { display: flex; flex-direction: column; width: min(460px, 92vw); max-height: 90vh; background: #fbfaf8;
+    .panel { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex;
+      flex-direction: column; width: min(460px, 92vw); max-height: 90vh; background: #fbfaf8;
       border: 1px solid #111; box-shadow: 0 24px 60px rgba(0,0,0,.45); }
+    .panel[data-dragged] { transform: none; }
     .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px;
-      border-bottom: 1px solid #111; }
+      border-bottom: 1px solid #111; cursor: grab; touch-action: none; user-select: none; }
+    .panel.dragging .head { cursor: grabbing; }
     .title { margin: 0; font-size: 14px; font-weight: 600; }
     .meta { margin: 2px 0 0; font: 600 9.5px/1.4 ui-monospace, monospace; letter-spacing: .08em;
       text-transform: uppercase; color: #666; }
@@ -734,10 +737,15 @@
     .queue li:last-child { border-bottom: 0; }
     .queue-name { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .queue-meta { grid-column: 1; font: 11px/1.4 ui-monospace, monospace; color: #555; overflow-wrap: anywhere; }
-    .queue-save { grid-row: 1 / span 2; grid-column: 2; align-self: center; padding: 4px 7px; border: 1px solid #111;
+    .queue-actions { grid-row: 1 / span 2; grid-column: 2; align-self: center; display: flex; gap: 6px; }
+    .queue-save { padding: 4px 7px; border: 1px solid #111;
       background: transparent; color: #111; font: 600 9px/1 ui-monospace, monospace; letter-spacing: .06em;
       text-transform: uppercase; cursor: pointer; }
     .queue-save:disabled { opacity: .35; cursor: default; }
+    .queue-drag { padding: 4px 7px; border: 1px dashed #111; background: transparent; color: #111;
+      font: 600 9px/1 ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; cursor: grab; }
+    .queue-drag:active { background: #111; color: #fbfaf8; cursor: grabbing; }
+    .queue-drag[hidden] { display: none; }
   `;
 
   // Sizes are always MB, with decimals below 10 MB: upload limits are quoted
@@ -775,6 +783,60 @@
     const next = `${base}-${index}${extension}`;
     used.add(next);
     return next;
+  }
+
+  // Chromium's download-drag shape: mime, then the name, then the URL. A page
+  // cannot put a file into another site's picker, but a drag carrying this lets
+  // a finished PDF be dropped where the saved copy would have gone.
+  function downloadDragPayload(name, type, url) {
+    return `${type}:${name}:${url}`;
+  }
+
+  // A dragged panel is clamped so its header stays reachable; one dropped past
+  // an edge would be a dialog nobody can grab again.
+  function clampOrigin(x, y, size, viewport, margin = 8) {
+    const maxLeft = Math.max(margin, viewport.width - size.width - margin);
+    const maxTop = Math.max(margin, viewport.height - 120);
+    return {
+      left: Math.min(Math.max(x, margin), maxLeft),
+      top: Math.min(Math.max(y, margin), maxTop),
+    };
+  }
+
+  function attachDragging(panel, head) {
+    let drag = null;
+    const onMove = (event) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      const rect = panel.getBoundingClientRect();
+      const origin = clampOrigin(event.clientX - drag.dx, event.clientY - drag.dy, rect, {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+      panel.style.left = `${origin.left}px`;
+      panel.style.top = `${origin.top}px`;
+      event.preventDefault();
+    };
+    const onUp = (event) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      drag = null;
+      panel.classList.remove("dragging");
+      window.removeEventListener("pointermove", onMove, true);
+      window.removeEventListener("pointerup", onUp, true);
+      window.removeEventListener("pointercancel", onUp, true);
+    };
+    head.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0 || (event.target instanceof Element && event.target.closest("button, input, a"))) return;
+      const rect = panel.getBoundingClientRect();
+      drag = { id: event.pointerId, dx: event.clientX - rect.left, dy: event.clientY - rect.top };
+      panel.dataset.dragged = "";
+      panel.style.left = `${rect.left}px`;
+      panel.style.top = `${rect.top}px`;
+      panel.classList.add("dragging");
+      event.preventDefault();
+      window.addEventListener("pointermove", onMove, true);
+      window.addEventListener("pointerup", onUp, true);
+      window.addEventListener("pointercancel", onUp, true);
+    });
   }
 
   function open() {
@@ -831,7 +893,7 @@
     const status = make("p", { class: "status" }, "Ready. Pick one or more PDFs, then press Shrink.");
     const result = make("div", { class: "result" });
     result.hidden = true;
-    const hint = make("p", { class: "hint" }, "Every file is rebuilt here in the browser, one after another. Pages, links and text are kept, and images are re-encoded until the file is under the maximum size; anything larger is split into parts that fit. A single page that cannot get under the ceiling is reported instead of dropped. Results stay in this panel until you save them.");
+    const hint = make("p", { class: "hint" }, "Every file is rebuilt here in the browser, one after another. Pages, links and text are kept, and images are re-encoded until the file is under the maximum size; anything larger is split into parts that fit. Drag the title bar to move the panel, or drag a finished row onto an upload box that accepts drops (Chromium) instead of saving it first.");
 
     const queue = make("ul", { class: "queue", "aria-label": "Files to shrink", "data-queue": "" });
     body.append(drop, queue, presets, maxBlock, status, result, hint);
@@ -846,6 +908,7 @@
     panel.append(head, body, foot);
     wrap.append(panel);
     root.append(wrap);
+    attachDragging(panel, head);
 
     const close = () => {
       window.removeEventListener("keydown", onKey, true);
@@ -888,20 +951,45 @@
       setStatus(`Saved ${filename} (${mb(bytes.length)}).`);
     }
 
+    // What a row would hand over: the PDF itself, or the archive when the file
+    // had to be split, so a drag carries the same thing Save would write.
+    function dragFileFor(item) {
+      if (!item.result.length) return null;
+      if (item.result.length === 1) return { name: item.result[0].name, type: "application/pdf", bytes: item.result[0].bytes };
+      return { name: `${baseName(item.file.name)}-parts.zip`, type: "application/zip", bytes: zipStore(item.result) };
+    }
+
     function rowFor(file) {
       const row = make("li");
       const name = make("span", { class: "queue-name" }, file.name);
       const meta = make("span", { class: "queue-meta" }, `${mb(file.size)} · queued`);
+      const actions = make("div", { class: "queue-actions" });
       const save = make("button", { class: "queue-save", type: "button", "data-save": "" }, "Save");
       save.disabled = true;
       save.hidden = true;
-      const item = { file, status: "queued", result: [], meta, save };
+      const drag = make("span", { class: "queue-drag", draggable: "true", "data-drag": "", title: "Drag this straight onto an upload box" }, "Drag");
+      drag.hidden = true;
+      const item = { file, status: "queued", result: [], meta, save, drag };
       save.addEventListener("click", () => {
         if (!item.result.length) return;
         if (item.result.length === 1) saveBytes(item.result[0].bytes, item.result[0].name);
         else saveBytes(zipStore(item.result), `${baseName(item.file.name)}-parts.zip`);
       });
-      row.append(name, meta, save);
+      drag.addEventListener("dragstart", (event) => {
+        const payload = dragFileFor(item);
+        if (!payload || !event.dataTransfer) {
+          event.preventDefault();
+          return;
+        }
+        const url = URL.createObjectURL(new Blob([payload.bytes], { type: payload.type }));
+        setTimeout(() => URL.revokeObjectURL(url), 120000);
+        event.dataTransfer.effectAllowed = "copy";
+        event.dataTransfer.setData("DownloadURL", downloadDragPayload(payload.name, payload.type, url));
+        event.dataTransfer.setData("text/plain", payload.name);
+        setStatus(`Dragging ${payload.name} (${mb(payload.bytes.length)}) — drop it on the upload box.`);
+      });
+      actions.append(drag, save);
+      row.append(name, meta, actions);
       queue.append(row);
       return item;
     }
@@ -1003,6 +1091,7 @@
         item.status = "done";
         item.save.hidden = false;
         item.save.disabled = false;
+        item.drag.hidden = false;
       } catch (error) {
         item.status = "error";
         item.meta.textContent = (MESSAGES[error?.message] || String(error?.message || error)).slice(0, 90);
@@ -1055,6 +1144,7 @@
     globalThis.__BL_TEST__.pdfShrink = {
       isPdf, scanObjects, serializePdf, imageKind, replaceImageDict, presetFor, countPages, dictEnd,
       pageTree, subsetFor, splitParts, crc32, zipStore, shrinkPdf, splitPdf, readPdf, uniqueName, ladderFrom,
+      downloadDragPayload, clampOrigin,
     };
   } else if (document?.body) {
     open();

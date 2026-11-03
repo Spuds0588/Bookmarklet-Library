@@ -8,7 +8,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 globalThis.__BL_TEST__ = {};
 new Function(await readFile(path.join(root, "bookmarklets", "files", "pdf-shrink.js"), "utf8"))();
-const { isPdf, scanObjects, serializePdf, imageKind, replaceImageDict, presetFor, countPages, dictEnd, pageTree, subsetFor, splitParts, crc32, zipStore, uniqueName, ladderFrom } =
+const { isPdf, scanObjects, serializePdf, imageKind, replaceImageDict, presetFor, countPages, dictEnd, pageTree, subsetFor, splitParts, crc32, zipStore, uniqueName, ladderFrom, downloadDragPayload, clampOrigin } =
   globalThis.__BL_TEST__.pdfShrink;
 delete globalThis.__BL_TEST__;
 
@@ -133,6 +133,29 @@ test("a part that does not fit is retried at the next stronger preset", () => {
   assert.deepEqual(ladderFrom("balanced"), ["balanced", "strong"]);
   assert.deepEqual(ladderFrom("strong"), ["strong"]);
   assert.deepEqual(ladderFrom(undefined), ["balanced", "strong"]);
+});
+
+test("a dragged result carries a download payload, not just a filename", () => {
+  assert.equal(
+    downloadDragPayload("scan-small.pdf", "application/pdf", "blob:https://example.com/8f1c"),
+    "application/pdf:scan-small.pdf:blob:https://example.com/8f1c",
+  );
+  assert.equal(
+    downloadDragPayload("scan-parts.zip", "application/zip", "blob:https://example.com/aa"),
+    "application/zip:scan-parts.zip:blob:https://example.com/aa",
+  );
+});
+
+test("a moved panel stays on screen with its header reachable", () => {
+  const size = { width: 460, height: 560 };
+  const viewport = { width: 1200, height: 750 };
+  assert.deepEqual(clampOrigin(370, 95, size, viewport), { left: 370, top: 95 });
+  // Dragged past a corner it stops at the margin rather than leaving the window.
+  assert.deepEqual(clampOrigin(-400, -400, size, viewport), { left: 8, top: 8 });
+  assert.deepEqual(clampOrigin(5000, 5000, size, viewport), { left: 732, top: 630 });
+  // A panel wider than the window keeps its left edge visible instead of both
+  // edges being clipped away.
+  assert.deepEqual(clampOrigin(0, 0, { width: 900, height: 400 }, { width: 600, height: 500 }), { left: 8, top: 8 });
 });
 
 test("files with the same name get distinct entries in one archive", () => {

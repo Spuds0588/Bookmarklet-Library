@@ -2,6 +2,23 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Shrink PDF: a panel you can move, results you can drag
+
+**Why**
+
+- The panel sits over the very upload box the shrink is meant for, and the last step of the job — save, find the file in Downloads, then pick it again — was the slow part.
+
+**What changed**
+
+- The panel follows its title bar: `pointerdown` on the header records the offset, `pointermove` on the window writes `left`/`top`, and `clampOrigin` keeps at least the header on screen. Nothing else in the panel starts a drag, so the close button, presets and inputs still work.
+- A finished row gained a **Drag** handle. `dragstart` writes `DownloadURL` as `mime:name:blob-url` with `effectAllowed = "copy"`, which is the shape Chromium uses for a download drag, plus `text/plain` as a name fallback. A row that was split drags its ZIP, so the drag and Save hand over the same file.
+- The blob URL is created per drag and revoked after two minutes, so a drag that is never dropped leaves nothing behind.
+
+**Verified in the capture**
+
+- A synthetic pointer drag moves the panel by (−120, −60), a second drag returns it to within 2 px, and the payload matches `application/pdf:<name>-small.pdf:blob:`.
+- The limit is honest: a headless run cannot perform a cross-window native drag, so dropping into another tab's file input is unproven there and is noted as a hand check in TODO.
+
 ## 2026-11-03 — Synthetic full-page scans at 150, 200 and 300 dpi
 
 **How they were made**

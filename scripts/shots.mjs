@@ -180,6 +180,43 @@ const STEPS = {
         return status;
       })()`,
     },
+    // The panel has to follow its title bar, and a finished row has to hand the
+    // browser a download drag rather than a bare filename, or the result cannot
+    // be dropped on an upload box at all.
+    {
+      script: `(() => {
+        const root = document.getElementById("bl-pdf-shrink-host").shadowRoot;
+        const panel = root.querySelector(".panel");
+        const head = root.querySelector(".head");
+        const before = panel.getBoundingClientRect();
+        // Down and to the right: a tall panel already sits at the top clamp, so
+        // dragging up would prove nothing but the clamp.
+        head.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, pointerId: 1, button: 0, clientX: before.left + 40, clientY: before.top + 18 }));
+        window.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, pointerId: 1, clientX: before.left + 140, clientY: before.top + 66 }));
+        const moved = panel.getBoundingClientRect();
+        window.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerId: 1 }));
+        const dx = Math.round(moved.left - before.left);
+        const dy = Math.round(moved.top - before.top);
+        if (Math.abs(dx) < 80 || Math.abs(dy) < 30) throw new Error("panel ignored the drag: " + dx + "," + dy);
+        if (moved.left < 0 || moved.top < 0) throw new Error("panel left the viewport: " + moved.left + "," + moved.top);
+
+        const chip = root.querySelector(".queue-drag");
+        if (!chip || chip.hidden || chip.getAttribute("draggable") !== "true") throw new Error("no drag handle on a finished row");
+        const transfer = new DataTransfer();
+        chip.dispatchEvent(new DragEvent("dragstart", { bubbles: true, cancelable: true, dataTransfer: transfer }));
+        const payload = transfer.getData("DownloadURL");
+        if (!/^application\\/pdf:.+-small\\.pdf:blob:https?:/.test(payload)) throw new Error("unexpected drag payload: " + payload);
+
+        // Put it back where a screenshot reads best.
+        head.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, pointerId: 2, button: 0, clientX: moved.left + 40, clientY: moved.top + 18 }));
+        window.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, pointerId: 2, clientX: moved.left + 40 - dx, clientY: moved.top + 18 - dy }));
+        window.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerId: 2 }));
+        const back = panel.getBoundingClientRect();
+        if (Math.abs(back.left - before.left) > 2) throw new Error("panel did not come back: " + back.left + " vs " + before.left);
+        return payload;
+      })()`,
+    },
+    { wait: 250 },
   ],
   // A console is only a console once something has been run in it.
   "js-runner": [
