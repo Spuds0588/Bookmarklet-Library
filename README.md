@@ -131,6 +131,8 @@ The PDF writer uses the Helvetica family, Latin-1 text, the DOCX page size and m
 
 **🗜️ Shrink PDF** makes a scan-heavy PDF smaller without turning it into a pile of pictures. It reads the file, re-encodes the images it can safely touch, and rebuilds the PDF around them: every page, every link and the whole text layer stay where they were.
 
+**Drop several files at once** and they queue. Each file is rebuilt in turn, its row reports what happened (`121 KB → 62 KB · 48% smaller`, `no gain`, or the reason it failed), and **Download all (.zip)** returns one archive — a browser blocks the second download a page starts, so separate files would silently stop after the first. **Save** on a row downloads just that file, split parts keep their page ranges in their names, and two files with the same name get distinct entries rather than overwriting each other.
+
 The images are the weight in a scan. Each JPEG is decoded, drawn at a smaller size or a lower quality, and written back as a JPEG; raw Flate bitmaps go through a canvas and come out as JPEGs too. Light keeps pages up to 2400px, Balanced uses 1800px, and Strong drops to 1200px. An image is only replaced when the new stream is genuinely smaller, so a file that is already tight comes back with no change and no download. Grey pages stay grey, because colour costs bytes and adds nothing to a scanned form.
 
 What it deliberately leaves alone: transparency masks and soft masks, `ImageMask` stencils, CCITT and JBIG2 fax images, CMYK and indexed colour, and predictors. Shrinking one half of a mask pair would leave the other misaligned, so those are skipped rather than guessed at. Encrypted PDFs are refused, because their streams cannot be read without the key.

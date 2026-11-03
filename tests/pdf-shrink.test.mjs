@@ -8,7 +8,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 globalThis.__BL_TEST__ = {};
 new Function(await readFile(path.join(root, "bookmarklets", "files", "pdf-shrink.js"), "utf8"))();
-const { isPdf, scanObjects, serializePdf, imageKind, replaceImageDict, presetFor, countPages, dictEnd, pageTree, subsetFor, splitParts, crc32, zipStore } =
+const { isPdf, scanObjects, serializePdf, imageKind, replaceImageDict, presetFor, countPages, dictEnd, pageTree, subsetFor, splitParts, crc32, zipStore, uniqueName } =
   globalThis.__BL_TEST__.pdfShrink;
 delete globalThis.__BL_TEST__;
 
@@ -126,6 +126,14 @@ test("an indirect length becomes a byte count, not a pointer at another object",
   assert.doesNotMatch(dict, /\/Length \d+ \d+ R/);
   assert.match(dict, /\/Length 13\b/);
   assert.equal(textOf(rebuilt.get(4).stream), "BT /F1 12 Tf\n");
+});
+
+test("files with the same name get distinct entries in one archive", () => {
+  const used = new Set();
+  assert.equal(uniqueName("Report-small.pdf", used), "Report-small.pdf");
+  assert.equal(uniqueName("Report-small.pdf", used), "Report-small-2.pdf");
+  assert.equal(uniqueName("Report-small.pdf", used), "Report-small-3.pdf");
+  assert.equal(uniqueName("Report-small-2.pdf", used), "Report-small-2-2.pdf");
 });
 
 test("only images this tool can re-encode are offered up", () => {

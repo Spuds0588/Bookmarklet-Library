@@ -124,9 +124,9 @@ const STEPS = {
         if (!bytes) throw new Error("fixture bytes were not preloaded");
         const root = document.getElementById("bl-pdf-shrink-host").shadowRoot;
         const input = root.querySelector("input[type=file]");
-        const file = new File([bytes], "scanned-field-report.pdf", { type: "application/pdf" });
         const transfer = new DataTransfer();
-        transfer.items.add(file);
+        transfer.items.add(new File([bytes], "scanned-field-report.pdf", { type: "application/pdf" }));
+        transfer.items.add(new File([bytes], "scanned-invoice.pdf", { type: "application/pdf" }));
         input.files = transfer.files;
         input.dispatchEvent(new Event("change", { bubbles: true }));
         return true;
@@ -142,15 +142,21 @@ const STEPS = {
         return true;
       })()`,
     },
-    { wait: 5000 },
+    { wait: 9000 },
     // A screenshot of an error panel would still look like a capture, so fail
-    // the run unless the shrink really produced a downloadable result.
+    // the run unless both queued files produced rows that can be saved.
     {
       script: `(() => {
         const root = document.getElementById("bl-pdf-shrink-host").shadowRoot;
         const status = root.querySelector(".status").textContent;
+        const rows = [...root.querySelectorAll(".queue li")];
+        if (rows.length !== 2) throw new Error("expected 2 queue rows, got " + rows.length + ": " + status);
+        const ready = rows.filter((row) => { const save = row.querySelector(".queue-save"); return save && !save.hidden && !save.disabled; });
+        if (ready.length !== 2) throw new Error("only " + ready.length + " rows are ready to save: " + rows.map((row) => row.textContent).join(" | "));
         if (root.querySelector(".result").hidden) throw new Error("no result: " + status);
-        if (root.querySelector("[data-download]").disabled) throw new Error("download is disabled: " + status);
+        const download = root.querySelector("[data-download]");
+        if (download.disabled) throw new Error("download is disabled: " + status);
+        if (!/zip/i.test(download.textContent)) throw new Error("expected one archive for the batch, got: " + download.textContent);
         return status;
       })()`,
     },

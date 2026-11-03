@@ -2,6 +2,20 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Shrink PDF takes a batch
+
+**Changed**
+
+- The picker and the drop zone accept several PDFs. Files queue in the panel, each row reports its own outcome (`121 KB → 62 KB · 48% smaller`, `no gain`, or why it failed), and processing runs one file at a time so a long batch does not freeze the tab.
+- Results stay in memory until saved. **Download all (.zip)** collects every output in one archive, because a browser blocks the second download a page starts; each row also has its own **Save** button. Split parts keep their page ranges in their file names instead of nesting a ZIP inside the archive.
+- Two files with the same name become distinct entries (`Report-small.pdf`, `Report-small-2.pdf`), so the archive never carries two entries under one name.
+- The drop zone stays live during a run, so more files can be added to the queue while it works.
+
+**Verified**
+
+- `npm test`: 110 pass, including name disambiguation for an archive.
+- The capture now hands two PDFs to the real picker in Chromium and fails unless both rows are saveable, a result block is shown and the footer offers exactly one archive. It passes, showing 2 files · 242 KB → 125 KB.
+
 ## 2026-11-03 — Shrink PDF: the font bug the render check caught
 
 **Changed**

@@ -706,6 +706,18 @@
       font: 600 10px/1 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
     .foot .primary { background: #111; color: #fbfaf8; }
     .foot .primary:disabled { opacity: .4; cursor: default; }
+    .queue { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; border: 1px solid #111;
+      background: #fff; max-height: 190px; overflow: auto; }
+    .queue:empty { display: none; }
+    .queue li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 10px; padding: 8px 10px;
+      border-bottom: 1px solid #ddd; }
+    .queue li:last-child { border-bottom: 0; }
+    .queue-name { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .queue-meta { grid-column: 1; font: 11px/1.4 ui-monospace, monospace; color: #555; overflow-wrap: anywhere; }
+    .queue-save { grid-row: 1 / span 2; grid-column: 2; align-self: center; padding: 4px 7px; border: 1px solid #111;
+      background: transparent; color: #111; font: 600 9px/1 ui-monospace, monospace; letter-spacing: .06em;
+      text-transform: uppercase; cursor: pointer; }
+    .queue-save:disabled { opacity: .35; cursor: default; }
   `;
 
   function kb(bytes) {
@@ -723,6 +735,23 @@
     return element;
   }
 
+  // A batch can hold two files with the same name, so the second entry needs a
+  // suffix or the archive carries duplicates.
+  function uniqueName(name, used) {
+    if (!used.has(name)) {
+      used.add(name);
+      return name;
+    }
+    const dot = name.lastIndexOf(".");
+    const base = dot > 0 ? name.slice(0, dot) : name;
+    const extension = dot > 0 ? name.slice(dot) : "";
+    let index = 2;
+    while (used.has(`${base}-${index}${extension}`)) index++;
+    const next = `${base}-${index}${extension}`;
+    used.add(next);
+    return next;
+  }
+
   function open() {
     document.getElementById("bl-pdf-shrink-host")?.remove();
     const host = document.createElement("div");
@@ -732,21 +761,21 @@
     style.textContent = CSS;
     root.append(style);
 
-    const state = { file: null, preset: "balanced", busy: false, result: null };
+    const state = { preset: "balanced", busy: false };
 
     const wrap = make("div", { class: "wrap" });
     const panel = make("section", { class: "panel", role: "dialog", "aria-modal": "true", "aria-label": "Shrink a PDF" });
     const head = make("header", { class: "head" });
     const titles = make("div");
-    titles.append(make("h2", { class: "title" }, "Shrink a PDF"), make("p", { class: "meta" }, "Images only · pages and text stay"));
+    titles.append(make("h2", { class: "title" }, "Shrink PDFs"), make("p", { class: "meta" }, "Images only · pages and text stay"));
     const closeButton = make("button", { class: "close", type: "button" }, "Close");
     head.append(titles, closeButton);
 
     const body = make("div", { class: "body" });
     const drop = make("label", { class: "drop" });
-    const dropTitle = make("b", {}, "Choose a PDF");
-    const dropText = make("span", {}, "or drop one here · nothing is uploaded");
-    const input = make("input", { type: "file", accept: "application/pdf,.pdf" });
+    const dropTitle = make("b", {}, "Choose PDFs");
+    const dropText = make("span", {}, "or drop several here · nothing is uploaded");
+    const input = make("input", { type: "file", accept: "application/pdf,.pdf", multiple: "" });
     drop.append(dropTitle, dropText, input);
 
     const presets = make("div", { class: "presets", role: "group", "aria-label": "Compression strength" });
@@ -766,12 +795,13 @@
     const splitInput = make("input", { type: "number", min: "0.2", step: "0.5", placeholder: "off", inputmode: "decimal" });
     splitRow.append(make("span", {}, "Split parts under (MB)"), splitInput);
 
-    const status = make("p", { class: "status" }, "Ready. Pick a PDF, then press Shrink.");
+    const status = make("p", { class: "status" }, "Ready. Pick one or more PDFs, then press Shrink.");
     const result = make("div", { class: "result" });
     result.hidden = true;
-    const hint = make("p", { class: "hint" }, "The file is rebuilt here in the browser. Pages, links and text are kept; only images are re-encoded, and only when the result is smaller.");
+    const hint = make("p", { class: "hint" }, "Every file is rebuilt here in the browser, one after another. Pages, links and text are kept; only images are re-encoded, and only when the result is smaller. Results stay in this panel until you save them.");
 
-    body.append(drop, presets, splitRow, status, result, hint);
+    const queue = make("ul", { class: "queue", "aria-label": "Files to shrink", "data-queue": "" });
+    body.append(drop, queue, presets, splitRow, status, result, hint);
 
     const foot = make("footer", { class: "foot" });
     const download = make("button", { class: "primary", type: "button", "data-download": "" }, "Download");
@@ -805,97 +835,13 @@
       status.className = error ? "status error" : "status";
     }
 
-    function choose(file) {
-      if (!file) return;
-      state.file = file;
-      state.result = null;
-      result.hidden = true;
-      download.disabled = true;
-      shrinkButton.disabled = false;
-      dropTitle.textContent = file.name;
-      dropText.textContent = `${kb(file.size)} · press Shrink`;
-      setStatus(`Ready to shrink ${file.name} (${kb(file.size)}).`);
+    const items = [];
+
+    function baseName(name) {
+      return name.replace(/\.pdf$/i, "");
     }
 
-    input.addEventListener("change", () => choose(input.files?.[0]));
-    drop.addEventListener("dragover", (event) => {
-      event.preventDefault();
-      drop.classList.add("over");
-    });
-    drop.addEventListener("dragleave", () => drop.classList.remove("over"));
-    drop.addEventListener("drop", (event) => {
-      event.preventDefault();
-      drop.classList.remove("over");
-      const file = event.dataTransfer?.files?.[0];
-      if (file) choose(file);
-    });
-
-    async function run() {
-      if (state.busy || !state.file) return;
-      state.busy = true;
-      shrinkButton.disabled = true;
-      download.disabled = true;
-      result.hidden = true;
-      setStatus(`Reading ${state.file.name}…`);
-
-      try {
-        const bytes = new Uint8Array(await state.file.arrayBuffer());
-        setStatus("Recompressing images and rebuilding the file…");
-        // Let the status paint before the main thread gets busy.
-        await new Promise((resolve) => setTimeout(resolve, 30));
-        const targetMb = Number.parseFloat(splitInput.value);
-        const target = Number.isFinite(targetMb) && targetMb > 0 ? targetMb * 1024 * 1024 : 0;
-        const outcome = target ? await splitPdf(bytes, target, state.preset) : await shrinkPdf(bytes, state.preset);
-        const parts = outcome.parts || null;
-        const total = parts ? parts.reduce((sum, part) => sum + part.bytes.length, 0) : outcome.after;
-        const saved = outcome.before - total;
-
-        if (!parts && saved <= 0) {
-          setStatus(`No gain: the rebuilt file is ${kb(total)}, about the same as the original. Nothing was downloaded.`, true);
-          result.hidden = true;
-          return;
-        }
-
-        const base = state.file.name.replace(/\.pdf$/i, "");
-        let filename = `${base}-small.pdf`;
-        let output = outcome.bytes;
-        if (parts && parts.length > 1) {
-          filename = `${base}-parts.zip`;
-          output = zipStore(parts.map((part, index) => ({ name: `${base}-part${index + 1}.pdf`, bytes: part.bytes })));
-        } else if (parts) {
-          output = parts[0].bytes;
-        }
-        state.result = { bytes: output, filename };
-
-        const ranges = parts
-          ? parts.map((part) => (part.from === part.to ? `${part.from}` : `${part.from}–${part.to}`)).join(", ")
-          : "";
-        const headline = parts && parts.length > 1
-          ? `${parts.length} parts · ${kb(total)}`
-          : `${kb(outcome.before)} → ${kb(total)}`;
-        const detail = parts && parts.length > 1
-          ? `pages ${ranges} · each under ${kb(target)}${parts.some((part) => part.tooBig) ? " except one page that is larger on its own" : ""} · ${outcome.shrunk} of ${outcome.candidates} images recompressed`
-          : `${Math.round((saved / outcome.before) * 100)}% smaller · ${outcome.shrunk} of ${outcome.candidates} images recompressed${outcome.skipped ? `, ${outcome.skipped} left alone because re-encoding did not help` : ""}`;
-
-        setStatus(`Done. ${outcome.pages} page${outcome.pages === 1 ? "" : "s"} in ${parts && parts.length > 1 ? `${parts.length} files, zipped` : "1 file"}.`);
-        result.replaceChildren(make("b", {}, headline), make("span", {}, detail));
-        result.hidden = false;
-        download.textContent = parts && parts.length > 1 ? "Download .zip" : "Download";
-        download.disabled = false;
-      } catch (error) {
-        const message = MESSAGES[error?.message] || `Could not shrink this PDF: ${error?.message || error}`;
-        setStatus(message, true);
-      } finally {
-        state.busy = false;
-        shrinkButton.disabled = !state.file;
-      }
-    }
-
-    shrinkButton.addEventListener("click", () => void run());
-
-    download.addEventListener("click", () => {
-      if (!state.result) return;
-      const { bytes, filename } = state.result;
+    function saveBytes(bytes, filename) {
       const type = filename.endsWith(".zip") ? "application/zip" : "application/pdf";
       const url = URL.createObjectURL(new Blob([bytes], { type }));
       const anchor = document.createElement("a");
@@ -907,6 +853,164 @@
       anchor.remove();
       setTimeout(() => URL.revokeObjectURL(url), 30000);
       setStatus(`Saved ${filename} (${kb(bytes.length)}).`);
+    }
+
+    function rowFor(file) {
+      const row = make("li");
+      const name = make("span", { class: "queue-name" }, file.name);
+      const meta = make("span", { class: "queue-meta" }, `${kb(file.size)} · queued`);
+      const save = make("button", { class: "queue-save", type: "button", "data-save": "" }, "Save");
+      save.disabled = true;
+      save.hidden = true;
+      const item = { file, status: "queued", result: [], meta, save };
+      save.addEventListener("click", () => {
+        if (!item.result.length) return;
+        if (item.result.length === 1) saveBytes(item.result[0].bytes, item.result[0].name);
+        else saveBytes(zipStore(item.result), `${baseName(item.file.name)}-parts.zip`);
+      });
+      row.append(name, meta, save);
+      queue.append(row);
+      return item;
+    }
+
+    function addFiles(list) {
+      const files = [...list];
+      const pdfs = files.filter((file) => /\.pdf$/i.test(file.name) || file.type === "application/pdf");
+      const skipped = files.length - pdfs.length;
+      for (const file of pdfs) items.push(rowFor(file));
+      shrinkButton.disabled = items.length === 0;
+      if (!pdfs.length) {
+        setStatus("That does not look like a PDF. Choose a .pdf file.", true);
+        return;
+      }
+      const waiting = items.filter((item) => item.status === "queued").length;
+      dropTitle.textContent = `${items.length} file${items.length === 1 ? "" : "s"} queued`;
+      dropText.textContent = "drop more any time · nothing is uploaded";
+      setStatus(`${waiting} PDF${waiting === 1 ? "" : "s"} ready to shrink${skipped ? `, ${skipped} non-PDF ${skipped === 1 ? "file" : "files"} skipped` : ""}. Press Shrink.`);
+    }
+
+    input.addEventListener("change", () => {
+      addFiles(input.files || []);
+      input.value = "";
+    });
+    drop.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      drop.classList.add("over");
+    });
+    drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+    drop.addEventListener("drop", (event) => {
+      event.preventDefault();
+      drop.classList.remove("over");
+      addFiles(event.dataTransfer?.files || []);
+    });
+
+    function resultFiles() {
+      const used = new Set();
+      return items
+        .filter((item) => item.result.length)
+        .flatMap((item) => item.result.map((entry) => ({ name: uniqueName(entry.name, used), bytes: entry.bytes })));
+    }
+
+    function showSummary() {
+      const files = resultFiles();
+      const done = items.filter((item) => item.status === "done");
+      const none = items.filter((item) => item.status === "none");
+      const failed = items.filter((item) => item.status === "error");
+      download.disabled = files.length === 0;
+      download.textContent = files.length > 1 ? "Download all (.zip)" : "Download";
+      if (!files.length) {
+        result.hidden = true;
+        return;
+      }
+      const before = done.reduce((sum, item) => sum + item.file.size, 0);
+      const after = done.reduce((sum, item) => sum + item.result.reduce((partSum, part) => partSum + part.bytes.length, 0), 0);
+      const headline = done.length === 1
+        ? (done[0].result.length > 1 ? `${done[0].result.length} parts · ${kb(after)}` : `${kb(before)} → ${kb(after)}`)
+        : `${done.length} files · ${kb(before)} → ${kb(after)}`;
+      const notes = [`${files.length} file${files.length === 1 ? "" : "s"} ready`];
+      if (none.length) notes.push(`${none.length} with no gain`);
+      if (failed.length) notes.push(`${failed.length} failed`);
+      result.replaceChildren(make("b", {}, headline), make("span", {}, notes.join(" · ")));
+      result.hidden = false;
+    }
+
+    async function processItem(item) {
+      const name = item.file.name;
+      item.status = "working";
+      item.meta.textContent = "working…";
+      setStatus(`Reading ${name}…`);
+      try {
+        const bytes = new Uint8Array(await item.file.arrayBuffer());
+        setStatus(`Recompressing ${name}…`);
+        await new Promise((resolve) => setTimeout(resolve, 30));
+        const targetMb = Number.parseFloat(splitInput.value);
+        const target = Number.isFinite(targetMb) && targetMb > 0 ? targetMb * 1024 * 1024 : 0;
+        const outcome = target ? await splitPdf(bytes, target, state.preset) : await shrinkPdf(bytes, state.preset);
+        const parts = outcome.parts || null;
+        const total = parts ? parts.reduce((sum, part) => sum + part.bytes.length, 0) : outcome.after;
+        const saved = outcome.before - total;
+
+        if (!parts && saved <= 0) {
+          item.status = "none";
+          item.meta.textContent = `${kb(outcome.before)} · no gain, left as it was`;
+          return;
+        }
+
+        const base = baseName(name);
+        if (parts && parts.length > 1) {
+          item.result = parts.map((part, index) => ({ name: `${base}-part${index + 1}.pdf`, bytes: part.bytes }));
+          item.meta.textContent = `${parts.length} parts · ${kb(total)}`;
+          if (parts.some((part) => part.tooBig)) item.meta.textContent += " · a page is still over the limit";
+        } else {
+          item.result = [{ name: `${base}-small.pdf`, bytes: parts ? parts[0].bytes : outcome.bytes }];
+          item.meta.textContent = `${kb(outcome.before)} → ${kb(total)} · ${Math.round((saved / outcome.before) * 100)}% smaller`;
+        }
+        item.status = "done";
+        item.save.hidden = false;
+        item.save.disabled = false;
+      } catch (error) {
+        item.status = "error";
+        item.meta.textContent = (MESSAGES[error?.message] || String(error?.message || error)).slice(0, 90);
+      } finally {
+        showSummary();
+      }
+    }
+
+    async function run() {
+      if (state.busy) return;
+      if (!items.some((item) => item.status === "queued")) {
+        setStatus("Every queued file has already been tried. Add another PDF or drop more.", true);
+        return;
+      }
+      state.busy = true;
+      shrinkButton.disabled = true;
+      download.disabled = true;
+      result.hidden = true;
+      try {
+        for (;;) {
+          const next = items.find((item) => item.status === "queued");
+          if (!next) break;
+          setStatus(`Shrinking ${next.file.name}…`);
+          await processItem(next);
+        }
+      } finally {
+        state.busy = false;
+        shrinkButton.disabled = items.length === 0;
+        showSummary();
+        const done = items.filter((item) => item.status === "done").length;
+        const none = items.filter((item) => item.status === "none").length;
+        const failed = items.filter((item) => item.status === "error").length;
+        setStatus(`Finished. ${done} shrank${none ? `, ${none} had no gain` : ""}${failed ? `, ${failed} failed` : ""}.`, done === 0);
+      }
+    }
+
+    shrinkButton.addEventListener("click", () => void run());
+
+    download.addEventListener("click", () => {
+      const files = resultFiles();
+      if (!files.length) return;
+      if (files.length === 1) saveBytes(files[0].bytes, files[0].name);
+      else saveBytes(zipStore(files), `shrunken-${files.length}-files.zip`);
     });
 
     document.body.append(host);
@@ -915,7 +1019,7 @@
   if (globalThis.__BL_TEST__) {
     globalThis.__BL_TEST__.pdfShrink = {
       isPdf, scanObjects, serializePdf, imageKind, replaceImageDict, presetFor, countPages, dictEnd,
-      pageTree, subsetFor, splitParts, crc32, zipStore, shrinkPdf, splitPdf, readPdf,
+      pageTree, subsetFor, splitParts, crc32, zipStore, shrinkPdf, splitPdf, readPdf, uniqueName,
     };
   } else if (document?.body) {
     open();
