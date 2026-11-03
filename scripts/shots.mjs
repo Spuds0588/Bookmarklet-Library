@@ -431,6 +431,8 @@ const PREP = {
 const REASONS = {
   // Leaves the tab for another site, so there is no page state to photograph.
   "simplepdf-open": "external",
+  // Opens a full-window embed of the editor, so the page it runs on is covered.
+  "simplepdf-local": "external",
   "tab-screenshot": "download",
   "website-to-markdown": "download",
   "selection-to-markdown": "download",

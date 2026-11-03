@@ -252,6 +252,10 @@
       "changed": false,
       "reason": "external"
     },
+    "simplepdf-local": {
+      "changed": false,
+      "reason": "external"
+    },
     "html-to-odt": {
       "file": "screenshots/html-to-odt.png",
       "changed": true,

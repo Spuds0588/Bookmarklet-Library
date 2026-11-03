@@ -2,6 +2,13 @@
 
 What has been done, in order. Newest entries first.
 
+## Local PDFs into the SimplePDF editor
+
+- **📝 Edit a Local PDF** (`files`) reads a picked file as a data URL and drives the embedded editor's `LOAD_DOCUMENT` over `postMessage`, so a `file://` PDF opens in SimplePDF with no upload and no public URL.
+- Why the plain redirect cannot do it: `?open=` takes http(s) only, a `data:` value was ignored, and the editor fetches through `https://simplepdf.com/cors/<url>` on its own server, where `127.0.0.1` is SimplePDF's machine (a loopback probe answered `400`). `simplepdf.com/editor` also refuses framing (`frame-ancestors 'self'`), so `embed.simplepdf.com/editor` is the host that works.
+- Readiness is discovered, not announced: `GET_FIELDS` is asked every 500 ms, and any reply — including `bad_request:no_document_loaded` — proves the bridge is up. `LOAD_DOCUMENT` then loads the bytes and is the one call that needs no origin allowlist. Verified in a browser against a real PDF: `success: true`, then `DOCUMENT_LOADED` and `PAGE_FOCUSED` page 1.
+- **📝 Open in SimplePDF** now sends `file://` users to the companion tool instead of telling them only to drag the file in.
+
 ## SimplePDF handoff
 
 - **📝 Open in SimplePDF** (`files`) sends the tab's PDF to `https://simplepdf.com/editor?open=…` in the same window, finding it as the document itself, a pdf.js `?file=` target, or an embed/object/iframe/link on the page.

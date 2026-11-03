@@ -193,4 +193,6 @@
 ## SimplePDF handoff
 
 - [ ] Decide whether a page with several PDFs should offer a choice instead of taking the first one found.
+- [ ] Note which sites' CSP refuses the local editor overlay, since the frame is subject to the page's `frame-src`.
+- [ ] Decide whether the last local PDF should be kept in IndexedDB so a reload does not mean picking the file again.
 - [ ] See whether the editor's `page` parameter also accepts a highlight or a selection worth carrying from Chrome's `#page=N&zoom=…` fragment.
