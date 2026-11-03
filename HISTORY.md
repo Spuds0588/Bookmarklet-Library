@@ -4,14 +4,14 @@ What has been done, in order. Newest entries first.
 
 ## A local PDF edits in a modal, then floats, then falls back to a popup
 
-- **📝 Edit a Local PDF** no longer takes over the window. The editor loads in a modal card over the page — file name, status line, **Float**, **Popup**, **Close** — so the site behind it survives the edit and `Esc` dismisses it.
+- **📝 Edit PDF on Page** no longer takes over the window. The editor loads in a modal card over the page — file name, status line, **Float**, **Popup**, **Close** — so the site behind it survives the edit and `Esc` dismisses it.
 - Framing can fail in silence: a host page whose CSP has no `frame-src` for `embed.simplepdf.com` raises no error and posts no message, so the old code waited the full 30 s readiness ceiling and then just said the editor did not answer. The modal attempt is now bounded at `FRAME_MS` (12 s), which leaves time to try something the user can actually see.
 - The fallbacks are the two surfaces that own their document and so escape the page's CSP: Document picture-in-picture (`documentPictureInPicture.requestWindow`) and `window.open`. Both re-run the same `GET_FIELDS` probe and `LOAD_DOCUMENT` handoff inside their own window, because the editor's replies are dispatched to the frame's parent, not to the opener.
 - Picture-in-picture needs a live user gesture, which a timeout-driven retry no longer has, so it is also a button — and `fallbackOrder` decides what to attempt automatically from what the browser offers. Tested for all four capability combinations, plus a guard that the frame attempt ends before the readiness ceiling.
 
 ## Local PDFs into the SimplePDF editor
 
-- **📝 Edit a Local PDF** (`files`) reads a picked file as a data URL and drives the embedded editor's `LOAD_DOCUMENT` over `postMessage`, so a `file://` PDF opens in SimplePDF with no upload and no public URL.
+- **📝 Edit PDF on Page** (`files`) reads a picked file as a data URL and drives the embedded editor's `LOAD_DOCUMENT` over `postMessage`, so a `file://` PDF opens in SimplePDF with no upload and no public URL.
 - Why the plain redirect cannot do it: `?open=` takes http(s) only, a `data:` value was ignored, and the editor fetches through `https://simplepdf.com/cors/<url>` on its own server, where `127.0.0.1` is SimplePDF's machine (a loopback probe answered `400`). `simplepdf.com/editor` also refuses framing (`frame-ancestors 'self'`), so `embed.simplepdf.com/editor` is the host that works.
 - Readiness is discovered, not announced: `GET_FIELDS` is asked every 500 ms, and any reply — including `bad_request:no_document_loaded` — proves the bridge is up. `LOAD_DOCUMENT` then loads the bytes and is the one call that needs no origin allowlist. Verified in a browser against a real PDF: `success: true`, then `DOCUMENT_LOADED` and `PAGE_FOCUSED` page 1.
 - **📝 Open in SimplePDF** now sends `file://` users to the companion tool instead of telling them only to drag the file in.

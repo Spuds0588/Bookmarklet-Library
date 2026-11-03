@@ -1,5 +1,5 @@
 /**
- * @name 📝 Edit a Local PDF
+ * @name 📝 Edit PDF on Page
  * @category files
  * @description Opens a PDF from your disk in SimplePDF's editor: in a modal by default, then a floating picture-in-picture window, then a popup, whichever the page allows.
  * @tags pdf, editor, local, annotate, sign, simplepdf

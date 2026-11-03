@@ -116,7 +116,7 @@
     if (!source) {
       const reason = blockedReason(found);
       if (reason === "local") {
-        toast("This PDF is a file on your disk, which a website cannot fetch. Use 📝 Edit a Local PDF, or open the editor and drag the file in.", {
+        toast("This PDF is a file on your disk, which a website cannot fetch. Use 📝 Edit PDF on Page, or open the editor and drag the file in.", {
           label: "Open editor",
           run: () => location.assign(EDITOR),
         });
