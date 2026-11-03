@@ -893,7 +893,7 @@
     const status = make("p", { class: "status" }, "Ready. Pick one or more PDFs, then press Shrink.");
     const result = make("div", { class: "result" });
     result.hidden = true;
-    const hint = make("p", { class: "hint" }, "Every file is rebuilt here in the browser, one after another. Pages, links and text are kept, and images are re-encoded until the file is under the maximum size; anything larger is split into parts that fit. Drag the title bar to move the panel, or drag a finished row onto an upload box that accepts drops (Chromium) instead of saving it first.");
+    const hint = make("p", { class: "hint" }, "Pages, links and text are kept; images are re-encoded until the file is under the maximum size, and anything larger is split into parts that fit. Drag the title bar to move the panel, or a finished row onto an upload box that accepts drops (Chromium).");
 
     const queue = make("ul", { class: "queue", "aria-label": "Files to shrink", "data-queue": "" });
     body.append(drop, queue, presets, maxBlock, status, result, hint);
