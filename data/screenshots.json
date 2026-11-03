@@ -318,6 +318,10 @@
       "file": "screenshots/save-html-snippet.png",
       "changed": true
     },
+    "send-to-docusign": {
+      "file": "screenshots/send-to-docusign.png",
+      "changed": true
+    },
     "iframe-to-tab": {
       "file": "screenshots/iframe-to-tab.png",
       "changed": true,

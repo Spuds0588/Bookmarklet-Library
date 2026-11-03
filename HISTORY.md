@@ -2,6 +2,25 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Send PDF to DocuSign
+
+**Changed**
+
+- Added **🚀 Send PDF to DocuSign** under Files. It finds the PDF in the tab (a `.pdf` URL, a `blob:` or `data:application/pdf`, or an `<embed>`/`<object>`/`<iframe>` in the page) or takes one from a picker, creates a draft envelope through the eSignature API, and opens the sender view for that envelope.
+- Two corrections to the sketch this started from. The document goes up as `documentBase64`, not `uri`: DocuSign fetching a browser URL cannot work for `blob:`, `file:` or session-protected files. And the handoff uses `POST /v2.1/accounts/{id}/envelopes/{envelopeId}/views/sender` instead of an invented console path — that endpoint returns the real sender URL and only accepts envelopes in the `created` state.
+- BYOK panel with environment, Account ID, token, optional signer email and subject. The token stays in memory unless "Remember the token" is ticked, which stores it in this origin's `localStorage` and says so beside the box. A blank signer email omits `recipients` entirely, because DocuSign rejects an empty address.
+- A 655-byte PDF fixture and a `PREP` entry (placeholder token, hidden embed) so the capture shows a filled-in panel; nothing is sent during a capture.
+
+**Verified**
+
+- CORS was checked before any code: `OPTIONS /restapi/v2.1/accounts/123/envelopes` on both hosts reflects the caller's origin and allows `Authorization`, and DocuSign documents CORS for endpoints with an account ID in the path. Without that, the whole premise would fail.
+- `npm test`: 88 pass, including PDF detection, name cleaning, envelope-body shape, `%PDF` sniffing and credential-shape checks. `verify` and `build --check` clean on 124 tools.
+- `node scripts/shots.mjs send-to-docusign --force` wrote the capture (89 screenshots).
+
+**Limit**
+
+- No live account was used: the request body is tested and the panel is exercised, but a real token against demo DocuSign is unrun, and the token must be pasted by hand because a static bookmarklet cannot complete an OAuth redirect.
+
 ## 2026-11-03 — Preview downloads, and the QR tool finally says what it does
 
 **Changed**

@@ -25,7 +25,7 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 | Capture | Tab screenshot, OCR a screen region, record tab/camera/audio, Loom links |
 | Annotate | Screenshot markup (arrows, boxes, numbered steps), freehand draw |
 | Text | Advanced find, find and replace on inputs, page to Markdown, read aloud, extract emails, table to CSV/Markdown, text-fragment citations, password generation, QR codes |
-| Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, ZIP create/extract, Word/HTML/RTF/TXT/Markdown and Excel/CSV conversion both ways, OpenDocument `.odt`/`.ods` conversion both ways, HTML snippet saver, Loom export |
+| Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, ZIP create/extract, Word/HTML/RTF/TXT/Markdown and Excel/CSV conversion both ways, OpenDocument `.odt`/`.ods` conversion both ways, HTML snippet saver, Loom export, send a PDF to DocuSign |
 | Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder, layout and accessibility overlays, environment switcher, form harvester/stamper, webhook dispatcher, a local AI agent that drives the page |
 | View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, sticky-header removal, link highlighting, dark mode, force scroll, presenter spotlight, Jitsi meeting, URL chat, voice commands, preview downloads |
 | Games | Doom, Neon Hell |
@@ -124,6 +124,16 @@ The PDF writer uses the Helvetica family, Latin-1 text, the DOCX page size and m
 ## Bulk media downloads
 
 **🖼️ Download all images**, **🎬 Download all videos**, **🎧 Download all audio** and **📥 Download all linked files** open a panel that lists what the page already loads. The image tool reads `img` and `picture` sources, `srcset`, the usual lazy-load attributes and social preview tags; the video and audio tools read the elements and their `source` fallbacks; the file tool reads anchors that carry `download` or point at a file extension. **Save all to folder** asks for a folder with the File System Access API and writes every file there, numbering names that already exist instead of overwriting them. **Download each** uses the browser's downloads folder when it cannot pick one. Each file is fetched from its own URL, so a file served without CORS headers is marked blocked and gets an **Open** link rather than a quiet failure. HLS and DASH playlists (`.m3u8`, `.mpd`) are listed but skipped, as is any single file over 600 MB. Nothing is uploaded and nothing is decrypted or re-encoded: a canvas, a CSS background, an encrypted stream or a player fed by JavaScript is not a file this can read.
+
+## Send to DocuSign
+
+**🚀 Send PDF to DocuSign** takes the PDF you are looking at and turns it into a DocuSign draft envelope without a download, an upload dialog or a second tab of clicking. It reads the PDF's bytes in the browser, posts them to the eSignature API as an envelope with `status: "created"`, then asks DocuSign for the sender view of that envelope and opens it in a new tab, ready for fields and recipients.
+
+It is bring-your-own-key. The panel asks for the **Account ID** and an **access token** from DocuSign's Apps and Keys page, plus whether they belong to Developer (demo) or Production — the two environments do not share tokens. An optional signer email becomes the one recipient; leave it blank to add recipients in DocuSign, because it rejects a recipient with no address. Nothing is stored on a server: the token stays in this browser, and only the account, environment, subject and address are remembered unless you tick the box to remember the token too. That box saves it in the current site's storage, where any script on that site could read it.
+
+If a browser will not run a bookmarklet on its own PDF tab, the panel offers **Choose a PDF** and uploads the file straight from disk. A page that embeds a PDF with `<embed>` or `<object>` is picked up automatically.
+
+The API answers CORS preflights for any endpoint with an account ID in the path, which is what makes a bookmarklet possible at all. A 401 usually means the token expired (they last eight hours) or belongs to the other environment; a 403 usually means it lacks the `signature` scope.
 
 ## Preview downloads
 

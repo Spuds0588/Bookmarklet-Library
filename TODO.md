@@ -52,6 +52,16 @@
 - [ ] The phase 2 document's runtime builder/registry idea was not adopted: these tools configure in their own panel or exchange JSON, because the catalog has no build-at-runtime step. Revisit only if a builder earns its keep.
 - [ ] The URL chat depends on the public PeerJS broker and CDN. If that service is unavailable, the hosted page says so; there is no fallback signalling server.
 
+## Send PDF to DocuSign (2026-11-03)
+
+- [x] **🚀 Send PDF to DocuSign** finds the PDF in the tab (a `.pdf` URL, a `blob:`, `data:application/pdf`, or an embed/object/iframe in the page), or takes one from a file picker, and creates a draft envelope with the bytes base64-encoded.
+- [x] BYOK panel: environment, Account ID, access token, optional signer email and subject. Only non-secret fields persist by default; the token persists only with an explicit checkbox, per origin, with the risk stated next to it.
+- [x] Handoff uses `POST .../views/sender` and opens the returned URL; a blocked pop-up becomes an in-panel link. 401 and 403 are explained in the panel.
+- [x] `tests/send-to-docusign.test.mjs` covers PDF detection, name cleaning, envelope body shape, `%PDF` sniffing and credential shape checks; the capture uses a real 655-byte PDF fixture.
+- [ ] No OAuth flow: a static bookmarklet cannot receive a redirect, so the token is pasted by hand. A refresh path needs a token endpoint somewhere.
+- [ ] No live account has been used. The API call is exercised against stubs; a demo account with a real token is still the missing test.
+- [ ] A `file://` PDF cannot be read by the bookmarklet; the picker is the fallback.
+
 ## Preview downloads (2026-11-03)
 
 - [x] **📄 Preview downloads** takes over clicks on image, video, audio, PDF, text and Office links with a capture-phase listener and shows the file in a shadow-root panel: media and images by URL, PDFs in an iframe, CSV/npm-style text in a `<pre>`, and a Save/Open note for Office formats.

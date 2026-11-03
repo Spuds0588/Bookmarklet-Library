@@ -206,6 +206,13 @@ const PREP = {
   // The hosted page is deployed with the site. Local captures point the loader
   // at the fixture server so screenshots do not depend on the live site.
   doom: ['globalThis.__BL_DOOM_BASE__ = "http://127.0.0.1:4321/doom/"'],
+  // The tool asks for credentials the first time it runs. Seed a saved account
+  // and a placeholder token, and put a PDF in the page, so the capture shows a
+  // filled-in panel rather than an empty setup form. Nothing is sent.
+  "send-to-docusign": [
+    `localStorage.setItem("bl:docusign", JSON.stringify({env:"demo",accountId:"4f2a9d1e-6c31-4a07-9b55-1d8e2c7a3b60",email:"dana@northwind.example",subject:"Please sign this document",rememberToken:true,token:"eyJhbGciOiJSUzI1NiJ9.ZGVtby1zZWVk.c2ln"}))`,
+    `(() => { const embed = document.createElement("embed"); embed.type = "application/pdf"; embed.src = "/sample.pdf"; embed.style.cssText = "position:fixed;left:-20px;top:-20px;width:1px;height:1px"; document.body.append(embed); return true; })()`,
+  ],
   "video-pip": ["document.querySelector('video').play()"],
   "audio-pip": ["document.querySelector('audio').play()"],
   // The stamper reads the harvester's saved payload; seed a realistic one so
@@ -887,6 +894,7 @@ const MEDIA = new Map([
   ["/report.csv", ["office/report.csv", "text/csv"]],
   ["/report.odt", ["office/report.odt", "application/vnd.oasis.opendocument.text"]],
   ["/report.ods", ["office/report.ods", "application/vnd.oasis.opendocument.spreadsheet"]],
+  ["/sample.pdf", ["sample.pdf", "application/pdf"]],
 ]);
 
 const DOOM_TYPES = {
