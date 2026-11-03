@@ -2,6 +2,13 @@
 
 What has been done, in order. Newest entries first.
 
+## The fallback surfaces get a harness
+
+- **`npm run fallbacks`** (`scripts/fallbacks.mjs`) runs each framed editor in headed Chrome over the DevTools pipe, on a page carrying `frame-src 'self'` and on a plain control page, and reports one line per surface.
+- The press that opens a document picture-in-picture window is granted activation through `Runtime.evaluate`, since a synthesized press does not reliably carry it; a surface Chrome never opened is reported as skipped rather than passed or failed.
+- Measured 2026-11-03: the modal loads in all three tools; the popup loads for the photo and code tools only on the control page, and for the PDF tool not at all. A popup the tool opens is an `about:blank` document and inherits the opener's policy, which the claim that the popup escapes the page's CSP got wrong.
+- The floating window is still unproven: it opened on the blocked page and the editor never answered, and it never opened on the control under the harness.
+
 ## A photo, and the page's own markup, edit in the same three surfaces
 
 - **📷 Edit photo on Page** (`files`) picks an image from disk and opens Photopea in the modal, handing it the bytes as an `ArrayBuffer` over Photopea's Live Messaging API; **Save PNG** asks for `saveToOE("png")` and the edited image comes straight back for download. Nothing is uploaded.
