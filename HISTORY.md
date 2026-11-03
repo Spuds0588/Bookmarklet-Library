@@ -2,6 +2,29 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-02 — WebMCP bridge gives a local model a page to drive
+
+**Changed**
+
+- Added **🕸️ WebMCP bridge** and the hosted `webmcp/` hub. The bookmarklet opens a companion window during the click, the hub indexes the page's visible controls, and a local model chooses one JSON action at a time: click, type, select or done. No page content is uploaded.
+- The map is capped at 30 entries with 48-character labels. Password and file inputs, disabled and inert controls, hidden elements and off-viewport boxes are skipped; link queries and fragments are dropped. The target uses native value setters and dispatches `input` and `change`, plus pointer and mouse events before a click.
+- The channel requires the hub's exact origin and popup source on the target, `window.opener` and the session token on the hub, and a 128-bit token after the handshake. `HALT` stops the target immediately, `ARM` re-arms it for the next run, and a reloaded page can reclaim a named hub window with `TARGET_HELLO`.
+- The hub tries Chrome's built-in Prompt API first, keeping a fresh session per turn so the small context window does not grow. If `requestAdapter()` returns a real WebGPU adapter it offers SmolLM2 360M, Qwen2.5 0.5B or Llama 3.2 1B through WebLLM. A run is capped at 12 steps, stops on an unusable reply, a refused action or the same move three times, and discards an in-flight result after Kill.
+- README, AGENTS and TODO describe the tool, the protocol, the model rules and the limits. The catalog, the connected-hub capture and its manifest entry are committed.
+
+**Verified**
+
+- `npm test`: 75 tests pass, including the new protocol, prompt, engine-detection and bookmarklet-gate suite.
+- Local Chrome/Electron run on the demo page: the hub connected, indexed 20 controls, and excluded the password and hidden CSRF fields. A direct typed action changed the field and fired one real `input` event. A two-step test-engine run typed the field, refreshed the map and finished with `done`.
+- Kill during a delayed model call left the field unchanged, logged the halt and stayed halted after the in-flight call returned; a new run re-armed the target and finished. Closing the hub cleared the session and its 20 injected IDs, and the next bookmarklet click opened a fresh connected hub.
+- The capture shows the connected hub with a task typed, 19 controls and Chrome's built-in model download offered in the capture profile. `npm run verify` reports 122 tools, 87 screenshots and 35 tools explained without one.
+
+**Limit**
+
+- The verification browser exposed `navigator.gpu` but returned no adapter and had no built-in model, so no real inference ran. The full loop used a deterministic test engine; the Prompt API and WebLLM adapters are covered by detection tests, not a model run.
+- Local verification was same-origin. The live cross-origin handshake, a COOP-sealed page and a blocked pop-up still need a browser pass.
+- The bookmarklet is about 8 KB raw, not the prototype's 3 KB target; it stays well under Firefox's 64 KB limit. It drives one document, not cross-origin iframes, and loses the bridge on a full navigation.
+
 ## 2026-11-01 — Four tools save a page's media into a chosen folder
 
 **Changed**

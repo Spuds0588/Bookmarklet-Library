@@ -175,6 +175,12 @@ const ZIP_SAMPLE = [
 /* Steps for a window the tool opened. A recorder sits there saying "ready"
  * until someone presses start, so the window is driven before it is shot. */
 const AFTER = {
+  // The bridge is only worth photographing once the hub says it is connected;
+  // the task field shows what the panel is for without pretending a model ran.
+  "webmcp-bridge": [
+    { wait: 900 },
+    { script: '(() => { const badge = document.getElementById("badge"); if (!badge || badge.dataset.state !== "live") throw new Error("hub did not connect: " + (badge?.textContent || "no badge")); const task = document.getElementById("task"); task.value = "Find the field notes and open the first result"; task.dispatchEvent(new Event("input", { bubbles: true })); return true; })()' },
+  ],
   "record-camera": [{ clickText: "Start Recording" }, { wait: 1800 }],
   // The microphone has to be chosen before the record button even appears.
   "record-audio": [{ click: "#mic-list button" }, { wait: 700 }, { click: "#recBtn" }, { wait: 1800 }],
@@ -204,6 +210,9 @@ const PREP = {
   // a canvas, but the image on it is a real QR SVG and the selection, crop and
   // decode are the ones the tool runs. The reader page is served locally so
   // the capture does not depend on the live site.
+  // The hub is hosted, so the capture points the bookmarklet at the fixture
+  // server's copy instead of the live site.
+  "webmcp-bridge": ['globalThis.__WEBMCP_HUB_URL__ = "http://127.0.0.1:4321/webmcp/"'],
   "scan-qr": [
     `(async () => {
       const image = new Image();
@@ -885,6 +894,7 @@ const DOOM_TYPES = {
 const PAGE_TYPES = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
   ".txt": "text/plain; charset=utf-8",
   ".svg": "image/svg+xml",
 };
@@ -912,6 +922,41 @@ async function serveFixture() {
         const body = await readFile(file);
         response.writeHead(200, {
           "content-type": PAGE_TYPES[path.extname(file)] ?? "application/octet-stream",
+          "content-length": body.length,
+          "cache-control": "no-store",
+        });
+        response.end(body);
+        return;
+      }
+      // The WebMCP hub is a hosted page of its own; the bookmarklet and its
+  // modules are served beside it so the capture runs without the live site.
+      if (pathname === "/webmcp") {
+        response.writeHead(302, { location: "/webmcp/" });
+        response.end();
+        return;
+      }
+      if (pathname.startsWith("/webmcp/")) {
+        const name = pathname.slice("/webmcp/".length) || "index.html";
+        const hubDir = path.join(root, "webmcp");
+        const file = path.normalize(path.join(hubDir, name));
+        if (!file.startsWith(hubDir + path.sep)) {
+          response.writeHead(404);
+          response.end("not found");
+          return;
+        }
+        const body = await readFile(file);
+        response.writeHead(200, {
+          "content-type": PAGE_TYPES[path.extname(file)] ?? "application/octet-stream",
+          "content-length": body.length,
+          "cache-control": "no-store",
+        });
+        response.end(body);
+        return;
+      }
+      if (pathname === "/bookmarklets/devtools/webmcp-bridge.js") {
+        const body = await readFile(path.join(root, "bookmarklets", "devtools", "webmcp-bridge.js"));
+        response.writeHead(200, {
+          "content-type": "text/javascript; charset=utf-8",
           "content-length": body.length,
           "cache-control": "no-store",
         });

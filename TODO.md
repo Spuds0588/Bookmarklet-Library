@@ -82,6 +82,18 @@
 - [ ] HLS/DASH, encrypted media, canvas drawings, CSS background images and players fed by JavaScript are out of scope; the panel says so rather than guessing at segments.
 - [ ] No physical test of a site with dozens of images or a Content-Disposition filename that disagrees with the URL name; the URL name wins.
 
+## WebMCP bridge (2026-11-02)
+
+- [x] **🕸️ WebMCP bridge** opens a hosted companion hub, connects to the page that opened it, indexes up to 30 visible controls and drives clicks, typing and selects from validated JSON actions. Password and file inputs are excluded.
+- [x] The target checks the hub origin and its popup source; the hub checks `window.opener`; every later message carries a 128-bit token. `HALT`/`ARM` implement Kill, `TARGET_HELLO` reclaims a named hub after a reload, and closing the hub re-arms on the next click.
+- [x] The hub prefers Chrome's built-in Prompt API and offers SmolLM2 360M, Qwen2.5 0.5B or Llama 3.2 1B through WebLLM only when `requestAdapter()` returns an adapter. Runs are capped at 12 steps and stop on an unusable reply, a failed action or the same move three times.
+- [x] Node tests cover validation, token shape, prompt trimming, engine detection, bookmarklet origin/token/kill gates and cleanup. A local Chrome run verified the handshake, 20 indexed controls, a typed action, a two-step test-engine run, Kill and recovery, and close-and-relaunch.
+- [x] The connected hub is captured at 1200x750 and committed.
+- [ ] Load a real local model and run a task end to end. The verification browser exposed no built-in model and no WebGPU adapter; Chrome 156 on localhost reported Gemini Nano downloadable during the capture, but its weights were not downloaded.
+- [ ] Handshake with the deployed cross-origin hub from a normal page, a COOP-isolated page and a page that blocks the pop-up. Local verification was same-origin.
+- [ ] Exercise a select, a checkbox and a React/Vue-controlled form. Typing was verified against the demo form's native input event.
+- [ ] Bring the 8 KB bookmarklet down to the 3 KB prototype target by moving re-arm bookkeeping into the hub or minifying at build time, without losing the readable source.
+
 ## Nice to have, only if it earns its place
 
 - [x] Shareable search: `?q=markdown` preselects the box, the target advertised in the `SearchAction` schema. Tool views deep-link as `#t/<slug>`.

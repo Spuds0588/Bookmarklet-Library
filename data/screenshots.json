@@ -1,7 +1,7 @@
 {
   "width": 1200,
   "height": 750,
-  "generated": "2026-11-01",
+  "generated": "2026-11-03",
   "tools": {
     "record-audio": {
       "file": "screenshots/record-audio.png",
@@ -376,6 +376,12 @@
     "wireframe-outline": {
       "file": "screenshots/wireframe-outline.png",
       "changed": true
+    },
+    "webmcp-bridge": {
+      "file": "screenshots/webmcp-bridge.png",
+      "changed": true,
+      "popup": true,
+      "steps": 2
     },
     "console-monitor": {
       "file": "screenshots/console-monitor.png",

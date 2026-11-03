@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark">
+<title>WebMCP Bridge — Bookmarklet Library</title>
+<link rel="stylesheet" href="hub.css">
+</head>
+<body>
+<main class="shell">
+  <header class="head">
+    <div>
+      <p class="kicker">Local browser agent</p>
+      <h1>WebMCP <span>Bridge</span></h1>
+    </div>
+    <span class="badge" id="badge" data-state="idle">Waiting</span>
+  </header>
+
+  <section class="view setup" id="setup" hidden>
+    <div class="install">
+      <p class="kicker">Install</p>
+      <p class="lead">Drag the button to your bookmarks bar.</p>
+      <a class="install-link" id="install-link" href="#" draggable="true">🕸️ WebMCP bridge</a>
+      <p class="note" id="install-note" aria-live="polite">Loading the bookmarklet…</p>
+    </div>
+
+    <div class="notice" id="coop" hidden>
+      <strong>This site cut the connection.</strong>
+      <p>A Cross-Origin-Opener-Policy header severed the link to the tab that opened this window. Try a page without that header; the bridge needs its opener to stay attached.</p>
+    </div>
+
+    <ol class="steps">
+      <li>Open the page you want the agent to work on.</li>
+      <li>Click the bookmarklet once. This companion window connects to that tab.</li>
+      <li>Give the hub a task, prepare a local model, and press <strong>Run</strong>.</li>
+    </ol>
+
+    <div class="panel">
+      <p class="kicker">What runs where</p>
+      <p>The page sends a compact map of its visible controls to this window. The map and the model's replies stay in these two tabs. Nothing from the page is uploaded.</p>
+      <p class="note">Chrome's built-in model needs no download. The WebLLM fallback downloads model weights once from Hugging Face when you choose it; the page's content is never part of that request.</p>
+    </div>
+
+    <details class="panel">
+      <summary>Requirements and limits</summary>
+      <p>Chrome 138 or newer with the Prompt API gives the quickest start. Without it, a WebGPU browser can run a small WebLLM model. The fallback models are hundreds of megabytes and stay in the browser cache.</p>
+      <p>Pop-ups must be allowed on the page where you click the bookmarklet. A strict <code>Cross-Origin-Opener-Policy: same-origin</code> header prevents the two windows from meeting. The bridge works in one document at a time, does not see inside cross-origin iframes, and loses its map on a full page navigation.</p>
+    </details>
+  </section>
+
+  <section class="view active" id="active" hidden>
+    <div class="meta">
+      <div><span>Engine</span><b id="engine-name">Detecting…</b></div>
+      <div><span>Target</span><b id="target-title">Waiting…</b></div>
+      <div><span>Controls</span><b id="map-count">0</b></div>
+    </div>
+
+    <div class="engine">
+      <select id="model" aria-label="WebLLM model" hidden></select>
+      <button class="btn" id="prepare" type="button" hidden>Prepare model</button>
+      <p class="note" id="engine-note">Waiting for the target tab.</p>
+    </div>
+
+    <div class="log" id="log" role="log" aria-live="polite" aria-label="Session log"></div>
+
+    <div class="composer">
+      <label class="sr-only" for="task">Task</label>
+      <textarea id="task" rows="2" maxlength="300" placeholder="e.g. Search for field notes and open the first result"></textarea>
+      <div class="controls">
+        <button class="btn primary" id="run" type="button" disabled>Run</button>
+        <button class="btn kill" id="kill" type="button" disabled>Kill</button>
+        <button class="btn" id="retry" type="button" hidden>Retry</button>
+      </div>
+      <div class="runline">
+        <label>Max steps <input id="steps" type="number" min="1" max="12" value="5"></label>
+        <span class="note" id="run-state"></span>
+      </div>
+    </div>
+
+    <details class="panel map">
+      <summary>Actionable map <span id="map-summary">none yet</span></summary>
+      <pre id="map">No map yet.</pre>
+    </details>
+  </section>
+
+  <footer class="foot">
+    <span>DOM stays between these two windows</span>
+    <span>Model runs on this device</span>
+  </footer>
+</main>
+<script type="module" src="hub.js"></script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 
 A searchable catalog of small browser tools. Find one that does the job, drag it to your bookmarks bar, click it on any page. Nothing to install, no accounts, no extensions.
 
-116 bookmarklets across eight categories: capture, annotate, text, files, dev tools, view, games and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site. Two tools use a hosted helper page: the URL chat loads PeerJS from a CDN, and Doom loads its own WebAssembly engine and shareware WAD from this site.
+122 bookmarklets across eight categories: capture, annotate, text, files, dev tools, view, games and privacy. Everything is vanilla HTML, CSS and JavaScript served as a static site. Four tools use a hosted helper page: the URL chat loads PeerJS from a CDN, Doom loads its own WebAssembly engine and shareware WAD from this site, the QR reader decodes screen captures locally, and the WebMCP hub runs the local agent window.
 
 ## Use it
 
@@ -26,7 +26,7 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 | Annotate | Screenshot markup (arrows, boxes, numbered steps), freehand draw |
 | Text | Advanced find, find and replace on inputs, page to Markdown, read aloud, extract emails, table to CSV/Markdown, text-fragment citations, password generation, QR codes |
 | Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, ZIP create/extract, Word/HTML/RTF/TXT/Markdown and Excel/CSV conversion both ways, OpenDocument `.odt`/`.ods` conversion both ways, HTML snippet saver, Loom export |
-| Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder, layout and accessibility overlays, environment switcher, form harvester/stamper, webhook dispatcher |
+| Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder, layout and accessibility overlays, environment switcher, form harvester/stamper, webhook dispatcher, WebMCP local agent bridge |
 | View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, sticky-header removal, link highlighting, dark mode, force scroll, presenter spotlight, Jitsi meeting, URL chat, voice commands |
 | Games | Doom, Neon Hell |
 | Privacy | Redact page text, hide email addresses, blur elements, pixelate a region, hide notification toasts, PII masker |
@@ -123,6 +123,14 @@ The PDF writer uses the Helvetica family, Latin-1 text, the DOCX page size and m
 
 **📮 Context Webhook Dispatcher** builds a small JSON body from the page URL, title, selected text and metadata, then POSTs it to a webhook. If the site's `connect-src` CSP or the endpoint's CORS policy blocks the request, it copies the same payload to the clipboard. The endpoint URL is stored under `bl:webhook`; nothing else is saved.
 
+## WebMCP bridge
+
+**🕸️ WebMCP bridge** opens a companion [hub](webmcp/) window and links it to the tab where you clicked. The hub indexes up to 30 visible controls and asks a local model for one JSON action at a time: click, type, select, or done. Chrome's built-in Prompt API (Gemini Nano) is tried first. A browser with a real WebGPU adapter can load SmolLM2 360M, Qwen2.5 0.5B or Llama 3.2 1B through WebLLM; the weights download once and stay in the browser cache. The page map and the model's replies stay between the two windows, and no page content is uploaded.
+
+The bookmarklet opens the hub during the click, so pop-ups must be allowed. The target accepts only messages from the hub's exact origin, the hub accepts only messages from the window it opened, and every later message carries a 128-bit session token. Password and file inputs are never indexed. **Kill** sends a halt before stopping the loop, an in-flight model call is discarded, and a run is capped at 12 steps. Closing the hub or reloading the page ends the session; clicking the bookmarklet again opens a fresh one.
+
+Limits: a `Cross-Origin-Opener-Policy: same-origin` page severs `window.opener`; only the top document is visible, not cross-origin iframes; a full navigation loses the bridge; and the local model can still return an unusable action, which stops the run rather than guessing. `navigator.gpu` alone is not enough: the hub asks for an adapter before offering WebLLM, because some browsers expose the API without one. The bookmarklet is about 8 KB raw, above the 3 KB prototype target but well under Firefox's 64 KB bookmark limit.
+
 ## Doom
 
 **💥 Will it run Doom?** opens a centered window with actual shareware **DOOM** Episode 1, not a lookalike. The bookmarklet is a small loader; [doom/](doom/index.html) hosts the unmodified Dwasm 2.2.0 WebAssembly engine and the shareware `DOOM1.WAD`. It starts on E1M1 at Hurt Me Plenty. **Expand** fills the browser, and **Open in tab** is there because a strict `frame-src` CSP can block the iframe.
@@ -152,6 +160,8 @@ npm test
 `tests/qr-tools.test.mjs` loads the QR tool's test export and checks a known URL's version, finder and timing patterns, the SVG quiet zone, UTF-8 byte counting, filenames and the too-long rejection.
 
 `tests/qr-reader.test.mjs` loads the bundled jsQR 1.4.0 build and decodes the encoder's own matrices: a URL, an inverted light-on-dark code, UTF-8 text, and a blank image that must not report a result. It also checks the Apache-2.0 header and the shipped license.
+
+`tests/webmcp.test.mjs` checks the protocol's JSON validation and limits, the 128-bit token shape, prompt bounds and path trimming, Prompt API/legacy/WebGPU detection including an adapter-less `navigator.gpu`, and the bookmarklet's origin, token, HALT and cleanup gates against a fake DOM. Browser runs cover the handshake, a typed action, a full model loop driven by a deterministic test engine, Kill and recovery, and close-and-relaunch. A real local model was not available in the verification browser.
 
 `tests/office-tools.test.mjs` builds and reads DOCX, XLSX, PDF and RTF output in Node: Word paragraphs, headings, lists, tables and images; HTML/Markdown/RTF/TXT to Word; CSV quoting; Excel sheet export; ordered-list restarts; table images; and PDF text in a paragraph that also carries an image. It also covers the cases real documents raise: a row that starts in a later column, a table row inside a content control, a cell with several paragraphs, a big Chinese RTF run, two RTF table rows, and an RTF picture with nested blip groups. Node has no canvas, so the PDF tests assert the skipped-image path; the image path is checked in Chrome.
 
@@ -247,6 +257,7 @@ scripts/compose.mjs            source parts + tool -> bookmarklets/files/<slug>.
 data/catalog.json              generated catalog the page reads
 data/screenshots.json          generated screenshot manifest the page reads
 qr-reader/                     hosted result window and bundled jsQR decoder for the screen QR tool
+webmcp/                        hosted WebMCP hub: setup page, agent loop, protocol and model adapters
 screenshots/<slug>.png         one capture per tool
 scripts/fixtures/…             the demo page and media clips tools are captured against
 scripts/fixtures/make-odf.mjs  writes report.odt and report.ods by hand, never through the code under test
@@ -256,6 +267,7 @@ tests/office-tools.test.mjs    Office conversion tests
 tests/odf-tools.test.mjs       OpenDocument conversion tests
 tests/qr-tools.test.mjs        QR encoder, SVG and filename tests
 tests/qr-reader.test.mjs       bundled jsQR decoder tests
+tests/webmcp.test.mjs          WebMCP protocol, prompt and bookmarklet gate tests
 scripts/build.mjs              builds the catalog
 scripts/shots.mjs              runs tools in headless Chrome, captures screenshots
 scripts/verify.mjs             integrity checks
