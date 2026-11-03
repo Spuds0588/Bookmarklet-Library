@@ -720,9 +720,14 @@
     .queue-save:disabled { opacity: .35; cursor: default; }
   `;
 
-  function kb(bytes) {
-    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-    return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  // Sizes are always MB, with decimals below 10 MB: upload limits are quoted
+  // that way, so "0.06 MB" reads true beside a 20 MB ceiling where "58 KB"
+  // needs a conversion first.
+  function mb(bytes) {
+    const value = bytes / (1024 * 1024);
+    if (value >= 100) return `${Math.round(value)} MB`;
+    if (value >= 10) return `${value.toFixed(1)} MB`;
+    return `${value.toFixed(2)} MB`;
   }
 
   function make(tag, attrs = {}, text = "") {
@@ -792,7 +797,7 @@
     }
 
     const splitRow = make("label", { class: "row" });
-    const splitInput = make("input", { type: "number", min: "0.2", step: "0.5", placeholder: "off", inputmode: "decimal" });
+    const splitInput = make("input", { type: "number", min: "0.2", step: "0.5", placeholder: "off", inputmode: "decimal", value: "20" });
     splitRow.append(make("span", {}, "Split parts under (MB)"), splitInput);
 
     const status = make("p", { class: "status" }, "Ready. Pick one or more PDFs, then press Shrink.");
@@ -852,13 +857,13 @@
       anchor.click();
       anchor.remove();
       setTimeout(() => URL.revokeObjectURL(url), 30000);
-      setStatus(`Saved ${filename} (${kb(bytes.length)}).`);
+      setStatus(`Saved ${filename} (${mb(bytes.length)}).`);
     }
 
     function rowFor(file) {
       const row = make("li");
       const name = make("span", { class: "queue-name" }, file.name);
-      const meta = make("span", { class: "queue-meta" }, `${kb(file.size)} · queued`);
+      const meta = make("span", { class: "queue-meta" }, `${mb(file.size)} · queued`);
       const save = make("button", { class: "queue-save", type: "button", "data-save": "" }, "Save");
       save.disabled = true;
       save.hidden = true;
@@ -925,8 +930,8 @@
       const before = done.reduce((sum, item) => sum + item.file.size, 0);
       const after = done.reduce((sum, item) => sum + item.result.reduce((partSum, part) => partSum + part.bytes.length, 0), 0);
       const headline = done.length === 1
-        ? (done[0].result.length > 1 ? `${done[0].result.length} parts · ${kb(after)}` : `${kb(before)} → ${kb(after)}`)
-        : `${done.length} files · ${kb(before)} → ${kb(after)}`;
+        ? (done[0].result.length > 1 ? `${done[0].result.length} parts · ${mb(after)}` : `${mb(before)} → ${mb(after)}`)
+        : `${done.length} files · ${mb(before)} → ${mb(after)}`;
       const notes = [`${files.length} file${files.length === 1 ? "" : "s"} ready`];
       if (none.length) notes.push(`${none.length} with no gain`);
       if (failed.length) notes.push(`${failed.length} failed`);
@@ -950,20 +955,20 @@
         const total = parts ? parts.reduce((sum, part) => sum + part.bytes.length, 0) : outcome.after;
         const saved = outcome.before - total;
 
-        if (!parts && saved <= 0) {
+        if (saved <= 0 && (!parts || parts.length === 1)) {
           item.status = "none";
-          item.meta.textContent = `${kb(outcome.before)} · no gain, left as it was`;
+          item.meta.textContent = `${mb(outcome.before)} · no gain, left as it was`;
           return;
         }
 
         const base = baseName(name);
         if (parts && parts.length > 1) {
           item.result = parts.map((part, index) => ({ name: `${base}-part${index + 1}.pdf`, bytes: part.bytes }));
-          item.meta.textContent = `${parts.length} parts · ${kb(total)}`;
+          item.meta.textContent = `${parts.length} parts · ${mb(total)}`;
           if (parts.some((part) => part.tooBig)) item.meta.textContent += " · a page is still over the limit";
         } else {
           item.result = [{ name: `${base}-small.pdf`, bytes: parts ? parts[0].bytes : outcome.bytes }];
-          item.meta.textContent = `${kb(outcome.before)} → ${kb(total)} · ${Math.round((saved / outcome.before) * 100)}% smaller`;
+          item.meta.textContent = `${mb(outcome.before)} → ${mb(total)} · ${Math.round((saved / outcome.before) * 100)}% smaller`;
         }
         item.status = "done";
         item.save.hidden = false;

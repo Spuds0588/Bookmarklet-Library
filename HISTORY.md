@@ -2,6 +2,19 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Sizes read in MB, and splitting starts at 20 MB
+
+**Changed**
+
+- Every size in the panel is stated in MB, with two decimals below 10 MB, so a scan reads `6.56 MB → 1.39 MB` and a form reads `0.18 MB → 0.06 MB` instead of switching to kilobytes. Upload limits are quoted in MB, so the panel now matches what people compare against.
+- **Split parts under (MB)** starts at 20 rather than off, which is the ceiling most upload forms actually impose.
+- With splitting on by default, a single-part result is held to the same rule as an unsplit one: nothing is offered when the rebuild does not beat the original. Previously the no-gain guard only applied when splitting was off.
+
+**Verified**
+
+- `npm test`: 110 pass.
+- The capture runs two PDFs through the real picker, asserts both rows are saveable and the footer offers one archive, and now shows `0.24 MB → 0.12 MB`.
+
 ## 2026-11-03 — Shrink PDF takes a batch
 
 **Changed**
