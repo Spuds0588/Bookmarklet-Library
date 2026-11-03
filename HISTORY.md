@@ -2,6 +2,25 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — A probe that runs the agent, and instructions tuned with it
+
+**Changed**
+
+- `scripts/shots.mjs --webmcp-probe` runs the agent end to end with no model. The hub is driven through its `?webmcp-test` hook, the engine is a script of decisions, `--tools` installs a WebMCP-shaped `document.modelContext` in the fixture so a page that publishes tools can be exercised where Chrome's API is switched off, `--kill` adds a mid-run halt, `--prompts` prints the exact prompt each step sent, and `--hub=prod` aims the same run at the live hub.
+- The first runs paid for themselves. The hub never passed `session.tools` into the prompt, so a tools page still got a `Controls:` list; it now sends the tools and drops the map. The system prompt was rewritten for both paths — it opened with “a numbered list of visible controls” and told the model to use ids from Controls, which a tools page does not have — tool results now feed the next prompt instead of a bare `-> ok`, and a field described by its own value no longer repeats it as both label and value.
+- The probe holds the fixture's region element instead of looking it up by `aria-label`, which that field does not have.
+
+**Verified**
+
+- Controls path: 19 controls, one `type` step, the page field went to “ridge”, and the log ran “19 visible controls indexed” → “Step 1: Type “ridge” into “demo region — north”” → “Action applied” → “Finished”.
+- Page-tool path (`--tools`): the hub reported “1 page tools”, the run called `set_region`, the field went to “ridge” and the log read “set_region: Region set to ridge.” → “Finished”. That step's prompt carried `Page tools (call these by name; results come back as text): [{"name":"set_region",…}]` and no `Controls:` line.
+- Kill (`--tools --kill`): the badge went `halted` after a mid-run press and the next tool call came back “The hub's kill switch is on.”
+- `npm test`: 78 pass; `build --check`, `compose --check` and `verify` are clean on 122 tools.
+
+**Limit**
+
+- `--tools` is a stub shaped like the documented API, not Chrome's own implementation, and no weights ran: the wording is checked for shape, not for whether a real model follows it. A run in a Chrome with WebMCP switched on, and one with Gemini Nano installed, are still the missing half.
+
 ## 2026-11-03 — Drive this page, and the page's own tools
 
 **Changed**
