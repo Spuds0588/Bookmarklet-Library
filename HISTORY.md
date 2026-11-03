@@ -15,11 +15,13 @@ What has been done, in order. Newest entries first.
 - The published page renders 122 cards each with a badge row; the WebMCP card reads Online · Web app · 3rd-party · CORS-free; `#t/webmcp-bridge` shows four chips with their explanations and an install href byte-identical to the catalog's; search reports 97 tools for `offline` and 104 for `sensitive-safe`.
 - The bridge against the deployed hub, genuinely cross-origin (`http://127.0.0.1:4173` → `https://spuds0588.github.io/.../webmcp/`): the bookmarklet opened the hub, the handshake completed (`[WebMCP] Hub connected.`), and the hub received a 20-control map with the page's password input left unmapped.
 - Closing the hub window cleared the target's session — active flag, pop-up reference and all 20 `data-webmcp-id` attributes — and the next click opened a fresh hub that reconnected with the same 20 controls.
+- A headless Chrome run over the DevTools pipe, the same transport `shots.mjs` uses, watched every window Chrome created and attached to the hub pop-up itself. The badge reached `live`, the hub listed 19 controls and the page title, and `__WEBMCP_TEST__` drove a scripted engine through one real step: typing “north ridge” into the mapped region input changed it from “demo region — north” and fired exactly one `input` event, then `done` closed the run with the badge back to `live`.
+- Kill pressed mid-run set the badge to `halted` and sent exactly one `HALT` to the target; a later `EXEC_ACTION` was answered “The hub's kill switch is on.”, so nothing runs after the switch.
 
 **Limit**
 
-- The hub is a separate pop-up window rather than a tab, so its own run (a model step, the `?webmcp-test` actions, Kill) was not driven in production; those paths stay covered by the Node suite and the earlier local run.
-- A page that blocks the pop-up, a COOP-isolated page and a real local model remain untested. This profile allowed the pop-up even without a click gesture, so the blocked-pop-up branch never ran.
+- The scripted engine stands in for a model: no weights ran, so the prompt, the reply parsing and the repeat guard are exercised by `tests/webmcp.test.mjs` rather than in production. A real local model is still untested.
+- A page that blocks the pop-up and a COOP-isolated page remain untested. The harness runs with `--disable-popup-blocking` and Chrome allowed the window without a click gesture, so the blocked-pop-up branch never ran.
 - The production smoke test did not cover the chip filter, the theme toggle, dragging a bookmark or the two-tool export.
 
 ## 2026-11-03 — Every tool says what it needs

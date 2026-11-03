@@ -92,7 +92,9 @@
 - [x] The connected hub is captured at 1200x750 and committed.
 - [ ] Load a real local model and run a task end to end. The verification browser exposed no built-in model and no WebGPU adapter; Chrome 156 on localhost reported Gemini Nano downloadable during the capture, but its weights were not downloaded.
 - [x] Handshake with the deployed cross-origin hub from a normal page: a `127.0.0.1:4173` page connected to `spuds0588.github.io/Bookmarklet-Library/webmcp/`, logged the connection, and delivered its 20-control map with the password field excluded. Closing the hub cleared the session and its IDs, and the next click reconnected with a fresh hub.
-- [ ] A COOP-isolated page and a page that blocks the pop-up are still untested, and the automated browser allowed the pop-up without a click gesture, so the blocked branch never ran. The hub's own run was not driven in production: it opens as a separate pop-up window, so a model step, the `?webmcp-test` actions and Kill still rest on the Node suite and the local pass.
+- [x] The hub pop-up itself was attached with the DevTools pipe and driven from a scripted engine: `live` badge, 19 controls, one real `type` step that changed the mapped input and fired a single `input` event, then `done`. Kill mid-run set `halted`, delivered exactly one `HALT`, and the next action was refused with “The hub's kill switch is on.”
+- [ ] A COOP-isolated page and a page that blocks the pop-up are still untested; the harness ran with `--disable-popup-blocking` and Chrome opened the hub without a click gesture, so that branch never ran.
+- [ ] The harness that attached to the pop-up lives in `/tmp` and is not committed. If this check earns its keep, teach `scripts/shots.mjs` a probe mode for it rather than adding a second browser driver.
 - [ ] Exercise a select, a checkbox and a React/Vue-controlled form. Typing was verified against the demo form's native input event.
 - [ ] Bring the 8 KB bookmarklet down to the 3 KB prototype target by moving re-arm bookkeeping into the hub or minifying at build time, without losing the readable source.
 
