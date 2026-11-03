@@ -69,7 +69,13 @@ function parseSource(slug, file, text) {
     if (!meta[field]) throw new Error(`${file}: missing @${field}`);
   }
   const code = text.slice(match[0].length).trim();
-  if (!code) throw new Error(`${file}: empty source`);
+  // A bookmarklet that lives in another repository is an entry, not a payload:
+  // it points at that repo's install page and carries no code, so the catalog
+  // can call it out without pretending to host it.
+  const external = (meta.external ?? "").trim();
+  if (external && !/^https?:\/\//.test(external)) throw new Error(`${file}: @external must be an http(s) URL`);
+  if (external && code) throw new Error(`${file}: an @external entry carries no code`);
+  if (!code && !external) throw new Error(`${file}: empty source`);
   if (!categoryIndex.has(meta.category)) throw new Error(`${file}: unknown category "${meta.category}"`);
   if (path.basename(path.dirname(file)) !== meta.category) {
     throw new Error(`${file}: category does not match its folder`);
@@ -103,6 +109,7 @@ function parseSource(slug, file, text) {
     throw new Error(`${file}: @author and @credit go together`);
   }
   if (credit && !/^https?:\/\//.test(credit)) throw new Error(`${file}: @credit must be an http(s) URL`);
+  if (external && !credit) throw new Error(`${file}: @external needs @author and @credit so the other repo is named`);
 
   return {
     slug,
@@ -117,9 +124,12 @@ function parseSource(slug, file, text) {
     author,
     credit,
     bytes: Buffer.byteLength(code),
+    external: Boolean(external),
+    externalUrl: external,
     source: path.relative(root, file).split(path.sep).join("/"),
-    // Percent-encoding keeps quotes, hashes and percent signs intact in an href.
-    href: "javascript:" + encodeURIComponent(code),
+    // Percent-encoding keeps quotes, hashes and percent signs intact in an href;
+    // an external entry's href is the install page it points at.
+    href: external || "javascript:" + encodeURIComponent(code),
   };
 }
 

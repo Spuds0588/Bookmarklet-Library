@@ -2,6 +2,28 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Exports lose a folder, and Turnstone joins the catalog
+
+**The export was one folder too deep**
+
+- `bookmarks.html` nested its category folders inside a "Bookmarklet Library" folder. A browser already wraps an import in a folder of its own, so the tools arrived two levels down. The library level is gone: the categories are the only folders in the file.
+- Checked by extracting `buildBookmarkFile` and running it against two categories: three `<DL>` lists (root plus one per category) with balanced tags, no library heading, and the category order preserved.
+
+**Tools that live elsewhere**
+
+- The catalog can now carry a bookmarklet that lives in another repository: `@external <install page>` with no code, and `@author`/`@credit` required so the other repo is named. `build` writes `external` and `externalUrl` and uses that URL as the href; `verify` skips the decode and byte checks and instead rejects an external entry that carries code or a byte count.
+- Added **📊 Turnstone on any page** (Files), pointing at `https://spuds0588.github.io/Turnstone/bookmarklet.html`. The card reads "Get it from Corey Burns", opens that page in a new tab and drops the copy button; the detail view says "Hosted elsewhere" where a size would be.
+- The capture declares external entries with the existing `external` reason rather than failing for a missing screenshot, which is why the catalog now reports 36 tools explained without one.
+
+**The other repos, surveyed**
+
+- Turnstone: real ports of the whole app (`csv`, `core`, `full`) plus an install page — added.
+- ReferenceMaterials: `JS_Runner_bookmarklet.js` is the origin of the JS Runner already vendored here, and `code_editor_modal_bookmarklet.html` is its demo page, so neither adds a tool.
+- QuickRecord: a screen recorder bookmarklet that duplicates `record-tab` and `record-camera`.
+- Powerapps-SVG-Icons-Assistant: a README and reference notes, no payload file.
+- TemplateDoc-Bookmarklet-Generator and the ReferenceMaterials generator pages build bookmarklets rather than being one.
+- The Arive family is excluded by the vendor rule in `verify.mjs` (`/arive/i`), so those stay out by policy.
+
 ## 2026-11-03 — Shrink PDF: a panel you can move, results you can drag
 
 **Why**

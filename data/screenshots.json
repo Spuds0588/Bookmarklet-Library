@@ -248,6 +248,10 @@
       "changed": false,
       "reason": "download"
     },
+    "turnstone-overlay": {
+      "changed": false,
+      "reason": "external"
+    },
     "html-to-odt": {
       "file": "screenshots/html-to-odt.png",
       "changed": true,

@@ -25,13 +25,23 @@ for (const item of catalog.items) {
   const source = await readFile(path.join(root, item.source), "utf8");
   const body = source.slice(source.indexOf("*/") + 2).trim();
 
-  if (decodeURIComponent(item.href.replace(/^javascript:/, "")) !== body) {
-    problems.push(`${item.slug}: href does not decode back to ${item.source}`);
-  }
-  try {
-    new Function(body);
-  } catch (error) {
-    problems.push(`${item.slug}: does not parse (${error.message})`);
+  if (item.external) {
+    // Points at another repo's install page. There is no payload here to decode,
+    // and shipping an empty bookmarklet would be worse than shipping none.
+    if (!/^https?:\/\//.test(item.href)) problems.push(`${item.slug}: external href is not an http(s) URL`);
+    if (body) problems.push(`${item.slug}: external entry carries code`);
+    if (item.bytes !== 0) problems.push(`${item.slug}: external entry has a byte count`);
+    if (!item.author || !item.credit) problems.push(`${item.slug}: external entry must name its author and source`);
+  } else {
+    if (decodeURIComponent(item.href.replace(/^javascript:/, "")) !== body) {
+      problems.push(`${item.slug}: href does not decode back to ${item.source}`);
+    }
+    try {
+      new Function(body);
+    } catch (error) {
+      problems.push(`${item.slug}: does not parse (${error.message})`);
+    }
+    if (item.bytes !== Buffer.byteLength(body)) problems.push(`${item.slug}: byte count mismatch`);
   }
   if (FORBIDDEN.test(body) || FORBIDDEN.test(item.name) || FORBIDDEN.test(item.description)) {
     problems.push(`${item.slug}: contains a forbidden vendor reference`);
@@ -58,7 +68,6 @@ for (const item of catalog.items) {
   if (item.credit && !/^https?:\/\//.test(item.credit)) problems.push(`${item.slug}: credit is not an http(s) URL`);
   if (seenNames.has(item.name)) problems.push(`${item.slug}: duplicate name "${item.name}"`);
   seenNames.add(item.name);
-  if (item.bytes !== Buffer.byteLength(body)) problems.push(`${item.slug}: byte count mismatch`);
   if (!EMOJI.test(item.name)) problems.push(`${item.slug}: name has no leading emoji`);
 }
 

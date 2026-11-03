@@ -247,18 +247,30 @@ function card(item) {
               <span class="card-shot-note">${esc(reasonFor(shot).short)} · no capture</span>
             </button>`
       }
-      <a class="install" href="${esc(item.href)}" draggable="true" title="Drag “${esc(item.name)}” onto your bookmarks bar">
-        ${bookmarkIcon}
-        <span>${esc(item.name)}</span>
-      </a>
-      <p class="install-hint">Drag onto your bookmarks bar</p>
+      ${
+        item.external
+          ? `<a class="install" href="${esc(item.href)}" target="_blank" rel="noopener" title="Opens the install page in the repository it lives in">
+              <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
+              <span>Get it from ${esc(item.author)}</span>
+            </a>
+            <p class="install-hint">Lives in another repo · opens its install page</p>`
+          : `<a class="install" href="${esc(item.href)}" draggable="true" title="Drag “${esc(item.name)}” onto your bookmarks bar">
+              ${bookmarkIcon}
+              <span>${esc(item.name)}</span>
+            </a>
+            <p class="install-hint">Drag onto your bookmarks bar</p>`
+      }
       <div class="card-actions">
         <button class="text-btn" type="button" data-open="${esc(item.slug)}">Details</button>
         <span class="card-actions-gap"></span>
-        <button class="copy-btn" type="button" data-copy="${esc(item.slug)}" aria-label="Copy code for ${esc(item.name)}" title="Copy the bookmarklet code">
+        ${
+          item.external
+            ? ""
+            : `<button class="copy-btn" type="button" data-copy="${esc(item.slug)}" aria-label="Copy code for ${esc(item.name)}" title="Copy the bookmarklet code">
           <svg class="icon" aria-hidden="true"><use href="#i-copy"></use></svg>
-        </button>
-        <a class="copy-btn" href="${esc(item.source)}" target="_blank" rel="noopener" aria-label="View source for ${esc(item.name)}" title="View source">
+        </button>`
+        }
+        <a class="copy-btn" href="${esc(item.external ? item.credit : item.source)}" target="_blank" rel="noopener" aria-label="${item.external ? "Open the repository" : "View source"} for ${esc(item.name)}" title="${item.external ? "The repository it lives in" : "View source"}">
           <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
         </a>
         <label class="pick">
@@ -415,8 +427,23 @@ function fillDetail(item) {
   nodes.detailTitle.textContent = item.name;
   nodes.detailDesc.textContent = item.description;
   nodes.detailInstall.setAttribute("href", item.href);
-  nodes.detailInstall.setAttribute("title", `Drag “${item.name}” onto your bookmarks bar`);
-  nodes.detailInstall.innerHTML = `${bookmarkIcon}<span>${esc(item.name)}</span>`;
+  if (item.external) {
+    nodes.detailInstall.setAttribute("target", "_blank");
+    nodes.detailInstall.setAttribute("rel", "noopener");
+    nodes.detailInstall.setAttribute("title", "Opens the install page in the repository it lives in");
+    nodes.detailInstall.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg><span>Get it from ${esc(item.author)}</span>`;
+  } else {
+    nodes.detailInstall.removeAttribute("target");
+    nodes.detailInstall.removeAttribute("rel");
+    nodes.detailInstall.setAttribute("title", `Drag “${item.name}” onto your bookmarks bar`);
+    nodes.detailInstall.innerHTML = `${bookmarkIcon}<span>${esc(item.name)}</span>`;
+  }
+  const installHint = nodes.detailInstall.parentElement?.querySelector(".install-hint");
+  if (installHint) {
+    installHint.textContent = item.external
+      ? "Opens the install page in the other repository"
+      : "Drag this button onto your bookmarks bar";
+  }
   nodes.detailTraits.innerHTML = (item.traits ?? [])
     .map((id) => {
       const trait = traitOf(id);
@@ -427,15 +454,19 @@ function fillDetail(item) {
   nodes.detailMeta.innerHTML = `
     <div><dt>Category</dt><dd>${esc(badgeFor(item.category))}</dd></div>
     <div><dt>Added</dt><dd>${esc(date)}</dd></div>
-    <div><dt>Size</dt><dd>${Math.max(1, Math.round(item.bytes / 1024))} KB</dd></div>
+    <div><dt>Size</dt><dd>${item.external ? "Hosted elsewhere" : `${Math.max(1, Math.round(item.bytes / 1024))} KB`}</dd></div>
     ${item.author ? `<div><dt>Credit</dt><dd><a href="${esc(item.credit)}" target="_blank" rel="noopener">${esc(item.author)}</a></dd></div>` : ""}`;
   nodes.detailHow.textContent = HOW_TOOL[item.slug] ?? HOW[item.category] ?? HOW.text;
   nodes.detailActions.innerHTML = `
-    <button class="ghost-btn" type="button" data-copy="${esc(item.slug)}">
+    ${
+      item.external
+        ? ""
+        : `<button class="ghost-btn" type="button" data-copy="${esc(item.slug)}">
       <svg class="icon" aria-hidden="true"><use href="#i-copy"></use></svg> Copy code
-    </button>
-    <a class="ghost-btn" href="${esc(item.source)}" target="_blank" rel="noopener">
-      <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg> Source file
+    </button>`
+    }
+    <a class="ghost-btn" href="${esc(item.external ? item.credit : item.source)}" target="_blank" rel="noopener">
+      <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg> ${item.external ? "Repository" : "Source file"}
     </a>
     ${item.author ? `<a class="ghost-btn" href="${esc(item.credit)}" target="_blank" rel="noopener">
       <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg> Original source
@@ -561,6 +592,9 @@ function buildBookmarkFile(items) {
     .map((category) => ({ category, items: items.filter((item) => item.category === category.id) }))
     .filter((group) => group.items.length);
 
+  // No library folder above the categories. A browser already wraps an import in
+  // a folder of its own, so a second level here only buries the tools one folder
+  // deeper than they need to be: the categories are the folders.
   const lines = [
     "<!DOCTYPE NETSCAPE-Bookmark-file-1>",
     "<!-- Exported from Bookmarklet Library -->",
@@ -568,21 +602,19 @@ function buildBookmarkFile(items) {
     "<TITLE>Bookmarklets</TITLE>",
     "<H1>Bookmarklets</H1>",
     "<DL><p>",
-    `    <DT><H3 ADD_DATE="${stamp}" LAST_MODIFIED="${stamp}">Bookmarklet Library</H3>`,
-    "    <DL><p>",
   ];
 
   for (const { category, items: group } of groups) {
-    lines.push(`        <DT><H3 ADD_DATE="${stamp}" LAST_MODIFIED="${stamp}">${esc(category.label)}</H3>`);
-    lines.push("        <DL><p>");
+    lines.push(`    <DT><H3 ADD_DATE="${stamp}" LAST_MODIFIED="${stamp}">${esc(category.label)}</H3>`);
+    lines.push("    <DL><p>");
     for (const item of group) {
-      lines.push(`            <DT><A HREF="${esc(item.href)}" ADD_DATE="${stamp}">${esc(item.name)}</A>`);
-      lines.push(`            <DD>${esc(item.description)}`);
+      lines.push(`        <DT><A HREF="${esc(item.href)}" ADD_DATE="${stamp}">${esc(item.name)}</A>`);
+      lines.push(`        <DD>${esc(item.description)}`);
     }
-    lines.push("        </DL><p>");
+    lines.push("    </DL><p>");
   }
 
-  lines.push("    </DL><p>", "</DL><p>");
+  lines.push("</DL><p>");
   return { html: lines.join("\n") + "\n", groups: groups.length };
 }
 

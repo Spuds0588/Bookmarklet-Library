@@ -14,7 +14,9 @@ A searchable catalog of small browser tools. Find one that does the job, drag it
 
 Click any card to open it full page: a screenshot of the tool at work on a demo page, what it does, and the same install button.
 
-Prefer keyboard or want to install a whole set at once? Search or filter, tick the tools you want with **Pick**, then **Download bookmarks.html**. The file holds a folder per category nested under "Bookmarklet Library" — import it from your browser's bookmark manager and the whole set lands in the bar in one go.
+Prefer keyboard or want to install a whole set at once? Search or filter, tick the tools you want with **Pick**, then **Download bookmarks.html**. The file holds one folder per category and nothing above them: a browser already wraps an import in a folder of its own, so a library level on top only buries the tools one level deeper. Import it from your bookmark manager and the whole set lands in the bar in one go.
+
+A few entries point at a bookmarklet that lives in another repository, such as **📊 Turnstone on any page**. Those cards say so, credit the author and open that repository's install page instead of offering a drag button, because this catalog does not host a copy.
 
 If dragging is blocked, use **Copy** and paste the code into a new bookmark's URL field.
 

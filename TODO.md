@@ -157,6 +157,12 @@
 - [ ] Exercise a select, a checkbox and a React/Vue-controlled form. Typing was verified against the demo form's native input event.
 - [ ] Bring the 8 KB bookmarklet down to the 3 KB prototype target by moving re-arm bookkeeping into the hub or minifying at build time, without losing the readable source.
 
+## Catalog entries (2026-11-03)
+
+- [x] `bookmarks.html` exports one folder per category with no library wrapper above them, and the composer note says so.
+- [x] An entry can point at a bookmarklet hosted in another repository (`@external`), with the author and repo named on the card, no copy button, and a declared capture reason. **📊 Turnstone on any page** is the first.
+- [ ] Only one external entry so far. QuickRecord's recorder duplicates `record-tab`, and the ReferenceMaterials files are the origin of tools already here; revisit if either gains something the local version lacks.
+
 ## Nice to have, only if it earns its place
 
 - [x] Shareable search: `?q=markdown` preselects the box, the target advertised in the `SearchAction` schema. Tool views deep-link as `#t/<slug>`.

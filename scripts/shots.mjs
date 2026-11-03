@@ -1359,7 +1359,10 @@ for (const item of items) {
   // Tools whose work leaves the page are declared, not photographed, and a
   // floating player without a display to float on keeps its note. Everything
   // else has to show its result in an image.
-  const expectedReason = needsDisplay ? (display ? null : "display") : REASONS[item.slug] ?? null;
+  // A tool that lives in another repository has no payload to run here, so it
+  // is declared rather than captured, whatever the reason list says.
+  const declared = item.external ? "external" : REASONS[item.slug];
+  const expectedReason = needsDisplay ? (display ? null : "display") : declared ?? null;
   const stepCount = (STEPS[item.slug] ?? []).length + (AFTER[item.slug] ?? []).length;
   const previousEntry = previous.tools?.[item.slug];
   const exists = await stat(path.join(OUT_DIR, `${item.slug}.png`)).then(() => true).catch(() => false);
