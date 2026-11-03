@@ -27,7 +27,7 @@ If dragging is blocked, use **Copy** and paste the code into a new bookmark's UR
 | Text | Advanced find, find and replace on inputs, page to Markdown, read aloud, extract emails, table to CSV/Markdown, text-fragment citations, password generation, QR codes |
 | Files | Clipboard to .md/.csv/.txt/.css/.html/.png, PDF lock/unlock, ZIP create/extract, Word/HTML/RTF/TXT/Markdown and Excel/CSV conversion both ways, OpenDocument `.odt`/`.ods` conversion both ways, HTML snippet saver, Loom export |
 | Dev tools | URL parameter reports, site map to CSV, local storage export, console monitor, selector recorder, layout and accessibility overlays, environment switcher, form harvester/stamper, webhook dispatcher, a local AI agent that drives the page |
-| View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, sticky-header removal, link highlighting, dark mode, force scroll, presenter spotlight, Jitsi meeting, URL chat, voice commands |
+| View | Picture-in-picture for video and audio, phone preview, zoom lens, ad decluttering, sticky-header removal, link highlighting, dark mode, force scroll, presenter spotlight, Jitsi meeting, URL chat, voice commands, preview downloads |
 | Games | Doom, Neon Hell |
 | Privacy | Redact page text, hide email addresses, blur elements, pixelate a region, hide notification toasts, PII masker |
 
@@ -124,6 +124,14 @@ The PDF writer uses the Helvetica family, Latin-1 text, the DOCX page size and m
 ## Bulk media downloads
 
 **🖼️ Download all images**, **🎬 Download all videos**, **🎧 Download all audio** and **📥 Download all linked files** open a panel that lists what the page already loads. The image tool reads `img` and `picture` sources, `srcset`, the usual lazy-load attributes and social preview tags; the video and audio tools read the elements and their `source` fallbacks; the file tool reads anchors that carry `download` or point at a file extension. **Save all to folder** asks for a folder with the File System Access API and writes every file there, numbering names that already exist instead of overwriting them. **Download each** uses the browser's downloads folder when it cannot pick one. Each file is fetched from its own URL, so a file served without CORS headers is marked blocked and gets an **Open** link rather than a quiet failure. HLS and DASH playlists (`.m3u8`, `.mpd`) are listed but skipped, as is any single file over 600 MB. Nothing is uploaded and nothing is decrypted or re-encoded: a canvas, a CSS background, an encrypted stream or a player fed by JavaScript is not a file this can read.
+
+## Preview downloads
+
+**📄 Preview downloads** catches a click on a link to an image, video, audio file, PDF, plain text, CSV or an Office document and shows the file in a panel over the page instead of downloading it or leaving the tab. The panel names the file, says what it is and how big it is, and then renders it: an image or a player for media, an embedded PDF, the text for a CSV or log, and a note with Save and Open for Word, Excel, PowerPoint and OpenDocument files, which a browser cannot display. Everything it fetched sits behind one **Download** button, so the file is still one click away.
+
+The panel is a shadow-root overlay, because staying in place is the point. If a page refuses the overlay, it opens in a Document Picture-in-Picture window; if that is missing, in a pop-up window. Esc or a click outside closes it and drops the fetched bytes.
+
+It reads the file with `fetch` first, which is what makes the text preview and the save possible. When the file sits on another origin without CORS headers, the panel shows it straight from its link and says so, and the download button keeps working. Links it cannot show (ZIP, installers, an extension it does not know) are left alone, so they still download normally.
 
 ## QR codes
 

@@ -52,6 +52,15 @@
 - [ ] The phase 2 document's runtime builder/registry idea was not adopted: these tools configure in their own panel or exchange JSON, because the catalog has no build-at-runtime step. Revisit only if a builder earns its keep.
 - [ ] The URL chat depends on the public PeerJS broker and CDN. If that service is unavailable, the hosted page says so; there is no fallback signalling server.
 
+## Preview downloads (2026-11-03)
+
+- [x] **📄 Preview downloads** takes over clicks on image, video, audio, PDF, text and Office links with a capture-phase listener and shows the file in a shadow-root panel: media and images by URL, PDFs in an iframe, CSV/npm-style text in a `<pre>`, and a Save/Open note for Office formats.
+- [x] The panel names the file from `Content-Disposition` or the path, reports kind and size, and offers Download, Open in tab and Close. Esc, the backdrop and Close revoke the object URL.
+- [x] Fallbacks are Document PiP then a pop-up when the overlay cannot mount; links it cannot render keep their normal download.
+- [x] `tests/preview-downloads.test.mjs` covers classification, name parsing and size labels; `shots.mjs` clicks the demo CSV so the capture shows a real preview.
+- [ ] Cross-origin files without CORS headers are shown from their link but cannot be saved from the panel. A range-request or redirect reader could close that.
+- [ ] Office files get no preview at all. Converting them needs a parser far past the 64 KB bookmark limit, so they stay a Save/Open card.
+
 ## QR code (2026-10-28)
 
 - [x] **🔳 Create QR code** opens a shadow-root panel with the page URL, or a web URL found on the clipboard, regenerates on input, and reports version, module count and UTF-8 byte count. It encodes Q error correction and offers Download PNG (about 1000 px), Download SVG, Copy PNG and Copy SVG. The PNG clipboard path was exercised in Chrome; the SVG image write succeeded there, and the text-markup fallback covers browsers that refuse SVG image data. Esc closes and restores focus.

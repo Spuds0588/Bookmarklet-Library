@@ -463,6 +463,11 @@
       "changed": true,
       "popup": true
     },
+    "preview-downloads": {
+      "file": "screenshots/preview-downloads.png",
+      "changed": true,
+      "steps": 3
+    },
     "kill-sticky-headers": {
       "file": "screenshots/kill-sticky-headers.png",
       "changed": true

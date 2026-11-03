@@ -107,6 +107,13 @@ const STEPS = {
     },
     { wait: 300 },
   ],
+  // The viewer only appears once a file link is clicked; a CSV is the one
+  // preview that renders the same way in a headless run as in a person's browser.
+  "preview-downloads": [
+    { script: 'document.querySelector(\'a[href="/report.csv"]\').scrollIntoView({ block: "center" })' },
+    { click: 'a[href="/report.csv"]' },
+    { wait: 900 },
+  ],
   // A console is only a console once something has been run in it.
   "js-runner": [
     { type: "document.querySelector('h1').textContent = 'JS Runner ran this line';", into: "#js-runner-container textarea" },

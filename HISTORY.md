@@ -2,6 +2,24 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Preview downloads, and the QR tool finally says what it does
+
+**Changed**
+
+- Added **📄 Preview downloads** under View (`bookmarklets/view/preview-downloads.js`). A capture-phase click listener takes over links to images, video, audio, PDF, CSV/text and Office files and shows the file in a panel over the page: media and images straight from the URL, PDFs in an iframe, text in a `<pre>`, and a Save/Open card for formats a browser cannot render. The header carries the name (from `Content-Disposition`, then the path), the kind and the size; the footer offers Download, Open in tab and Close.
+- The panel mounts as a shadow-root overlay, then Document Picture-in-Picture, then a pop-up, so a page that refuses one still gets a viewer. Esc, the backdrop and Close revoke the object URL and stop any playing media.
+- Links the panel cannot show (ZIP, installers, unknown extensions) are ignored, so they download as before. Cross-origin files without CORS are shown from the link with a note rather than refused.
+- Renamed **🔳 QR code** to **🔳 Create QR code** in the metadata and the prose that describes it today; slug, capture and `#t/` anchor stay put.
+
+**Verified**
+
+- `npm test`: 82 tests, 82 pass, including the new classification, name and size tests. `verify` and `build --check` clean on 123 tools.
+- `node scripts/shots.mjs preview-downloads --force` clicks the demo page's CSV link, and the capture shows the panel with the checklist text; the file is listed as captured in `data/screenshots.json`.
+
+**Limit**
+
+- A cross-origin file without CORS headers can be read neither for text nor for saving, so that case previews from its URL only. Office formats get no rendering at all.
+
 ## 2026-11-03 — A probe that runs the agent, and instructions tuned with it
 
 **Changed**
