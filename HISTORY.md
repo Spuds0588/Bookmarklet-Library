@@ -2,6 +2,20 @@
 
 What has been done, in order. Newest entries first.
 
+## 2026-11-03 — Full-page image scans: what a real 150 dpi scanner actually does
+
+**Found**
+
+- The 15 generated `scan-*.pdf` files in the corpus contain no legible text at all; tesseract returns nothing from them. They exercise size, page count and splitting, but they never proved anything about legibility.
+- A real Lexmark X792 scan (EPA sample letter, 3 pages, 1275×1650 at 150 dpi, 2.02 MB) converts to 1.52 MB at Strong. Its pages are below the 1800 px ceiling, so the tool re-encodes the JPEG and does not resample the page at all: word coverage is 98.9% on page 1 (five tokens differ around the seal and date stamp) and 100% on pages 2 and 3.
+- Page 1's image carries `/DecodeParms <</BitsPerComponent 4 /Colors 3 /Columns 1275>>` with no `/Predictor`. It inflates to raw RGB and round-trips correctly, which the identical renders confirm; that dictionary shape must keep being treated as raw, not as filtered data.
+- On 200 dpi full-page image scans Strong does resample to 1800 px. Body text stayed word for word there too: BERT page 1 and 2 at 0.9996 and 1.0, tracemonkey at 0.9972 / 0.9706 / 0.5829 sequence match with 2, 7 and 0 missing words.
+- Scans stored with CCITT/fax compression (the Web Lite sample) are still skipped entirely by design, so a 1-bit fax-style scan gets no benefit from the tool.
+
+**Metric note**
+
+- Sequence similarity is a poor legibility test once OCR picks a different reading order on the same page: EPA page 1 has 465 words in the original, 468 in the rebuild, five tokens differing, yet the ratio reads 0.11 because the header is ordered differently. Legibility is judged by word coverage together with a visual check, which is what the comparison page shows.
+
 ## 2026-11-03 — Strong is checked for readable text, and its resolution stays up
 
 **Changed**
