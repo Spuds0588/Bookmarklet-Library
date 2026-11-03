@@ -263,7 +263,7 @@
       if (event.key === "Escape") closeAll();
     });
 
-    const frame = makeFrame(stage);
+    const frame = makeFrame(document);
     stage.append(frame);
 
     (async () => {
