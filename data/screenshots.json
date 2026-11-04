@@ -393,6 +393,10 @@
       "file": "screenshots/form-harvester.png",
       "changed": true
     },
+    "todoist-sidebar": {
+      "changed": false,
+      "reason": "external"
+    },
     "system-info": {
       "file": "screenshots/system-info.png",
       "changed": true,

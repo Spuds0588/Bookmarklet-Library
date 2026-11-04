@@ -2,6 +2,15 @@
 
 What has been done, in order. Newest entries first.
 
+## Todoist over the page, and the honest limits of framing a task app
+
+- **📋 Open Todoist on Page** (`devtools`) frames `app.todoist.com/app/today` in a modal over the page, floats it in a document picture-in-picture window, and can open it as a popup. It is the first task tool here that is a sidebar rather than a form.
+- Task managers were measured before any of this: Trello sends `frame-ancestors 'none'`, ClickUp `'self'` plus a list, Asana and Notion `SAMEORIGIN` plus lists, Linear `'self'`, Google Tasks `X-Frame-Options: DENY`, Plane, Huly and Vikunja `DENY`, Taskade and AFFiNE `SAMEORIGIN`, Basecamp `SAMEORIGIN`. Todoist, TickTick, Kan and Capacities send nothing, and every one of them showed a sign-in or marketing page in the frame while signed out.
+- Todoist is the one with documentation behind it: its help centre embeds `todoist.com/app` in a Notion `/embed` block and signs in there, and warns that third-party cookie blocking is what breaks the login. That matches the measured headers, so the modal is offered — with the caveat written into the bar.
+- **The popup opens the app itself, not a frame.** Every other tool here opens its popup as an `about:blank` document holding a frame, which inherits the opener's CSP; this one calls `window.open` on Todoist's own URL, so the window is first-party to Todoist and the session works. That is a deliberate difference, not an oversight.
+- Two signals decide the frame, and neither can see inside the iframe: the `load` event, and `securitypolicyviolation` on the host document filtered to `frame-src`/`child-src`/`default-src` aimed at `todoist.com`. A refusal outranks a load that did arrive.
+- **Corrected a claim about popups:** links clicked inside a popup navigate that popup, not the tab you came from, and once it holds another origin the tool cannot script it at all. The benefit of the popup is that the original page is left untouched, not that links return to the main tab.
+
 ## A bookmarklet per destination, because prefilled links are not universal
 
 - **📌 Task bookmarklet builder** (`devtools`) turns the address of a board, repository, project or list into a bookmarklet: the id is parsed out of that address, and the payload reads the title, URL and selection when it is clicked, never when it is built.

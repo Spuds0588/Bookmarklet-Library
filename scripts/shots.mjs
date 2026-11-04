@@ -439,6 +439,9 @@ const REASONS = {
   // It opens a file picker before it can show anything, and the editor behind
   // that picker is a hosted app: there is no page state to photograph.
   "photo-editor-local": "dialog",
+  // The card would photograph Todoist's own sign-in page inside our panel: the
+  // tool's work is handing the page over to another site's app, not a page state.
+  "todoist-sidebar": "external",
   "tab-screenshot": "download",
   "website-to-markdown": "download",
   "selection-to-markdown": "download",

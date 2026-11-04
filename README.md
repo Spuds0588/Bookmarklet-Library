@@ -179,6 +179,14 @@ None of those services can be framed — Trello sends `X-Frame-Options: DENY`, G
 
 The token lives inside that bookmarklet, so build it on your own machine: bookmarks sync to your browser account, and this is the one thing a shared tool could not do, since storage is per-origin and a token saved on one site is invisible on the next.
 
+## Open Todoist over the page you are on
+
+**📋 Open Todoist on Page** puts Todoist's app in a sidebar over whatever you are reading: framed in a modal over the page, in a floating picture-in-picture window, or in a popup, whichever your browser and that page allow. Todoist is the only task manager here whose own documentation shows its app running signed in inside another site's frame — its help centre tells you to add `todoist.com/app` to a Notion `/embed` block — and it sends neither `X-Frame-Options` nor `frame-ancestors`, which was measured. What stops the frame is the page's own CSP, or nothing at all.
+
+That same help page names the catch: a browser that blocks third-party cookies "won't recognize you logging in to Todoist". A frame is a third-party page to Todoist and always will be, so the modal shows what a third-party frame shows. **Popup** is the rung that fixes it, because it opens `app.todoist.com` at its own URL instead of framing it, and there the page is first-party and your session counts. The bar says so rather than promising a signed-in sidebar the browser may not give you.
+
+The frame is bounded at twelve seconds and a `securitypolicyviolation` on the host page is read as a refusal, since a page that forbids `frame-src` says nothing and paints nothing. Neither signal can see inside Todoist, so the tool never claims the app loaded — only that the frame was allowed to try.
+
 ## Edit a PDF in SimplePDF
 
 **📝 Open in SimplePDF** finds the PDF this tab already has — the document itself, the file behind a pdf.js viewer, or an embed, object or link on the page — and redirects the same window to `https://simplepdf.com/editor?open=…`, so editing starts without downloading the file and picking it again (both that address and `embed.simplepdf.com` accept `open`). A `#page=4` on the original address is carried over as the editor's `page` parameter, and a presigned S3 or Azure URL keeps its query string.
