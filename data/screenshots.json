@@ -1,7 +1,7 @@
 {
   "width": 1200,
   "height": 750,
-  "generated": "2026-11-03",
+  "generated": "2026-11-04",
   "tools": {
     "record-audio": {
       "file": "screenshots/record-audio.png",
@@ -397,6 +397,10 @@
       "file": "screenshots/system-info.png",
       "changed": true,
       "popup": true
+    },
+    "task-bookmarklet-builder": {
+      "file": "screenshots/task-bookmarklet-builder.png",
+      "changed": true
     },
     "add-page-to-task": {
       "file": "screenshots/add-page-to-task.png",

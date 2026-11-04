@@ -2,6 +2,12 @@
 
 What has been done, in order. Newest entries first.
 
+## A bookmarklet per destination, because prefilled links are not universal
+
+- **📌 Task bookmarklet builder** (`devtools`) turns the address of a board, repository, project or list into a bookmarklet: the id is parsed out of that address, and the payload reads the title, URL and selection when it is clicked, never when it is built.
+- **Trello, GitHub and GitLab** keep their prefilled links. **Todoist, ClickUp and Asana** publish no create link at all, so the builder writes a request for their open APIs and bakes the token in — the one shape a shared bookmarklet cannot offer, because storage is per-origin.
+- Every generated payload is a test: it has to parse, hit the documented endpoint, carry the destination id, and embed the token as data so a quote in it cannot break the code.
+
 ## A page becomes a task without a key
 
 - **📝 Add page to a task** (`devtools`) prefills Trello's add-card window, Linear's `linear.new`, a GitHub or GitLab issue in the repository the page is already in, or a `things:///add` task, from the page title, its URL and the selection.

@@ -173,6 +173,12 @@ Both follow the same order as the PDF editor: the modal frame first, then a floa
 
 None of those services can be framed — Trello sends `X-Frame-Options: DENY`, GitHub `deny`, Linear, GitLab and Notion `SAMEORIGIN` — so the destination opens in a window the tool owns, where your existing session counts. Nothing is stored and no token is involved: the tool builds the service's own prefilled link and hands it over.
 
+### When the service publishes no prefilled link
+
+**📌 Task bookmarklet builder** covers the rest. Paste the address of a board, repository, project or list and it reads the id out of that address, then hands you a bookmarklet of your own. Trello, GitHub and GitLab stay keyless, because their create pages already take query parameters. **Todoist**, **ClickUp** and **Asana** publish no such link but do have an open API, so their bookmarklet carries an API token you paste in and posts the page straight to the project or list you chose.
+
+The token lives inside that bookmarklet, so build it on your own machine: bookmarks sync to your browser account, and this is the one thing a shared tool could not do, since storage is per-origin and a token saved on one site is invisible on the next.
+
 ## Edit a PDF in SimplePDF
 
 **📝 Open in SimplePDF** finds the PDF this tab already has — the document itself, the file behind a pdf.js viewer, or an embed, object or link on the page — and redirects the same window to `https://simplepdf.com/editor?open=…`, so editing starts without downloading the file and picking it again (both that address and `embed.simplepdf.com` accept `open`). A `#page=4` on the original address is carried over as the editor's `page` parameter, and a presigned S3 or Azure URL keeps its query string.

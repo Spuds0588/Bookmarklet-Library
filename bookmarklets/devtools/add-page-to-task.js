@@ -177,6 +177,7 @@
       field("Note", noteInput),
       targets,
       el("p", "hint", "The service opens in its own window: every one of them refuses to be framed, and there its own session counts."),
+      el("p", "hint", "Todoist, ClickUp and Asana publish no prefilled link — build one for them with 📌 Task bookmarklet builder."),
     );
     card.append(bar, body);
 
