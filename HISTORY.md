@@ -2,6 +2,14 @@
 
 What has been done, in order. Newest entries first.
 
+## A drawer of your own tasks, built from a token
+
+- **📋 Build a task drawer on Page** (`devtools`) writes a personal bookmarklet: pick Todoist, Trello, Linear, GitHub, ClickUp, Notion or Asana, paste a token, and the generated payload mounts the same right-edge drawer as 📋 Open Todoist on Page, then fetches your tasks straight from the service.
+- **The provider list is decided by CORS, not by popularity.** Trello and GitHub send `*`, Asana, Linear, ClickUp, Notion and Todoist's v1 API echo the caller's origin; Vikunja sends nothing, Taskade refuses the preflight, and TickTick, Google Tasks and Microsoft To Do are OAuth-only. The tool offers the seven it can read with a pasted key and names none of the others.
+- **The drawer is one function whose source is the bookmarklet** (`RUNTIME.toString()`), so the tested code and the shipped payload cannot drift. A test asserts the generated body contains that exact function, and another asserts every provider's endpoint host appears inside it.
+- **Refusals are reported, not swallowed.** A non-2xx answer becomes `status · message` from the service's own body, a 401 says the token was refused, and a `fetch` rejection mentions the page's CSP — because the difference between "you have no tasks" and "this page blocked the request" is the whole point.
+- ClickUp and Notion ask for one more id, read out of a pasted URL by `parseTarget`; Trello needs its key as well as its token; Asana reads the token's first workspace, which is a compromise recorded in TODO.
+
 ## Todoist over the page, and the honest limits of framing a task app
 
 - **The first surface is a drawer, not a modal.** It slides in from the right edge, full height, with no scrim; the host spans the viewport for positioning but is `pointer-events:none`, so the page underneath stays clickable and scrollable. Closing slides it back out and unmounts only after the transition, because pulling the host away mid-animation reads as a freeze. The frame, its two signals and its wording are unchanged — only the shell is.

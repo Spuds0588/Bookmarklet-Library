@@ -389,6 +389,10 @@
       "changed": true,
       "popup": true
     },
+    "task-drawer-builder": {
+      "file": "screenshots/task-drawer-builder.png",
+      "changed": true
+    },
     "form-harvester": {
       "file": "screenshots/form-harvester.png",
       "changed": true

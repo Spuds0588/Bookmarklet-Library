@@ -179,6 +179,14 @@ None of those services can be framed — Trello sends `X-Frame-Options: DENY`, G
 
 The token lives inside that bookmarklet, so build it on your own machine: bookmarks sync to your browser account, and this is the one thing a shared tool could not do, since storage is per-origin and a token saved on one site is invisible on the next.
 
+### A drawer of your own tasks, built on your token
+
+**📋 Build a task drawer on Page** writes you a personal bookmarklet that slides your own task list out of the right edge of any page — the same drawer as the Todoist tool, but fed by the service's API. Pick Todoist, Trello, Linear, GitHub, ClickUp, Notion or Asana, paste a token, and drag the result to your bookmarks bar. ClickUp and Notion also want a list or database, which it reads out of the URL you paste.
+
+Those seven are the services that let a page read them with a pasted key: Trello and GitHub send `Access-Control-Allow-Origin: *`, and Asana, Linear, ClickUp, Notion and Todoist's v1 API echo the caller's origin, all measured. Vikunja sends no CORS header at all, Taskade refuses the preflight, and TickTick, Google Tasks and Microsoft To Do only speak OAuth, so none of them can be read this way and none is offered.
+
+The token is baked into the bookmarklet you build, so build it on your own machine: bookmarks sync to your browser account. The drawer calls the service directly and shows what came back — a refused token says which status came with it rather than showing an empty list, and a page whose CSP blocks the request says that instead of pretending you have no tasks.
+
 ## Open Todoist over the page you are on
 
 **📋 Open Todoist on Page** slides Todoist out of the right edge of whatever you are reading — a drawer as tall as the window, with the page still live beside it — then a floating picture-in-picture window, then a popup, whichever your browser and that page allow. It is a drawer rather than a dialog on purpose: there is no scrim, the page behind stays clickable and scrollable, and the drawer arrives by sliding in so you can see where it came from. Close slides it back out, and Esc does the same. Todoist is the only task manager here whose own documentation shows its app running signed in inside another site's frame — its help centre tells you to add `todoist.com/app` to a Notion `/embed` block — and it sends neither `X-Frame-Options` nor `frame-ancestors`, which was measured. What stops the frame is the page's own CSP, or nothing at all.
