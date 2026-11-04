@@ -1,8 +1,8 @@
 /**
  * @name 📋 Open Todoist on Page
  * @category devtools
- * @description Opens Todoist in a sidebar over the page you are on: framed in a modal by default, then a floating picture-in-picture window, then a popup, and says plainly when a page will not allow the frame.
- * @tags todoist, task, todo, sidebar, iframe, picture-in-picture
+ * @description Slides Todoist out from the right edge of the page you are on: framed in a drawer by default, then a floating picture-in-picture window, then a popup, and says plainly when a page will not allow the frame.
+ * @tags todoist, task, todo, sidebar, drawer, iframe, picture-in-picture
  * @traits network, web-app
  * @added 2026-11-04
  * @featured false
@@ -21,14 +21,22 @@
   // is a first-party page, so the session counts.
   const EMBED = "https://app.todoist.com/app/today";
   const ORIGIN = "https://app.todoist.com";
-  // A page's `frame-src` refuses a frame silently, so the modal gives up early
+  // A page's `frame-src` refuses a frame silently, so the drawer gives up early
   // enough to leave time for a surface the user can see.
   const FRAME_MS = 12000;
   const POPUP = "popup,width=1020,height=780";
 
   const SURFACES = ["iframe", "float", "popup"];
   const PIP_OPTIONS = { width: 1000, height: 760 };
+  // Long enough to cover the slide in the stylesheet below; a close that waits
+  // for `transitionend` gets stuck if the sheet never loads.
+  const DRAWER_MS = 260;
   const NOTE = "A frame is a third-party page to Todoist, so it only stays signed in where the browser allows third-party cookies. Popup opens Todoist itself, where it is first-party.";
+
+  // The host owns the whole viewport so the drawer can sit at its edge, but it
+  // swallows no clicks: the page underneath stays fully usable, which a scrim
+  // would have taken away. This is the difference between a drawer and a modal.
+  const HOST_STYLE = "position:fixed;inset:0;z-index:2147483647;pointer-events:none";
 
   /** Which surfaces are worth trying, given what this browser offers. */
   const fallbackOrder = (caps = {}) => {
@@ -57,12 +65,15 @@
 
   const CSS = [
     ":host{all:initial}",
-    ".scrim{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(17,17,17,.55)}",
-    ".card{display:flex;flex-direction:column;width:min(1040px,100%);height:min(86vh,880px);border:1px solid #111;background:#fbfaf8;color:#111;font:13px/1.4 system-ui,-apple-system,sans-serif;outline:none}",
-    ".bar{display:flex;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid #111}",
-    ".name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:22vw}",
-    ".status{margin-left:auto;opacity:.75;text-align:right;max-width:40vw}",
-    "button{border:1px solid #111;background:#fbfaf8;color:#111;font:inherit;padding:6px 10px;cursor:pointer;white-space:nowrap}",
+    ".drawer{position:absolute;top:0;right:0;bottom:0;display:flex;flex-direction:column;width:min(520px,100vw);border-left:1px solid #111;background:#fbfaf8;color:#111;font:13px/1.4 system-ui,-apple-system,sans-serif;box-shadow:-24px 0 48px rgba(17,17,17,.16);pointer-events:auto;outline:none;transform:translateX(100%);transition:transform 260ms cubic-bezier(.22,.61,.36,1)}",
+    '.drawer[data-open="true"]{transform:translateX(0)}',
+    "@media (prefers-reduced-motion:reduce){.drawer{transition:none}}",
+    ".bar{display:flex;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid #111}",
+    ".name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+    ".actions{display:flex;gap:6px;margin-left:auto}",
+    ".status{margin:0;padding:7px 12px;border-bottom:1px solid #111;opacity:.75;font-size:12px}",
+    ".status:empty{display:none}",
+    "button{border:1px solid #111;background:#fbfaf8;color:#111;font:inherit;padding:5px 9px;cursor:pointer;white-space:nowrap}",
     "button:hover{background:#111;color:#fbfaf8}",
     "button[disabled]{opacity:.45;cursor:default}",
     "button[disabled]:hover{background:#fbfaf8;color:#111}",
@@ -87,44 +98,60 @@
   function openSidebar() {
     const host = document.createElement("div");
     host.setAttribute("data-todoist-sidebar", "");
-    host.style.cssText = "position:fixed;inset:0;z-index:2147483647";
+    host.style.cssText = HOST_STYLE;
     const root = host.attachShadow({ mode: "open" });
     const style = document.createElement("style");
     style.textContent = CSS;
 
-    const scrim = el(document, "div", "scrim");
-    const card = el(document, "div", "card");
-    card.tabIndex = -1;
+    const drawer = el(document, "div", "drawer");
+    drawer.tabIndex = -1;
+    drawer.setAttribute("role", "complementary");
+    drawer.setAttribute("aria-label", "Todoist");
+    drawer.dataset.open = "false";
     const bar = el(document, "div", "bar");
     const label = el(document, "span", "name", "Todoist");
-    const status = el(document, "span", "status", "Opening Todoist…");
+    const actions = el(document, "div", "actions");
     const floatBtn = el(document, "button", "", "Float");
     const popupBtn = el(document, "button", "", "Popup");
     const closeBtn = el(document, "button", "", "Close");
     for (const button of [floatBtn, popupBtn, closeBtn]) button.type = "button";
+    const status = el(document, "p", "status", "Opening Todoist…");
     const stage = el(document, "div", "stage");
     const note = el(document, "p", "note", NOTE);
 
-    bar.append(label, status, floatBtn, popupBtn, closeBtn);
-    card.append(bar, stage, note);
-    scrim.append(card);
-    root.append(style, scrim);
+    actions.append(floatBtn, popupBtn, closeBtn);
+    bar.append(label, actions);
+    drawer.append(bar, status, stage, note);
+    root.append(style, drawer);
     document.documentElement.appendChild(host);
-    card.focus();
 
-    // The page's CSP is what a modal runs into, and it reports itself here
+    // The drawer is appended off-screen and opened on the next frame, so the
+    // transition has a start position to move from rather than snapping in.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        drawer.dataset.open = "true";
+        drawer.focus();
+      });
+    });
+
+    // The page's CSP is what a frame runs into, and it reports itself here
     // rather than through the frame, which we can never inspect.
     const seen = { loaded: false, violated: false };
     let timer = 0;
+    let closing = 0;
 
     const stopWatch = () => {
       clearTimeout(timer);
       document.removeEventListener("securitypolicyviolation", onViolation);
     };
 
+    // Closing slides the drawer out and only then unmounts it, so the host is
+    // not torn away mid-animation. A second close while closing is a no-op.
     const closeAll = () => {
+      if (closing) return;
       stopWatch();
-      host.remove();
+      drawer.dataset.open = "false";
+      closing = setTimeout(() => host.remove(), DRAWER_MS);
     };
 
     const blocked = async () => {
@@ -221,7 +248,7 @@
       popupBtn.disabled = false;
     });
     closeBtn.addEventListener("click", closeAll);
-    card.addEventListener("keydown", (event) => {
+    drawer.addEventListener("keydown", (event) => {
       if (event.key === "Escape") closeAll();
     });
 
@@ -233,7 +260,7 @@
       if (frameVerdict(seen) !== "ready") blocked();
     }, FRAME_MS);
 
-    return { host, closeAll, status, tryFloat, tryPopup, frame };
+    return { host, drawer, closeAll, status, tryFloat, tryPopup, frame };
   }
 
   if (globalThis.__BL_TEST__) {
@@ -248,6 +275,9 @@
       FRAME_MS,
       POPUP,
       NOTE,
+      CSS,
+      HOST_STYLE,
+      DRAWER_MS,
     };
   } else if (document?.body) {
     openSidebar();

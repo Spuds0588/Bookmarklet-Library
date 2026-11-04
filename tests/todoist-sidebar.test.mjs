@@ -8,7 +8,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 globalThis.__BL_TEST__ = {};
 new Function(await readFile(path.join(root, "bookmarklets", "devtools", "todoist-sidebar.js"), "utf8"))();
-const { fallbackOrder, blocksFrame, frameVerdict, EMBED, ORIGIN, SURFACES, FRAME_MS, POPUP, NOTE } =
+const { fallbackOrder, blocksFrame, frameVerdict, EMBED, ORIGIN, SURFACES, FRAME_MS, POPUP, NOTE, CSS, HOST_STYLE, DRAWER_MS } =
   globalThis.__BL_TEST__.todoistSidebar;
 delete globalThis.__BL_TEST__;
 
@@ -18,7 +18,7 @@ test("the sidebar frames Todoist's app, not its marketing page", () => {
   assert.ok(EMBED.startsWith(ORIGIN), "the frame and the origin it is checked against have to agree");
 });
 
-test("the modal frame comes first, then document picture-in-picture, then a popup", () => {
+test("the drawer frame comes first, then document picture-in-picture, then a popup", () => {
   assert.deepEqual(SURFACES, ["iframe", "float", "popup"]);
 
   assert.deepEqual(fallbackOrder({ documentPictureInPicture: true, open: true }), ["float", "popup"]);
@@ -51,6 +51,26 @@ test("the popup is a window we own at Todoist's own URL", () => {
   assert.match(POPUP, /popup/);
   assert.match(NOTE, /third-party cookies/);
   assert.match(NOTE, /first-party/);
+});
+
+test("the first surface is a drawer that slides in from the right edge", () => {
+  // A drawer, not a modal: anchored to the right edge, full height, and it
+  // arrives by moving rather than appearing over a scrim.
+  assert.match(CSS, /right:0/);
+  assert.match(CSS, /bottom:0/);
+  assert.match(CSS, /transform:translateX\(100%\)/);
+  assert.match(CSS, /\.drawer\[data-open="true"\]\{transform:translateX\(0\)\}/);
+  assert.match(CSS, /prefers-reduced-motion/);
+  assert.doesNotMatch(CSS, /scrim/);
+  assert.match(CSS, /pointer-events:auto/);
+
+  // The host spans the viewport for positioning but must not swallow clicks,
+  // or a drawer becomes a modal with extra steps.
+  assert.match(HOST_STYLE, /pointer-events:none/);
+  assert.match(HOST_STYLE, /position:fixed/);
+
+  assert.equal(typeof DRAWER_MS, "number");
+  assert.ok(DRAWER_MS >= 200 && DRAWER_MS <= 400, `${DRAWER_MS}ms is not a slide`);
 });
 
 test("the frame attempt is bounded well before a user would give up", () => {
