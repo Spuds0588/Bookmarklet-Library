@@ -10,9 +10,8 @@
  * @credit https://gist.github.com/being-frank/62ffe651b07ef27aa525
  */
 (() => {
-  for (const input of document.getElementsByTagName("input")) {
-    if (input.type.toLowerCase() !== "hidden") continue;
-    input.type = "text";
-    input.style.border = "1px solid red";
+  for (const field of document.querySelectorAll('input[type="hidden" i]')) {
+    field.setAttribute("type", "text");
+    field.style.border = "1px solid red";
   }
 })();

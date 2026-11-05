@@ -490,11 +490,11 @@
       "testing": false,
       "author": "Community snippet",
       "credit": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions",
-      "bytes": 227,
+      "bytes": 269,
       "external": false,
       "externalUrl": "",
       "source": "bookmarklets/text/extract-emails.js",
-      "href": "javascript:(()%20%3D%3E%20%7B%0A%20%20const%20emails%20%3D%20document.body.innerHTML.match(%2F(%5Ba-zA-Z0-9._-%5D%2B%40%5Ba-zA-Z0-9._-%5D%2B%5C.%5Ba-zA-Z0-9._-%5D%2B)%2Fgi)%3B%0A%20%20if%20(!emails)%20return%20alert(%22No%20emails%20found.%22)%3B%0A%20%20prompt(%22Found%20Emails%3A%22%2C%20%5B...new%20Set(emails)%5D.join(%22%3B%20%22))%3B%0A%7D)()%3B"
+      "href": "javascript:(()%20%3D%3E%20%7B%0A%20%20const%20ADDRESS%20%3D%20%2F%5Ba-z0-9._-%5D%2B%40%5Ba-z0-9._-%5D%2B%5C.%5Ba-z0-9._-%5D%2B%2Fgi%3B%0A%20%20const%20unique%20%3D%20new%20Set(document.body.innerHTML.match(ADDRESS)%20%7C%7C%20%5B%5D)%3B%0A%20%20if%20(!unique.size)%20%7B%0A%20%20%20%20alert(%22No%20emails%20found.%22)%3B%0A%20%20%20%20return%3B%0A%20%20%7D%0A%20%20prompt(%22Found%20Emails%3A%22%2C%20%5B...unique%5D.join(%22%3B%20%22))%3B%0A%7D)()%3B"
     },
     {
       "slug": "mailto-outlook",
@@ -2463,11 +2463,11 @@
       "testing": false,
       "author": "being-frank",
       "credit": "https://gist.github.com/being-frank/62ffe651b07ef27aa525",
-      "bytes": 206,
+      "bytes": 177,
       "external": false,
       "externalUrl": "",
       "source": "bookmarklets/devtools/show-hidden-fields.js",
-      "href": "javascript:(()%20%3D%3E%20%7B%0A%20%20for%20(const%20input%20of%20document.getElementsByTagName(%22input%22))%20%7B%0A%20%20%20%20if%20(input.type.toLowerCase()%20!%3D%3D%20%22hidden%22)%20continue%3B%0A%20%20%20%20input.type%20%3D%20%22text%22%3B%0A%20%20%20%20input.style.border%20%3D%20%221px%20solid%20red%22%3B%0A%20%20%7D%0A%7D)()%3B"
+      "href": "javascript:(()%20%3D%3E%20%7B%0A%20%20for%20(const%20field%20of%20document.querySelectorAll('input%5Btype%3D%22hidden%22%20i%5D'))%20%7B%0A%20%20%20%20field.setAttribute(%22type%22%2C%20%22text%22)%3B%0A%20%20%20%20field.style.border%20%3D%20%221px%20solid%20red%22%3B%0A%20%20%7D%0A%7D)()%3B"
     },
     {
       "slug": "hex-eyedropper",
@@ -2496,7 +2496,7 @@
       "external": false,
       "externalUrl": "",
       "source": "bookmarklets/devtools/hex-eyedropper.js",
-      "href": "javascript:void%20(async%20()%20%3D%3E%20%7B%0A%20%20try%20%7B%0A%20%20%20%20prompt(%22HEX%3A%22%2C%20(await%20new%20EyeDropper().open()).sRGBHex)%3B%0A%20%20%7D%20catch%20(error)%20%7B%0A%20%20%20%20alert(error)%3B%0A%20%20%7D%0A%7D)()%3B"
+      "href": "javascript:(()%20%3D%3E%20%7B%0A%20%20new%20EyeDropper()%0A%20%20%20%20.open()%0A%20%20%20%20.then((picked)%20%3D%3E%20prompt(%22HEX%3A%22%2C%20picked.sRGBHex))%0A%20%20%20%20.catch((error)%20%3D%3E%20alert(error))%3B%0A%7D)()%3B"
     },
     {
       "slug": "code-editor-local",
@@ -2875,11 +2875,11 @@
       "testing": false,
       "author": "Team A11Y Collective",
       "credit": "https://www.a11y-collective.com/blog/accessibility-bookmarklets/",
-      "bytes": 367,
+      "bytes": 436,
       "external": false,
       "externalUrl": "",
       "source": "bookmarklets/devtools/image-alt-text.js",
-      "href": "javascript:(()%20%3D%3E%20%7B%0A%20%20for%20(const%20image%20of%20document.getElementsByTagName(%22img%22))%20%7B%0A%20%20%20%20if%20(!image.alt)%20continue%3B%0A%20%20%20%20const%20label%20%3D%20document.createElement(%22span%22)%3B%0A%20%20%20%20label.style.cssText%20%3D%0A%20%20%20%20%20%20%22background%3Ablack%3Bcolor%3Awhite%3Bpadding%3A2px%3Bfont-size%3A12px%3Bposition%3Aabsolute%3Bz-index%3A9999%3B%22%3B%0A%20%20%20%20label.textContent%20%3D%20image.alt%3B%0A%20%20%20%20image.parentNode.insertBefore(label%2C%20image)%3B%0A%20%20%7D%0A%7D)()%3B"
+      "href": "javascript:(()%20%3D%3E%20%7B%0A%20%20for%20(const%20image%20of%20document.getElementsByTagName(%22img%22))%20%7B%0A%20%20%20%20if%20(!image.alt)%20continue%3B%0A%20%20%20%20const%20label%20%3D%20document.createElement(%22span%22)%3B%0A%20%20%20%20Object.assign(label.style%2C%20%7B%0A%20%20%20%20%20%20background%3A%20%22black%22%2C%0A%20%20%20%20%20%20color%3A%20%22white%22%2C%0A%20%20%20%20%20%20padding%3A%20%222px%22%2C%0A%20%20%20%20%20%20fontSize%3A%20%2212px%22%2C%0A%20%20%20%20%20%20position%3A%20%22absolute%22%2C%0A%20%20%20%20%20%20zIndex%3A%20%229999%22%2C%0A%20%20%20%20%7D)%3B%0A%20%20%20%20label.textContent%20%3D%20image.alt%3B%0A%20%20%20%20image.insertAdjacentElement(%22beforebegin%22%2C%20label)%3B%0A%20%20%7D%0A%7D)()%3B"
     },
     {
       "slug": "export-local-storage",
@@ -3071,11 +3071,11 @@
       "testing": false,
       "author": "OpenReplay",
       "credit": "https://blog.openreplay.com/5-bookmarklets-developers/",
-      "bytes": 114,
+      "bytes": 160,
       "external": false,
       "externalUrl": "",
       "source": "bookmarklets/devtools/layout-debugger.js",
-      "href": "javascript:document.querySelectorAll(%22*%22).forEach((element)%20%3D%3E%20%7B%0A%20%20element.style.background%20%3D%20%22rgb(0%200%200%20%2F%2010%25)%22%3B%0A%7D)%3B%0Avoid%200%3B"
+      "href": "javascript:(()%20%3D%3E%20%7B%0A%20%20const%20TINT%20%3D%20%22rgba(0%2C%200%2C%200%2C%200.1)%22%3B%0A%20%20for%20(const%20box%20of%20document.getElementsByTagName(%22*%22))%20%7B%0A%20%20%20%20box.style.setProperty(%22background%22%2C%20TINT)%3B%0A%20%20%7D%0A%7D)()%3B"
     },
     {
       "slug": "clear-site-data",
@@ -3438,11 +3438,11 @@
       "testing": false,
       "author": "Alisdair McDiarmid",
       "credit": "https://alisdair.mcdiarmid.org/kill-sticky-headers/",
-      "bytes": 223,
+      "bytes": 404,
       "external": false,
       "externalUrl": "",
       "source": "bookmarklets/view/kill-sticky-headers.js",
-      "href": "javascript:(()%20%3D%3E%20%7B%0A%20%20for%20(const%20element%20of%20document.querySelectorAll(%22*%22))%20%7B%0A%20%20%20%20const%20position%20%3D%20getComputedStyle(element).position%3B%0A%20%20%20%20if%20(position%20%3D%3D%3D%20%22fixed%22%20%7C%7C%20position%20%3D%3D%3D%20%22sticky%22)%20element.style.position%20%3D%20%22static%22%3B%0A%20%20%7D%0A%7D)()%3B"
+      "href": "javascript:(()%20%3D%3E%20%7B%0A%20%20const%20walker%20%3D%20document.createTreeWalker(document.documentElement%2C%20NodeFilter.SHOW_ELEMENT)%3B%0A%20%20const%20pinned%20%3D%20%5B%5D%3B%0A%20%20for%20(let%20node%20%3D%20walker.currentNode%3B%20node%3B%20node%20%3D%20walker.nextNode())%20%7B%0A%20%20%20%20const%20%7B%20position%20%7D%20%3D%20getComputedStyle(node)%3B%0A%20%20%20%20if%20(position%20%3D%3D%3D%20%22fixed%22%20%7C%7C%20position%20%3D%3D%3D%20%22sticky%22)%20pinned.push(node)%3B%0A%20%20%7D%0A%20%20for%20(const%20node%20of%20pinned)%20node.style.setProperty(%22position%22%2C%20%22static%22)%3B%0A%7D)()%3B"
     },
     {
       "slug": "phone-preview",
@@ -3582,11 +3582,11 @@
       "testing": false,
       "author": "Hongkiat",
       "credit": "https://www.hongkiat.com/blog/100-useful-bookmarklets-for-better-productivity-ultimate-list/",
-      "bytes": 150,
+      "bytes": 173,
       "external": false,
       "externalUrl": "",
       "source": "bookmarklets/view/enable-right-click.js",
-      "href": "javascript:void%20(document.oncontextmenu%20%3D%20null)%2C%0A%20%20(document.onselectstart%20%3D%20null)%2C%0A%20%20(document.ondragstart%20%3D%20null)%2C%0A%20%20(document.body.style.userSelect%20%3D%20%22auto%22)%3B"
+      "href": "javascript:(()%20%3D%3E%20%7B%0A%20%20for%20(const%20handler%20of%20%5B%22oncontextmenu%22%2C%20%22onselectstart%22%2C%20%22ondragstart%22%5D)%20document%5Bhandler%5D%20%3D%20null%3B%0A%20%20document.body.style.setProperty(%22user-select%22%2C%20%22auto%22)%3B%0A%7D)()%3B"
     },
     {
       "slug": "social-link-preview",
@@ -3721,11 +3721,11 @@
       "testing": false,
       "author": "Learn JavaScript",
       "credit": "https://bookmarklet.io/resources",
-      "bytes": 180,
+      "bytes": 249,
       "external": false,
       "externalUrl": "",
       "source": "bookmarklets/view/highlight-links.js",
-      "href": "javascript:(()%20%3D%3E%20%7B%0A%20%20document.querySelectorAll(%22a%22).forEach((link)%20%3D%3E%20%7B%0A%20%20%20%20link.style.backgroundColor%20%3D%20%22yellow%22%3B%0A%20%20%20%20link.style.color%20%3D%20%22black%22%3B%0A%20%20%20%20link.style.padding%20%3D%20%222px%22%3B%0A%20%20%7D)%3B%0A%7D)()%3B"
+      "href": "javascript:(()%20%3D%3E%20%7B%0A%20%20const%20HIGHLIGHT%20%3D%20%7B%20backgroundColor%3A%20%22yellow%22%2C%20color%3A%20%22black%22%2C%20padding%3A%20%222px%22%20%7D%3B%0A%20%20for%20(const%20link%20of%20document.querySelectorAll(%22a%22))%20%7B%0A%20%20%20%20for%20(const%20%5Bproperty%2C%20value%5D%20of%20Object.entries(HIGHLIGHT))%20link.style%5Bproperty%5D%20%3D%20value%3B%0A%20%20%7D%0A%7D)()%3B"
     },
     {
       "slug": "replace-ads",

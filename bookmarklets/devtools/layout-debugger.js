@@ -9,7 +9,9 @@
  * @author OpenReplay
  * @credit https://blog.openreplay.com/5-bookmarklets-developers/
  */
-document.querySelectorAll("*").forEach((element) => {
-  element.style.background = "rgb(0 0 0 / 10%)";
-});
-void 0;
+(() => {
+  const TINT = "rgba(0, 0, 0, 0.1)";
+  for (const box of document.getElementsByTagName("*")) {
+    box.style.setProperty("background", TINT);
+  }
+})();

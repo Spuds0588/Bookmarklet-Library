@@ -9,7 +9,7 @@
  * @author Hongkiat
  * @credit https://www.hongkiat.com/blog/100-useful-bookmarklets-for-better-productivity-ultimate-list/
  */
-void (document.oncontextmenu = null),
-  (document.onselectstart = null),
-  (document.ondragstart = null),
-  (document.body.style.userSelect = "auto");
+(() => {
+  for (const handler of ["oncontextmenu", "onselectstart", "ondragstart"]) document[handler] = null;
+  document.body.style.setProperty("user-select", "auto");
+})();

@@ -10,9 +10,8 @@
  * @credit https://bookmarklet.io/resources
  */
 (() => {
-  document.querySelectorAll("a").forEach((link) => {
-    link.style.backgroundColor = "yellow";
-    link.style.color = "black";
-    link.style.padding = "2px";
-  });
+  const HIGHLIGHT = { backgroundColor: "yellow", color: "black", padding: "2px" };
+  for (const link of document.querySelectorAll("a")) {
+    for (const [property, value] of Object.entries(HIGHLIGHT)) link.style[property] = value;
+  }
 })();

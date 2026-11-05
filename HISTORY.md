@@ -2,6 +2,13 @@
 
 What has been done, in order. Newest entries first.
 
+## Thirteen published snippets, re-expressed in this repository's own code
+
+- The thirteen community tools were rewritten from their behaviour rather than kept as pasted code, so the readable file beside **Original source** is this repository's own implementation. Names, credits, links, slugs and descriptions are untouched — the technique still belongs to the developer it is credited to.
+- Eight had room for an independent expression and use one: **📌 Kill Sticky Headers** collects pinned elements with a `TreeWalker` and applies the change in a second pass, **👁️ Show Hidden Form Fields** selects `input[type="hidden" i]` instead of testing `.type` inside a loop, **👁️ Image Alt Text** builds its label with `Object.assign` and `insertAdjacentElement`, **📧 Extract All Emails** dedupes with a `Set` over `match()`, **💧 Hex EyeDropper** is a promise chain, **🔓 Enable Right-Click** clears handlers in a loop, **🖍️ Highlight All Links** applies a property map, and **🧱 Layout Debugger** tints through `getElementsByTagName("*")` with `setProperty`.
+- Five are one property assignment and were deliberately left alone: **✏️ Redactor** (`designMode`), **🌚 Instant Dark Mode** (`filter: invert(1)`), **⏩ Training Video Speeder** (`playbackRate = 2`), **🔑 Reveal Hidden Passwords** (`type = "text"`), **🔲 Wireframe Outline** (a stylesheet rule). Any implementation of these is the same line, so a rewrite would have been cosmetic; the behaviour itself is not something copyright separates from its expression. This is engineering judgement, not legal advice, and each upstream page should be checked before any relicensing.
+- Behaviour was compared rather than assumed: an old-vs-new headless run of all eight changed tools produced the same observable state — same email set, same computed tint, same field types and borders, same positions after the sticky pass, same label text and computed styles, same prompt arguments, same cleared handlers, same anchor colours and padding.
+
 ## A drawer of your own tasks, built from a token
 
 - **📋 Build a task drawer on Page** (`devtools`) writes a personal bookmarklet: pick Todoist, Trello, Linear, GitHub, ClickUp, Notion or Asana, paste a token, and the generated payload mounts the same right-edge drawer as 📋 Open Todoist on Page, then fetches your tasks straight from the service.

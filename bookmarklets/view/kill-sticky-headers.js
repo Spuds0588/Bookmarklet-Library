@@ -10,8 +10,11 @@
  * @credit https://alisdair.mcdiarmid.org/kill-sticky-headers/
  */
 (() => {
-  for (const element of document.querySelectorAll("*")) {
-    const position = getComputedStyle(element).position;
-    if (position === "fixed" || position === "sticky") element.style.position = "static";
+  const walker = document.createTreeWalker(document.documentElement, NodeFilter.SHOW_ELEMENT);
+  const pinned = [];
+  for (let node = walker.currentNode; node; node = walker.nextNode()) {
+    const { position } = getComputedStyle(node);
+    if (position === "fixed" || position === "sticky") pinned.push(node);
   }
+  for (const node of pinned) node.style.setProperty("position", "static");
 })();

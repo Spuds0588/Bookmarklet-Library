@@ -55,7 +55,7 @@ A missing badge is information too: no **CORS-free** on a downloader means a cro
 
 ## Community tools
 
-Thirteen cards are other developers' tools. Their names stay as the authors wrote them, with an emoji added for the bookmarks bar. Each card says **By …** and links that name to the original; the full page puts **Original source** beside **Source file**, so the borrowed work and this repository's readable copy are one click apart.
+Thirteen cards started as other developers' published tools. Their names stay as the authors wrote them, with an emoji added for the bookmarks bar. Each card says **By …** and links that name to the original, and the full page puts **Original source** beside **Source file**: the technique is theirs, and the readable code here was written in this repository from that behaviour rather than pasted from it. Five of the thirteen are a single property assignment — `document.designMode`, `playbackRate`, an inverting filter — so their code necessarily reads like anyone's would; the eleven lines that make up those five are the idea itself, which is not something a rewrite can separate.
 
 | Tool | Author | Original |
 | --- | --- | --- |

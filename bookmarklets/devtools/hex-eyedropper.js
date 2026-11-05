@@ -9,10 +9,9 @@
  * @author Thomas Orlita
  * @credit https://github.com/ThomasOrlita/awesome-bookmarklets
  */
-void (async () => {
-  try {
-    prompt("HEX:", (await new EyeDropper().open()).sRGBHex);
-  } catch (error) {
-    alert(error);
-  }
+(() => {
+  new EyeDropper()
+    .open()
+    .then((picked) => prompt("HEX:", picked.sRGBHex))
+    .catch((error) => alert(error));
 })();

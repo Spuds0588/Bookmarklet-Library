@@ -10,7 +10,11 @@
  * @credit https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions
  */
 (() => {
-  const emails = document.body.innerHTML.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
-  if (!emails) return alert("No emails found.");
-  prompt("Found Emails:", [...new Set(emails)].join("; "));
+  const ADDRESS = /[a-z0-9._-]+@[a-z0-9._-]+\.[a-z0-9._-]+/gi;
+  const unique = new Set(document.body.innerHTML.match(ADDRESS) || []);
+  if (!unique.size) {
+    alert("No emails found.");
+    return;
+  }
+  prompt("Found Emails:", [...unique].join("; "));
 })();

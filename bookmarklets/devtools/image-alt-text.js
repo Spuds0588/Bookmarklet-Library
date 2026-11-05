@@ -13,9 +13,15 @@
   for (const image of document.getElementsByTagName("img")) {
     if (!image.alt) continue;
     const label = document.createElement("span");
-    label.style.cssText =
-      "background:black;color:white;padding:2px;font-size:12px;position:absolute;z-index:9999;";
+    Object.assign(label.style, {
+      background: "black",
+      color: "white",
+      padding: "2px",
+      fontSize: "12px",
+      position: "absolute",
+      zIndex: "9999",
+    });
     label.textContent = image.alt;
-    image.parentNode.insertBefore(label, image);
+    image.insertAdjacentElement("beforebegin", label);
   }
 })();
