@@ -2,6 +2,15 @@
 
 What has been done, in order. Newest entries first.
 
+## A download shelf beside the partner portal
+
+- **📥 Build a download shelf on Page** (`devtools`) writes a personal bookmarklet for one run: download → unzip → partner page → upload. The wizard takes the portals as `Name | URL` lines (or bare URLs that name themselves after their host) and a tick box that opens the first partner the moment a download is caught.
+- **The file is caught in memory, not in the Downloads folder.** A click on a `download` anchor, a link whose path ends in a file extension, or a `blob:`/`data:` URL is prevented and fetched into a `Blob`; the shelf row shows the name the server or the anchor gave it, the type and the size, with **Open**, **Save** and **Remove**. `HTMLAnchorElement.prototype.click` is patched as well, because the usual download today is a detached anchor clicked by page script, and no click of its reaches a listener.
+- **A refused read does not lose the file.** Where CORS or the page's CSP stops the fetch, the row says so and offers **Save**, which re-fires the original link as a native download.
+- **Unzip happens in the tab.** The archive's central directory is read, entries are inflated with `DecompressionStream("deflate-raw")`, and the entries take the archive's place on the shelf, each draggable and savable. Encrypted and ZIP64 entries are skipped, and an archive past the 300 MB ceiling is refused by name.
+- **The partner opens to the left of the shelf** in a frame, with **Open in tab** always in its bar, because a partner's `X-Frame-Options` refusal fires no event and would otherwise read as a slow load. A CSP refusal is caught with `securitypolicyviolation` and named. Closing the panel blanks the frame rather than leaving the partner page running behind it.
+- **Dragging is the upload path that skips the disk.** A row writes its `File` into `dataTransfer`, so it can be dropped on a partner's upload box. That drop has been driven same-origin only; a cross-origin partner is the browser's own drag, not a script, and is listed in TODO as unverified.
+
 ## Thirteen published snippets, re-expressed in this repository's own code
 
 - The thirteen community tools were rewritten from their behaviour rather than kept as pasted code, so the readable file beside **Original source** is this repository's own implementation. Names, credits, links, slugs and descriptions are untouched — the technique still belongs to the developer it is credited to.

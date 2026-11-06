@@ -6,7 +6,7 @@
     "build": "node scripts/build.mjs",
     "check": "node scripts/build.mjs --check",
     "verify": "node scripts/verify.mjs",
-    "test": "node --test tests/zip-tools.test.mjs tests/office-tools.test.mjs tests/odf-tools.test.mjs tests/qr-tools.test.mjs tests/qr-reader.test.mjs tests/media-grab.test.mjs tests/webmcp.test.mjs tests/preview-downloads.test.mjs tests/send-to-docusign.test.mjs tests/chat-to-markdown.test.mjs tests/webhook-builder.test.mjs tests/simplepdf.test.mjs tests/simplepdf-local.test.mjs tests/photo-editor-local.test.mjs tests/code-editor-local.test.mjs tests/add-page-to-task.test.mjs tests/task-bookmarklet-builder.test.mjs tests/pdf-shrink.test.mjs tests/todoist-sidebar.test.mjs tests/task-drawer-builder.test.mjs",
+    "test": "node --test tests/zip-tools.test.mjs tests/office-tools.test.mjs tests/odf-tools.test.mjs tests/qr-tools.test.mjs tests/qr-reader.test.mjs tests/media-grab.test.mjs tests/webmcp.test.mjs tests/preview-downloads.test.mjs tests/send-to-docusign.test.mjs tests/chat-to-markdown.test.mjs tests/webhook-builder.test.mjs tests/simplepdf.test.mjs tests/simplepdf-local.test.mjs tests/photo-editor-local.test.mjs tests/code-editor-local.test.mjs tests/add-page-to-task.test.mjs tests/task-bookmarklet-builder.test.mjs tests/pdf-shrink.test.mjs tests/todoist-sidebar.test.mjs tests/task-drawer-builder.test.mjs tests/download-shelf-builder.test.mjs",
     "shots": "node scripts/shots.mjs",
     "fallbacks": "node scripts/fallbacks.mjs",
     "serve": "python3 -m http.server 4173"

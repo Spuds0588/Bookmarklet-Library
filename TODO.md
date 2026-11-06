@@ -26,6 +26,16 @@
 - [ ] Re-run `node scripts/shots.mjs <slug> --force` whenever a tool's effect on a page changes. Captures are committed, so they only rot if a tool is edited and the shot is forgotten.
 - [ ] Consider a `--check` mode on `scripts/shots.mjs` for CI, comparing a fresh capture against the committed PNG.
 
+## Download shelf (2026-11-06)
+
+- [x] **📥 Build a download shelf on Page** generates a bookmarklet that catches downloads into the tab's memory, lists them in a sidebar, unzips an archive in place, and opens a user-set partner in a frame to the left with **Open in tab** beside it. The wizard's tick box opens the first partner once, on the first catch.
+- [x] `tests/download-shelf-builder.test.mjs` covers the partner parser (bare hosts, comments, refused schemes, the cap), the config and payload shape, and the runtime's invariants: the prototype patch and its restore, the capture-phase listener, `DecompressionStream`, the frame plus tab pair, the memory ceiling and the two-press close.
+- [ ] **A cross-origin partner's drop target is unverified.** Dragging a row into a same-origin frame carries the `File`; whether a partner's own document accepts it is the browser's drag, not script, and has only been reasoned about. Drive one real portal's upload box by hand.
+- [ ] **Most partners will refuse the frame.** Nothing here measures a portal's headers, and a refusal by `X-Frame-Options` cannot be seen from the page, so the panel reads as blank until the user presses **Open in tab**. Either probe a partner's headers at build time or make the blank state louder.
+- [ ] **Downloads that never touch an anchor** are missed: a form POST, a `location.href` to a file, a server-sent `Content-Disposition` on a navigation, or a service-worker download all bypass the click listener. The shelf says it catches clicks, not that it catches everything.
+- [ ] **In-memory only, by design.** A caught 60 MB export leaves nothing behind if the tab reloads, and the 300 MB ceiling is a hard stop rather than a prompt. IndexedDB could survive a reload; it was not built because the workflow is minutes long, not hours.
+- [ ] **Unzip reads stored and deflated entries only.** `bzip2` and `LZMA` inside a zip are refused by method number, and a password-protected archive is skipped rather than prompting. Say so in the row copy if a real file ever hits it.
+
 ## Tests
 
 - [x] `npm test` covers the ZIP builder and browser cores through `tests/zip-tools.test.mjs`: standard container bytes, folder paths, UTF-8 names, stored and deflated entries, data descriptors, duplicate names, size and entry limits, encrypted/ZIP64/split/symlink/unsafe-path rejection, and CRC failure cleanup.

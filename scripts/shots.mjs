@@ -87,6 +87,20 @@ const STEPS = {
   // redaction toast up for a few seconds: drag a region before it fades.
   "pixelate-section": [{ wait: 2400 }, { drag: [280, 320, 780, 580] }, { wait: 250 }],
   "generate-password": [{ wait: 300 }],
+  // The shelf builder needs a partner before it hands out a link, and the shot
+  // should show a ready shelf rather than an empty form.
+  "download-shelf-builder": [
+    {
+      script: `(() => {
+        const root = document.querySelector("[data-download-shelf-builder]").shadowRoot;
+        const partners = root.querySelector("textarea");
+        partners.value = "Acme claims | https://acme.example/upload\\nClaims portal | https://claims.example/new";
+        partners.dispatchEvent(new Event("input", { bubbles: true }));
+        return true;
+      })()`,
+    },
+    { wait: 350 },
+  ],
   // The editor is a live cross-origin app that has to paint before it looks
   // like an editor rather than an empty frame.
   "code-editor-local": [{ wait: 6000 }],

@@ -1,7 +1,7 @@
 {
   "width": 1200,
   "height": 750,
-  "generated": "2026-11-04",
+  "generated": "2026-11-06",
   "tools": {
     "record-audio": {
       "file": "screenshots/record-audio.png",
@@ -413,6 +413,11 @@
     "add-page-to-task": {
       "file": "screenshots/add-page-to-task.png",
       "changed": true
+    },
+    "download-shelf-builder": {
+      "file": "screenshots/download-shelf-builder.png",
+      "changed": true,
+      "steps": 2
     },
     "webhook-dispatch": {
       "file": "screenshots/webhook-dispatch.png",
