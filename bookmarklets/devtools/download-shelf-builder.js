@@ -109,6 +109,25 @@
       ods: "application/vnd.oasis.opendocument.spreadsheet",
     };
 
+    // Types a browser downloads rather than renders. A blob of one of these is
+    // a file the page built, not something it is about to show.
+    const DOWNLOADS =
+      /^(application\/(zip|x-zip-compressed|x-7z-compressed|x-rar-compressed|gzip|octet-stream|msword|rtf|vnd\.)|text\/csv)/i;
+    const downloadType = (type) => DOWNLOADS.test(String(type || ""));
+
+    // A page that builds its export in JavaScript hands the browser an object
+    // URL, and usually revokes it in the same turn as the click. Recording the
+    // blob at creation is the only moment those bytes are certain to exist.
+    const generated = new Map();
+    const nativeCreate = URL.createObjectURL;
+    const nativeOpen = window.open;
+    const remember = (url, blob) => {
+      // A page can mint dozens of preview URLs; the shelf keeps the recent ones,
+      // which is what a download in progress is holding.
+      if (generated.size >= 60) generated.delete(generated.keys().next().value);
+      generated.set(url, blob);
+    };
+
     const CSS = [
       ":host{all:initial}",
       `.shelf{position:absolute;top:0;right:0;bottom:0;display:flex;flex-direction:column;width:${STAGE};border-left:1px solid #111;background:#fbfaf8;color:#111;font:13px/1.45 system-ui,-apple-system,sans-serif;box-shadow:-18px 0 40px rgba(17,17,17,.14);pointer-events:auto}`,
@@ -209,7 +228,6 @@
 
     let items = [];
     let serial = 0;
-    let paused = false;
     let autoDone = false;
     let armed = 0;
     const madeUrls = new Set();
@@ -290,8 +308,12 @@
 
     // ---- the shelf -------------------------------------------------------
 
-    const makeEntry = (patch) =>
-      Object.assign({ id: (serial += 1), name: "download", blob: null, url: "", note: "", status: "", type: "" }, patch);
+    const makeEntry = (patch) => {
+      const entry = Object.assign({ id: (serial += 1), name: "", blob: null, url: "", note: "", status: "", type: "" }, patch);
+      // Nothing names a blob the page built, so it gets a stable name of its own.
+      if (!entry.name) entry.name = `generated-${entry.id}`;
+      return entry;
+    };
     const addEntry = (patch) => {
       const entry = makeEntry(patch);
       items.push(entry);
@@ -301,7 +323,9 @@
     const open = (item) => {
       const url = URL.createObjectURL(item.blob);
       madeUrls.add(url);
-      const tab = window.open(url, "_blank");
+      // The shelf's own tab is opened through the native call so a caught zip is
+      // not taken again by the sink the shelf itself installed.
+      const tab = nativeOpen.call(window, url, "_blank");
       if (!tab) {
         item.status = "The browser blocked the new tab. Use Save.";
         render();
@@ -409,9 +433,38 @@
         });
     };
 
-    const take = (url, name) => {
-      const entry = addEntry({ name: name || "download", url, status: "Fetching…" });
+    const accept = (entry, blob, header) => {
+      if (blob.size > HOLD) {
+        entry.status = `Could not read it: ${sizeText(blob.size)} is more than this shelf holds`;
+        render();
+        return;
+      }
+      const base = header || entry.name;
+      const missing = extOf(base) ? "" : Object.keys(TYPES).find((key) => TYPES[key] === blob.type) || "";
+      entry.name = missing ? `${base}.${missing}` : base;
+      entry.blob = blob;
+      entry.type = typeOf(entry.name, blob.type);
+      entry.status = "";
+      entry.note = `${labelOf(entry.name)} · ${sizeText(blob.size)}`;
       render();
+      // The wizard's auto-open is for the first catch of a session, and only
+      // while the user has not opened a partner panel of their own.
+      if (autoOpen && !autoDone && partners.length && stage.dataset.open !== "true") {
+        autoDone = true;
+        openPartner(0);
+      }
+    };
+
+    const take = (url, name) => {
+      const entry = addEntry({ name: name || "", url, status: "Reading…" });
+      render();
+      const known = generated.get(url);
+      if (known) {
+        // No fetch: a page that revoked the URL already would fail one, and the
+        // bytes are right here.
+        accept(entry, known, "");
+        return;
+      }
       fetch(url)
         .then((res) => {
           if (!res.ok) throw new Error(`the server answered ${res.status}`);
@@ -419,28 +472,35 @@
           if (length > HOLD) throw new Error(`${sizeText(length)} is more than this shelf holds`);
           return res.blob().then((blob) => ({ blob, header: nameFrom(res, url) }));
         })
-        .then(({ blob, header }) => {
-          if (blob.size > HOLD) throw new Error(`${sizeText(blob.size)} is more than this shelf holds`);
-          const base = header || entry.name;
-          const missing = extOf(base) ? "" : Object.keys(TYPES).find((key) => TYPES[key] === blob.type) || "";
-          entry.name = missing ? `${base}.${missing}` : base;
-          entry.blob = blob;
-          entry.type = typeOf(entry.name, blob.type);
-          entry.status = "";
-          entry.note = `${labelOf(entry.name)} · ${sizeText(blob.size)}`;
-          render();
-          // The wizard's auto-open is for the first catch of a session, and only
-          // while the user has not opened a partner panel of their own.
-          if (autoOpen && !autoDone && partners.length && stage.dataset.open !== "true") {
-            autoDone = true;
-            openPartner(0);
-          }
-        })
+        .then(({ blob, header }) => accept(entry, blob, header))
         .catch((error) => {
           entry.status = `Could not read it: ${said(error)}`;
           render();
         });
     };
+
+    URL.createObjectURL = function createObjectURL(object) {
+      const url = nativeCreate.call(URL, object);
+      if (object instanceof Blob) remember(url, object);
+      return url;
+    };
+
+    // The other sink a generated file leaves by. It is taken only when the
+    // browser would have downloaded the type rather than rendered it, so a
+    // preview the page opens still opens.
+    const built = (url) => generated.get(String(url || "")) || null;
+    window.open = function open(url) {
+      const blob = built(url);
+      if (blob && downloadType(blob.type)) {
+        take(String(url), "");
+        return null;
+      }
+      return nativeOpen.apply(this, arguments);
+    };
+    // A location change cannot be wrapped: every member of `Location` is an
+    // unforgeable own property of the instance, so `location.assign` and
+    // `location.href` cannot be replaced. That was measured in Chrome, not
+    // assumed, and it is the one generated download this shelf cannot take.
 
     const rowFor = (item) => {
       const row = el("li", "row");
@@ -519,7 +579,6 @@
     // ---- catching the download -----------------------------------------
 
     const onClick = (event) => {
-      if (paused) return;
       const node = event.target;
       const anchor = node && node.closest ? node.closest("a[href]") : null;
       if (!anchor || !isDownload(anchor)) return;
@@ -528,7 +587,7 @@
     };
 
     const patchedClick = function click() {
-      if (!paused && isDownload(this)) {
+      if (isDownload(this)) {
         take(this.href, nameOf(this));
         return;
       }
@@ -544,7 +603,8 @@
       d.removeEventListener("click", onClick, true);
       d.removeEventListener("securitypolicyviolation", onViolation);
       if (proto.click === patchedClick) proto.click = nativeClick;
-      paused = false;
+      URL.createObjectURL = nativeCreate;
+      window.open = nativeOpen;
       frame.src = "about:blank";
       for (const url of madeUrls) URL.revokeObjectURL(url);
       host.remove();

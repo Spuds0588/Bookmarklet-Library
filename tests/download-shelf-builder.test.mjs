@@ -79,6 +79,28 @@ test("the runtime catches detached anchors, blob URLs and file links", () => {
   assert.match(runtime, /saveLink/);
 });
 
+test("a file the page builds in JavaScript is caught before its URL is revoked", () => {
+  const runtime = RUNTIME.toString();
+  // The Angular shape: a blob, an object URL, a detached anchor, and a revoke in
+  // the same turn. Refetching that URL after the fact fails, so the blob has to
+  // be remembered when it is created.
+  assert.match(runtime, /URL\.createObjectURL = function createObjectURL/);
+  assert.match(runtime, /if \(object instanceof Blob\) remember\(url, object\)/);
+  assert.match(runtime, /const known = generated\.get\(url\)/);
+  assert.match(runtime, /generated-\$\{entry\.id\}/);
+  // The other sink, gated on the browser downloading the type.
+  assert.match(runtime, /window\.open = function open/);
+  assert.match(runtime, /downloadType\(blob\.type\)/);
+  // Measured, not assumed: Location's members are unforgeable, so a location
+  // change is the one generated download that cannot be wrapped.
+  assert.doesNotMatch(runtime, /Location\.prototype/, "a no-op patch would only look like coverage");
+  assert.match(runtime, /unforgeable/);
+  assert.match(runtime, /nativeOpen\.call\(window, url, "_blank"\)/, "the shelf's own tab is not re-caught");
+  // Every override is put back when the shelf closes.
+  assert.match(runtime, /URL\.createObjectURL = nativeCreate/);
+  assert.match(runtime, /window\.open = nativeOpen/);
+});
+
 test("bytes are read into memory and only written when asked", () => {
   const runtime = RUNTIME.toString();
   assert.match(runtime, /res\.blob\(\)/);
